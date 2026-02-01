@@ -331,7 +331,7 @@ const AppContent: React.FC = () => {
                     />
                   } />
                   <Route path="/upload" element={<UploadWizard recipients={recipients} userId={userId!} />} />
-                  <Route path="/add-recipient" element={<AddRecipient userId={userId!} />} />
+                  <Route path="/add-recipient" element={<AddRecipient userId={userId!} recipientCount={recipients.length} />} />
                 </Routes>
               </Layout>
             )

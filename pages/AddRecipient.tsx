@@ -5,12 +5,23 @@ import { useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 
+const RECIPIENT_CAP = 5;
+
 interface AddRecipientProps {
   userId: Id<"users">;
+  recipientCount?: number;
 }
 
-const AddRecipient: React.FC<AddRecipientProps> = ({ userId }) => {
+const AddRecipient: React.FC<AddRecipientProps> = ({ userId, recipientCount = 0 }) => {
   const navigate = useNavigate();
+  const isAtCap = recipientCount >= RECIPIENT_CAP;
+  
+  // Redirect if at cap
+  React.useEffect(() => {
+    if (isAtCap) {
+      navigate('/recipients');
+    }
+  }, [isAtCap, navigate]);
   // Fix: Use imported api object instead of string literal for Convex mutation
   const addMutation = useMutation(api.recipients.add);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,13 +152,26 @@ const AddRecipient: React.FC<AddRecipientProps> = ({ userId }) => {
           </select>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={!formData.name || !formData.email}
-          className="w-full h-16 bg-primary text-white font-black uppercase rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Add Recipient
-        </button>
+        {isAtCap ? (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
+            <p className="text-red-400 font-bold text-center text-sm mb-2">Recipient Limit Reached</p>
+            <p className="text-red-400/80 text-xs text-center mb-4">You have reached the maximum of {RECIPIENT_CAP} recipients. You cannot add more recipients at this time.</p>
+            <button
+              onClick={() => navigate('/recipients')}
+              className="w-full h-12 bg-primary text-white font-black uppercase rounded-xl hover:bg-blue-600 transition-all"
+            >
+              Back to Recipients
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleSave}
+            disabled={!formData.name || !formData.email}
+            className="w-full h-16 bg-primary text-white font-black uppercase rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Add Recipient
+          </button>
+        )}
       </main>
     </div>
   );

@@ -6,6 +6,8 @@ import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 import { Recipient, SecureFile } from '../types';
 
+const RECIPIENT_CAP = 5;
+
 interface RecipientsProps {
   recipients: Recipient[];
   files?: SecureFile[];
@@ -421,6 +423,29 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [] }) => {
                 </div>
               </div>
             ))}
+            
+            {/* Recipient Cap Section */}
+            <div className="mt-6 pt-4 border-t border-gray-800">
+              {recipients.length >= RECIPIENT_CAP ? (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-amber-500 text-lg flex-shrink-0 mt-0.5">info</span>
+                    <div className="flex-1">
+                      <p className="text-amber-400 text-sm font-bold">Recipient Limit Reached</p>
+                      <p className="text-amber-400/80 text-xs mt-1">You have reached the maximum of {RECIPIENT_CAP} recipients. You cannot add more recipients at this time.</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => navigate('/add-recipient')}
+                  className="w-full h-11 bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors rounded-lg font-bold uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">person_add</span>
+                  Add Recipient ({recipients.length}/{RECIPIENT_CAP})
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
