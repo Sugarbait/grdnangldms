@@ -55,6 +55,8 @@ export const sendNotificationEmails = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const results: { email: string; success: boolean; error?: string }[] = [];
@@ -269,24 +271,45 @@ ${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.
 - Guardian Angel DMS`;
 
       // Send email
-      try {
-        console.log(`[EMAIL] Sending to ${recipient.email}`);
-        await transporter.sendMail({
-          from: `"Guardian Angel DMS" <${process.env.SMTP_USER}>`,
-          to: recipient.email,
-          subject: `Guardian Angel DMS - Message from ${user.name}`,
-          html: htmlEmail,
-          text: textEmail,
-        });
+      let sendSuccess = false;
+      let lastError: any = null;
+      
+      // Retry logic: try up to 3 times with exponential backoff
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`[EMAIL] Sending to ${recipient.email} (attempt ${attempt}/3)`);
+          await transporter.sendMail({
+            from: `"Guardian Angel DMS" <${process.env.SMTP_USER}>`,
+            to: recipient.email,
+            subject: `Guardian Angel DMS - Message from ${user.name}`,
+            html: htmlEmail,
+            text: textEmail,
+          });
 
-        results.push({ email: recipient.email, success: true });
-        console.log(`[EMAIL] SUCCESS: Sent to ${recipient.email}`);
-      } catch (error: any) {
-        console.error(`[EMAIL] FAILED: ${recipient.email}:`, error.message);
+          results.push({ email: recipient.email, success: true });
+          console.log(`[EMAIL] SUCCESS: Sent to ${recipient.email}`);
+          sendSuccess = true;
+          break;
+        } catch (error: any) {
+          lastError = error;
+          console.error(`[EMAIL] FAILED attempt ${attempt}: ${recipient.email}:`, error.message);
+          
+          // If not last attempt, wait before retrying (exponential backoff)
+          if (attempt < 3) {
+            const waitTime = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+            console.log(`[EMAIL] Retrying in ${waitTime}ms...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+        }
+      }
+      
+      // If all retries failed, log the failure
+      if (!sendSuccess) {
+        console.error(`[EMAIL] FAILED after 3 attempts: ${recipient.email}:`, lastError?.message);
         results.push({
           email: recipient.email,
           success: false,
-          error: error.message,
+          error: lastError?.message || "Failed after 3 retry attempts",
         });
       }
     }
@@ -324,6 +347,8 @@ export const sendTestEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const emailHtml = `
@@ -430,6 +455,8 @@ export const sendReminderEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const emailHtml = `
@@ -626,6 +653,8 @@ export const checkAndSendReminder = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const minutesRemaining = Math.floor(remainingSeconds / 60);
@@ -718,6 +747,8 @@ export const sendCheckInAlertEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const results: { email: string; success: boolean; error?: string }[] = [];
@@ -813,6 +844,8 @@ export const sendPasswordResetEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const resetLink = `${process.env.VITE_SITE_URL || "https://grdnangl.digitalac.app"}/#/reset-password?token=${args.resetToken}&email=${encodeURIComponent(args.email)}`;
@@ -924,6 +957,8 @@ export const sendVerificationEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 second timeout
+      socketTimeout: 10000, // 10 second socket timeout
     });
 
     const verificationLink = `${process.env.VITE_SITE_URL || "https://grdnangl.digitalac.app"}/#/verify-email?token=${args.verificationToken}&email=${encodeURIComponent(args.email)}`;
