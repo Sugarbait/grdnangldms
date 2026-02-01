@@ -179,13 +179,13 @@ export const loginUser = action({
  * Set up MFA for a user
  */
 export const setupMFA = action({
-  args: { userId: v.id("users"), totpSecret: v.string(), totpCode: v.string() },
+  args: { userId: v.string(), totpSecret: v.string(), totpCode: v.string() },
   handler: async (ctx, args) => {
     try {
       console.log("[setupMFA] Starting MFA setup for user:", args.userId);
 
       // Get user
-      const user = await ctx.runQuery(internal.users.getUserById, { userId: args.userId });
+      const user = await ctx.runQuery(internal.users.getUserById, { userId: args.userId as any });
       console.log("[setupMFA] User query result:", user ? "Found" : "Not found");
 
       if (!user) {
@@ -214,7 +214,7 @@ export const setupMFA = action({
 
       // Save MFA settings
       await ctx.runMutation(internal.users.saveMFASettings, {
-        userId: args.userId,
+        userId: args.userId as any,
         totpSecret: args.totpSecret,
         backupCodes: backupCodes,
       });

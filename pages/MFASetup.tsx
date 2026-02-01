@@ -66,7 +66,7 @@ const MFASetup: React.FC = () => {
     try {
       console.log("[MFASetup] Calling setupMFA with userId:", userId);
       const result = await setupMFAAction({
-        userId: userId as Id<"users">,
+        userId: userId,
         totpSecret: totpSecret,
         totpCode: totpCode,
       });
@@ -211,13 +211,8 @@ const MFASetup: React.FC = () => {
 
           <button
             onClick={() => {
-              console.log("[MFASetup] Cancelling MFA setup, proceeding without MFA");
-              // Wait for currentUser to be loaded before navigating
-              if (currentUser === undefined) {
-                setError("Loading user data...");
-                return;
-              }
-              navigate('/');
+              console.log("[MFASetup] Cancelling MFA setup, returning to login");
+              navigate('/login');
             }}
             className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] mt-3 flex items-center justify-center gap-2"
           >
