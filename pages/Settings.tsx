@@ -729,9 +729,116 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
 
       {/* Help & Support */}
       <section className="bg-primary/10 border border-primary/20 p-6 rounded-[28px] shadow-lg">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-primary uppercase tracking-tight">Help & Support</h3>
-          <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-full">NEW USERS</span>
+          <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-full">LEARN</span>
+        </div>
+
+        <div className="space-y-4">
+          {/* Getting Started */}
+          <div className="bg-background-dark p-4 rounded-lg border border-primary/20">
+            <h4 className="text-sm font-black text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">school</span>
+              Getting Started
+            </h4>
+            <p className="text-xs text-gray-400 mb-3">Learn the basics of Guardian Angel DMS and set up your digital legacy plan.</p>
+            <div className="space-y-2">
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('📚 Getting Started Guide\n\n1. Set Your Check-in Timer\nConfigure how often you need to check in (weekly, monthly, etc.)\n\n2. Upload Important Files\nAdd messages, documents, photos, and audio files to your vault.\n\n3. Add Recipients\nDesignate who should receive your files when the timer expires.\n\n4. Assign Files to Recipients\nDecide which files each recipient gets.\n\n5. Your Plan is Ready\nJust check in regularly - the app handles the rest!');
+                }}
+                className="text-xs text-primary hover:text-blue-400 transition-colors flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                How to Set Up Your Legacy Plan
+              </a>
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('⏱️ Check-in Timer Explained\n\nYour timer counts down from your configured duration (7 days by default).\n\nEach time you "Check In", the timer resets.\n\nWhen the timer reaches 0, the emergency protocol triggers automatically:\n\n✓ Recipient notifications sent\n✓ Your files distributed\n✓ Recipients can download their files\n\nYou can stop the timer anytime, or adjust the duration in Settings.');
+                }}
+                className="text-xs text-primary hover:text-blue-400 transition-colors flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                Understanding the Check-in Timer
+              </a>
+            </div>
+          </div>
+
+          {/* Frequently Asked Questions */}
+          <div className="bg-background-dark p-4 rounded-lg border border-primary/20">
+            <h4 className="text-sm font-black text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">help</span>
+              FAQ
+            </h4>
+            <div className="space-y-2">
+              <button 
+                onClick={() => alert('🔐 Encryption & Security\n\nGuardian Angel uses end-to-end encryption:\n\n• Your encryption key is derived from your password\n• Only you can decrypt your files\n• Even our servers cannot access your data\n• Files remain encrypted until delivery\n\nYour data is protected with AES-256 encryption.')}
+                className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">expand_more</span>
+                How is my data encrypted?
+              </button>
+              <button 
+                onClick={() => alert('📧 Multi-Device Support\n\nYes! You can access your account from multiple devices:\n\n• Your encryption key is securely stored\n• You can log in from phone, tablet, or computer\n• Your vault syncs across all devices\n• Timer state remains synchronized\n\nJust log in with the same email and password.')}
+                className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">expand_more</span>
+                Can I use this on multiple devices?
+              </button>
+              <button 
+                onClick={() => alert('👥 Recipient Notifications\n\nRecipients are notified when your timer expires:\n\n• They receive an email with download links\n• Links remain active for 90 days\n• They can download assigned files anytime\n• No special account needed\n• You can preview emails before sending\n\nRecipients see only the files you assign to them.')}
+                className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">expand_more</span>
+                How do recipients get notified?
+              </button>
+              <button 
+                onClick={() => alert('🛑 Emergency Protocol\n\nIf you miss check-ins, the protocol automatically triggers:\n\n1. Timer Expires → All recipients notified\n2. Files Distributed → Sent via secure email\n3. Download Links → Active for 90 days\n4. Proof of Delivery → You can verify delivery\n\nYou can cancel anytime by checking in or stopping the timer.')}
+                className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">expand_more</span>
+                What happens when my timer expires?
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Tips */}
+          <div className="bg-background-dark p-4 rounded-lg border border-amber-500/20">
+            <h4 className="text-sm font-black text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">lightbulb</span>
+              Pro Tips
+            </h4>
+            <ul className="text-xs text-gray-400 space-y-1 ml-4">
+              <li>✓ Set a calendar reminder to check in regularly</li>
+              <li>✓ Tell your recipients about this service beforehand</li>
+              <li>✓ Keep your recovery codes in a safe place</li>
+              <li>✓ Update your files periodically</li>
+              <li>✓ Test email delivery to ensure recipients get notified</li>
+            </ul>
+          </div>
+
+          {/* Contact Support */}
+          <div className="bg-background-dark p-4 rounded-lg border border-primary/20">
+            <h4 className="text-sm font-black text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-lg">mail</span>
+              Need More Help?
+            </h4>
+            <p className="text-xs text-gray-400 mb-3">If you have questions or issues, we're here to help.</p>
+            <button 
+              onClick={() => {
+                const email = 'support@grdnangl.digitalac.app';
+                window.location.href = `mailto:${email}?subject=Guardian Angel DMS Support Request`;
+              }}
+              className="w-full h-10 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-black uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">mail</span>
+              Email Support
+            </button>
+          </div>
         </div>
       </section>
 
