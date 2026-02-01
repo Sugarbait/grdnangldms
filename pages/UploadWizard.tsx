@@ -23,6 +23,11 @@ interface FileEntry {
   noteContent?: string;
 }
 
+// Hostinger SMTP email limits
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB per file (safety margin below 25 MB limit)
+const MAX_EMAIL_SIZE_BYTES = 30 * 1024 * 1024; // 30 MB total email (safety margin below 35 MB limit)
+const FILE_SIZE_DISPLAY = '20 MB';
+
 const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
   const navigate = useNavigate();
   const addFileMutation = useMutation(api.files.add);
@@ -124,6 +129,28 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size against Hostinger SMTP limit
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        setErrorMessage(`❌ File too large: ${fileSizeMB} MB. Maximum file size is ${FILE_SIZE_DISPLAY} due to email delivery limits.`);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
+      // Calculate total size if this file is added
+      const currentTotalSize = selectedFiles.reduce((sum, f) => sum + (f.blob?.size || 0), 0);
+      const newTotalSize = currentTotalSize + file.size;
+      
+      if (newTotalSize > MAX_EMAIL_SIZE_BYTES) {
+        const totalMB = (newTotalSize / (1024 * 1024)).toFixed(1);
+        setErrorMessage(`❌ Combined files too large: ${totalMB} MB. Maximum combined size is 30 MB to ensure reliable email delivery.`);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
+      // Clear error if file size is valid
+      setErrorMessage(null);
+
       const size = file.size > 1024 * 1024
         ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
         : `${(file.size / 1024).toFixed(0)} KB`;
