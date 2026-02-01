@@ -1,0 +1,9 @@
+
+{
+  "name": "Guardian Angel DMS",
+  "description": "A secure digital dead man's switch that automatically releases sensitive information to designated recipients after a set period of inactivity.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
