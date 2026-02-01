@@ -232,6 +232,7 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
           });
         }
 
+        setIsSaving(false);
         closeEdit();
       } catch (error: any) {
         console.error('Error saving file details:', error);
