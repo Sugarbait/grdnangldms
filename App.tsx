@@ -250,7 +250,12 @@ const AppContent: React.FC = () => {
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />}
+          element={
+            isAuthenticated && currentUser?.emailVerified ? 
+              <Navigate to="/" replace /> 
+            : 
+              <Login onLogin={handleLogin} />
+          }
         />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
@@ -277,6 +282,8 @@ const AppContent: React.FC = () => {
           path="/*" 
           element={
             !isAuthenticated ? (
+              <Navigate to="/login" replace />
+            ) : !currentUser?.emailVerified ? (
               <Navigate to="/login" replace />
             ) : (
               <Layout>
