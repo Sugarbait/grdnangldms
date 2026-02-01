@@ -237,7 +237,7 @@ export const verifyEmailToken = mutation({
     });
 
     console.log("[verifyEmailToken] Email verified successfully for user:", user._id);
-    return { success: true };
+    return { success: true, userId: user._id.toString() };
   },
 });
 

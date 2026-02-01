@@ -27,10 +27,17 @@ const VerifyEmail: React.FC = () => {
     const verify = async () => {
       try {
         setLoading(true);
-        await verifyEmailToken({
+        const result = await verifyEmailToken({
           email: decodeURIComponent(email),
           verificationToken: token,
         });
+        
+        // Update localStorage with the verified user ID
+        if (result.userId) {
+          console.log("[VerifyEmail] Email verified, updating userId to:", result.userId);
+          localStorage.setItem('guardian_user_id', result.userId);
+        }
+        
         setVerified(true);
         setError(null);
 
