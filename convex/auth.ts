@@ -185,7 +185,7 @@ export const setupMFA = action({
       console.log("[setupMFA] Starting MFA setup for user:", args.userId);
 
       // Get user
-      const user = await ctx.runQuery(internal.users.getUserById, { userId: args.userId as any });
+      const user = (await ctx.runQuery(internal.users.getUserById, { userId: args.userId })) as any;
       console.log("[setupMFA] User query result:", user ? "Found" : "Not found");
 
       if (!user) {

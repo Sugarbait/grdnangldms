@@ -19,9 +19,9 @@ export const getUserByEmail = internalQuery({
  * Internal query: Get user by ID
  */
 export const getUserById = internalQuery({
-  args: { userId: v.id("users") },
+  args: { userId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.userId);
+    return await ctx.db.get(args.userId as any);
   },
 });
 
