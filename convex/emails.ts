@@ -55,8 +55,8 @@ export const sendNotificationEmails = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const results: { email: string; success: boolean; error?: string }[] = [];
@@ -292,12 +292,13 @@ ${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.
           break;
         } catch (error: any) {
           lastError = error;
-          console.error(`[EMAIL] FAILED attempt ${attempt}: ${recipient.email}:`, error.message);
+          const errorMsg = error?.message || error?.toString() || "Unknown error";
+          console.error(`[EMAIL] FAILED attempt ${attempt}: ${recipient.email}: ${errorMsg}`);
           
           // If not last attempt, wait before retrying (exponential backoff)
           if (attempt < 3) {
-            const waitTime = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
-            console.log(`[EMAIL] Retrying in ${waitTime}ms...`);
+            const waitTime = Math.pow(2, attempt - 1) * 2000; // 2s, 4s, 8s (longer waits)
+            console.log(`[EMAIL] Retrying in ${waitTime}ms after delay...`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
@@ -305,11 +306,12 @@ ${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.
       
       // If all retries failed, log the failure
       if (!sendSuccess) {
-        console.error(`[EMAIL] FAILED after 3 attempts: ${recipient.email}:`, lastError?.message);
+        const errorMsg = lastError?.message || lastError?.toString() || "Unknown error";
+        console.error(`[EMAIL] FAILED after 3 attempts: ${recipient.email}: ${errorMsg}`);
         results.push({
           email: recipient.email,
           success: false,
-          error: lastError?.message || "Failed after 3 retry attempts",
+          error: errorMsg || "Failed after 3 retry attempts",
         });
       }
     }
@@ -347,8 +349,8 @@ export const sendTestEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const emailHtml = `
@@ -455,8 +457,8 @@ export const sendReminderEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const emailHtml = `
@@ -653,8 +655,8 @@ export const checkAndSendReminder = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const minutesRemaining = Math.floor(remainingSeconds / 60);
@@ -747,8 +749,8 @@ export const sendCheckInAlertEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const results: { email: string; success: boolean; error?: string }[] = [];
@@ -844,8 +846,8 @@ export const sendPasswordResetEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const resetLink = `${process.env.VITE_SITE_URL || "https://grdnangl.digitalac.app"}/#/reset-password?token=${args.resetToken}&email=${encodeURIComponent(args.email)}`;
@@ -957,8 +959,8 @@ export const sendVerificationEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // 10 second timeout
-      socketTimeout: 10000, // 10 second socket timeout
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const verificationLink = `${process.env.VITE_SITE_URL || "https://grdnangl.digitalac.app"}/#/verify-email?token=${args.verificationToken}&email=${encodeURIComponent(args.email)}`;
