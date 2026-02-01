@@ -420,3 +420,68 @@ export const createOrUpdateOAuthUser = action({
     };
   },
 });
+
+/**
+ * Resend verification email to user
+ */
+export const resendVerificationEmail = action({
+  args: { email: v.string() },
+  handler: async (ctx, args): Promise<{ success: boolean; message?: string; error?: string }> => {
+    const trimmedEmail = args.email.toLowerCase().trim();
+    console.log("[resendVerificationEmail] Starting for email:", trimmedEmail);
+
+    try {
+      // Find user by email
+      let user = await ctx.runQuery(internal.users.getUserByEmail, { email: trimmedEmail });
+      if (!user) {
+        // Try lowercase lookup for backward compatibility
+        user = await ctx.runQuery(internal.users.getUserByEmail, { email: trimmedEmail.toLowerCase() });
+      }
+
+      if (!user) {
+        console.error("[resendVerificationEmail] User not found for email:", trimmedEmail);
+        throw new ConvexError("Email address not found in our system.");
+      }
+
+      // Check if email is already verified
+      if (user.emailVerified) {
+        console.log("[resendVerificationEmail] Email already verified for user:", user._id);
+        return {
+          success: true,
+          message: "This email has already been verified! You can log in now.",
+        };
+      }
+
+      // Check if user has a verification token
+      if (!user.verificationToken) {
+        console.error("[resendVerificationEmail] No verification token found for user:", user._id);
+        throw new ConvexError("Cannot resend verification - token missing. Please contact support.");
+      }
+
+      // Resend verification email
+      console.log("[resendVerificationEmail] Sending verification email to:", trimmedEmail);
+      const emailResult = await ctx.runAction(api.emails.sendVerificationEmail, {
+        userId: user._id,
+        email: trimmedEmail,
+        verificationToken: user.verificationToken,
+      });
+
+      if (!emailResult.success) {
+        console.error("[resendVerificationEmail] Failed to send email:", emailResult.error);
+        throw new ConvexError("Failed to send verification email. Please try again later.");
+      }
+
+      console.log("[resendVerificationEmail] Verification email sent successfully to:", trimmedEmail);
+      return {
+        success: true,
+        message: "Verification email has been sent! Please check your inbox.",
+      };
+    } catch (error) {
+      console.error("[resendVerificationEmail] Error:", error);
+      if (error instanceof ConvexError) {
+        return { success: false, error: error.data };
+      }
+      return { success: false, error: "An error occurred while resending the verification email." };
+    }
+  },
+});

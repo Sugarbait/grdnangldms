@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 
 const VerifyEmail: React.FC = () => {
@@ -70,15 +70,32 @@ const VerifyEmail: React.FC = () => {
     verify();
   }, [token, email, verifyEmailToken, navigate]);
 
+  const resendVerificationEmailAction = useAction(api.auth.resendVerificationEmail);
+
   const handleResendEmail = async () => {
+    if (!email) {
+      setError("Email address not found. Please check your link.");
+      return;
+    }
+
     setResending(true);
+    setError(null);
+    
     try {
-      // Note: In a real implementation, you'd call an action to resend the verification email
-      // For now, we'll show a message
-      alert('Resend email feature would be implemented here');
-      setResending(false);
+      console.log("[VerifyEmail] Resending verification email to:", email);
+      const result = await resendVerificationEmailAction({
+        email: decodeURIComponent(email),
+      });
+
+      if (result.success) {
+        alert(result.message || "Verification email has been sent! Check your inbox.");
+      } else {
+        setError(result.error || "Failed to resend verification email. Please try again.");
+      }
     } catch (err: any) {
-      setError(err.message || "Failed to resend verification email.");
+      console.error("[VerifyEmail] Resend error:", err);
+      setError(err.message || "Failed to resend verification email. Please try again.");
+    } finally {
       setResending(false);
     }
   };
