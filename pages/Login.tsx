@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -37,23 +37,21 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const usedBackupCode = useMutation(api.users.usedBackupCode);
   const deriveEncryptionKeyAction = useAction(api.auth.deriveEncryptionKeyAction);
   const createOrUpdateOAuthUserAction = useAction(api.auth.createOrUpdateOAuthUser);
+  const verifyTOTPCodeForLoginAction = useAction(api.auth.verifyTOTPCodeForLogin);
 
-  const handleSystemReset = () => {
-    localStorage.clear();
-    window.location.reload();
-  };
+  // Handle Microsoft OAuth redirect - index.tsx rewrites #id_token=... to #/login?ms_token=...
+  useEffect(() => {
+    const hashQuery = window.location.hash.split('?')[1];
+    if (!hashQuery) return;
+    const params = new URLSearchParams(hashQuery);
+    const token = params.get('ms_token');
+    if (!token) return;
 
-  const handleGoogleSignIn = async (credentialResponse: any) => {
-    setIsLoading(true);
-    setError(null);
-    setProgress(0);
-    setStatusText('Authenticating with Google...');
+    // Clean the URL
+    window.history.replaceState(null, '', window.location.pathname + '#/login');
 
+    // Decode the JWT
     try {
-      // credentialResponse.credential is the JWT token
-      // For this implementation, we'll parse the basic JWT payload
-      // In production, you should verify the signature on the backend
-      const token = credentialResponse.credential;
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
@@ -64,16 +62,82 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       );
       const decoded = JSON.parse(jsonPayload);
 
+      console.log('[Microsoft OAuth] Token decoded:', decoded);
+
+      // Process the Microsoft sign-in
+      setIsLoading(true);
+      setProgress(0);
+      setStatusText('Authenticating with Microsoft...');
+
+      (async () => {
+        try {
+          const result = await createOrUpdateOAuthUserAction({
+            provider: 'microsoft',
+            providerId: decoded.oid || decoded.sub,
+            email: decoded.preferred_username || decoded.email,
+            name: decoded.name,
+            avatarUrl: undefined,
+          });
+
+          sessionStorage.setItem('guardian_encryption_key_source', 'oauth');
+          localStorage.setItem('guardian_encryption_key_source', 'oauth');
+
+          const sequence = [
+            { progress: 25, text: 'Loading your account...' },
+            { progress: 50, text: 'Verifying...' },
+            { progress: 80, text: 'Almost there...' },
+            { progress: 100, text: 'Welcome!' }
+          ];
+
+          for (const step of sequence) {
+            await new Promise(r => setTimeout(r, 150));
+            setProgress(step.progress);
+            setStatusText(step.text);
+          }
+
+          setTimeout(() => {
+            localStorage.setItem('guardian_user_id', result.userId);
+            onLogin(result.userId as Id<"users">);
+          }, 300);
+        } catch (err: any) {
+          setError(err.data || err.message || "Microsoft sign-in failed");
+          setIsLoading(false);
+        }
+      })();
+    } catch (err) {
+      console.error('[Microsoft OAuth] Failed to decode token:', err);
+      setError("Microsoft sign-in failed. Please try again.");
+    }
+  }, []);
+
+  const handleSystemReset = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const handleGoogleSignIn = async (tokenResponse: any) => {
+    setIsLoading(true);
+    setError(null);
+    setProgress(0);
+    setStatusText('Authenticating with Google...');
+
+    try {
+      // Fetch user profile using the access token
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch Google user info');
+      const profile = await res.json();
+
       const result = await createOrUpdateOAuthUserAction({
         provider: 'google',
-        providerId: decoded.sub, // Google's unique user ID
-        email: decoded.email,
-        name: decoded.name,
-        avatarUrl: decoded.picture || undefined,
+        providerId: profile.sub, // Google's unique user ID
+        email: profile.email,
+        name: profile.name,
+        avatarUrl: profile.picture || undefined,
       });
 
       // For OAuth users, the encryption key is server-generated
-      // Store a placeholder key that will be fetched on first file access
       sessionStorage.setItem('guardian_encryption_key_source', 'oauth');
       localStorage.setItem('guardian_encryption_key_source', 'oauth');
 
@@ -110,6 +174,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     try {
       // Microsoft OAuth configuration
       const clientId = import.meta.env.VITE_OAUTH_MICROSOFT_CLIENT_ID || 'YOUR_MICROSOFT_CLIENT_ID';
+      // Use origin + pathname only (no hash) — Microsoft will append #id_token=... to this
       const redirectUri = window.location.origin + window.location.pathname;
       const responseType = 'id_token';
       const scope = 'openid profile email';
@@ -118,7 +183,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const nonce = Math.random().toString(36).substring(7);
       sessionStorage.setItem('ms_oauth_nonce', nonce);
 
-      // Build Microsoft OAuth URL
+      // Build Microsoft OAuth URL — response_mode=fragment returns id_token in URL hash
       const msAuthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${encodeURIComponent(clientId)}&response_type=${encodeURIComponent(responseType)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&nonce=${encodeURIComponent(nonce)}&response_mode=fragment`;
 
       // Redirect to Microsoft login
@@ -247,10 +312,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         const result = await usedBackupCode({ userId, backupCode: totpCode });
         valid = result.valid;
       } else {
-        // 6-digit TOTP code - accept as valid (full TOTP verification can be added later)
-        // For now, we trust that if the user is entering a 6-digit code during MFA login,
-        // they must have the correct TOTP secret setup, otherwise they wouldn't have gotten here
-        valid = true;
+        // 6-digit TOTP code - verify against the user's TOTP secret
+        const result = await verifyTOTPCodeForLoginAction({ userId: userId.toString(), token: totpCode });
+        valid = result.valid;
       }
 
       if (!valid) {
@@ -428,7 +492,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <input
                 type="text"
                 value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                onChange={(e) => setTotpCode(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8))}
                 placeholder="000000 or XXXXXXXX"
                 className="w-full h-14 bg-surface-dark border-gray-800 rounded-2xl px-5 text-white text-center text-lg font-mono focus:border-primary transition-all"
                 maxLength={8}
@@ -771,25 +835,24 @@ interface OAuthButtonProps {
 const GoogleLoginButton: React.FC<OAuthButtonProps> = ({ onSuccess, onError, isLoading }) => {
   const googleClientId = import.meta.env.VITE_OAUTH_GOOGLE_CLIENT_ID;
 
-  const { signIn } = useGoogleLogin({
-    onSuccess: (credentialResponse) => {
-      console.log('[Google OAuth] Success:', credentialResponse);
-      onSuccess(credentialResponse);
+  const login = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      console.log('[Google OAuth] Success:', tokenResponse);
+      onSuccess(tokenResponse);
     },
     onError: () => {
       console.error('[Google OAuth] Error');
       onError();
     },
-    flow: 'implicit',
   });
 
   const handleClick = () => {
     if (!googleClientId || googleClientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
-      alert('❌ Google OAuth not configured!\n\nPlease add your Google Client ID to .env.local:\nVITE_OAUTH_GOOGLE_CLIENT_ID=your-client-id\n\nSee OAUTH_CREDENTIALS_SETUP.md for instructions.');
+      alert('❌ Google OAuth not configured!\n\nPlease add your Google Client ID to .env.local:\nVITE_OAUTH_GOOGLE_CLIENT_ID=your-client-id');
       return;
     }
     console.log('[Google OAuth] Initiating sign-in...');
-    signIn();
+    login();
   };
 
   return (
