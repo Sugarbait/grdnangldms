@@ -55,10 +55,10 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
       };
     } else {
       return {
-        color: 'text-green-600 dark:text-green-400',
-        bgColor: 'bg-green-50 dark:bg-green-900/20',
-        borderColor: 'border-green-200 dark:border-green-800',
-        iconColor: 'text-green-500',
+        color: 'text-gray-500 dark:text-gray-400',
+        bgColor: 'bg-transparent',
+        borderColor: 'border-gray-700 dark:border-gray-700',
+        iconColor: 'text-gray-500',
         pulse: false,
         urgency: 'normal'
       };
@@ -68,31 +68,20 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
   const timerState = getTimerState(timeRemaining);
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-all duration-300 ${timerState.bgColor} ${timerState.borderColor} ${timerState.pulse ? 'animate-pulse' : ''}`}>
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="material-symbols-outlined text-lg" style={{ color: timerState.iconColor === 'text-red-500' ? '#ef4444' : timerState.iconColor === 'text-amber-500' ? '#f59e0b' : '#10b981' }}>
-          {timerState.urgency === 'critical' ? 'schedule' : 'schedule'}
+    <div className={`flex items-center justify-between px-4 py-2 border-b transition-all duration-300 ${timerState.bgColor} ${timerState.borderColor}`}>
+      <div className="flex items-center gap-2">
+        <span className="material-symbols-outlined text-sm" style={{ color: timerState.iconColor === 'text-red-500' ? '#ef4444' : timerState.iconColor === 'text-amber-500' ? '#f59e0b' : '#6b7280' }}>
+          schedule
         </span>
-
-        <div className="flex flex-col min-w-0">
-          <span className={`text-sm font-semibold ${timerState.color}`}>
-            {formatTime(timeRemaining)}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            {timerState.urgency === 'critical'
-              ? 'Session expiring!'
-              : timerState.urgency === 'warning'
-              ? 'Session ending soon'
-              : 'Session time'
-            }
-          </span>
-        </div>
+        <span className={`text-xs font-mono font-medium ${timerState.color}`}>
+          {formatTime(timeRemaining)}
+        </span>
       </div>
 
       {timerState.urgency === 'critical' && (
         <button
           onClick={onLogout}
-          className="flex-shrink-0 px-2 py-1 text-xs font-medium bg-red-600 text-white rounded hover:bg-red-700 transition-colors whitespace-nowrap"
+          className="text-xs font-medium px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
           title="Logout now"
         >
           Logout
