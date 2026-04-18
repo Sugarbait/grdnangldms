@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserProfile } from '../App';
@@ -140,7 +139,7 @@ const Layout: React.FC<LayoutProps> = ({
 
         <div className={`flex-1 overflow-y-auto ${showMobileNav ? 'pb-24' : 'pb-0'} md:pb-0 no-scrollbar flex flex-col`}>
           {/* Content wrapper — constrained width on desktop so it doesn't stretch */}
-          <div className="flex-1 w-full md:max-w-2xl md:mx-auto md:w-full">
+          <div className="w-full md:max-w-2xl md:mx-auto px-4 md:px-6">
             {children}
           </div>
 
