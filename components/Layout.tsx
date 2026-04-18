@@ -106,6 +106,16 @@ const Layout: React.FC<LayoutProps> = ({
             ))}
           </div>
 
+          {/* Session Timer - Desktop only */}
+          {getSessionTimeRemaining && onSessionTimeout && (
+            <div className="px-5 py-3 border-t border-gray-800">
+              <SessionTimer
+                getTimeRemaining={getSessionTimeRemaining}
+                onLogout={onSessionTimeout}
+              />
+            </div>
+          )}
+
           {/* Sidebar footer */}
           <div className="px-5 py-5 border-t border-gray-900 flex flex-col gap-2">
             <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-600">
@@ -127,16 +137,6 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* ── Main Content ── */}
       <main className="flex-1 flex flex-col h-full overflow-hidden md:ml-56">
-        {/* Session Timer — sticky at top */}
-        {getSessionTimeRemaining && onSessionTimeout && (
-          <div className="sticky top-0 z-30 bg-background-dark/95 backdrop-blur px-4 py-2 border-b border-gray-800">
-            <SessionTimer
-              getTimeRemaining={getSessionTimeRemaining}
-              onLogout={onSessionTimeout}
-            />
-          </div>
-        )}
-
         <div className={`flex-1 overflow-y-auto ${showMobileNav ? 'pb-24' : 'pb-0'} md:pb-0 no-scrollbar flex flex-col`}>
           {/* Content wrapper — constrained width on desktop so it doesn't stretch */}
           <div className="w-full md:max-w-2xl md:mx-auto px-4 md:px-6">

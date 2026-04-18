@@ -16,10 +16,7 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
       setTimeRemaining(getTimeRemaining());
     };
 
-    // Update every second
     const interval = setInterval(updateTimer, 1000);
-
-    // Update immediately
     updateTimer();
 
     return () => clearInterval(interval);
@@ -37,28 +34,25 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
 
     if (minutes <= 2) {
       return {
-        color: 'text-red-600',
-        bgColor: 'bg-red-50 dark:bg-red-900/20',
-        borderColor: 'border-red-200 dark:border-red-800',
-        iconColor: 'text-red-500',
+        bgColor: 'bg-red-900/30',
+        borderColor: 'border-red-700',
+        textColor: 'text-red-400',
         pulse: true,
         urgency: 'critical'
       };
     } else if (minutes <= 5) {
       return {
-        color: 'text-amber-600 dark:text-amber-400',
-        bgColor: 'bg-amber-50 dark:bg-amber-900/20',
-        borderColor: 'border-amber-200 dark:border-amber-800',
-        iconColor: 'text-amber-500',
+        bgColor: 'bg-amber-900/30',
+        borderColor: 'border-amber-700',
+        textColor: 'text-amber-400',
         pulse: false,
         urgency: 'warning'
       };
     } else {
       return {
-        color: 'text-gray-500 dark:text-gray-400',
-        bgColor: 'bg-transparent',
-        borderColor: 'border-gray-700 dark:border-gray-700',
-        iconColor: 'text-gray-500',
+        bgColor: 'bg-gray-800/40',
+        borderColor: 'border-gray-700',
+        textColor: 'text-gray-400',
         pulse: false,
         urgency: 'normal'
       };
@@ -68,25 +62,30 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
   const timerState = getTimerState(timeRemaining);
 
   return (
-    <div className={`flex items-center justify-between px-4 py-2 border-b transition-all duration-300 ${timerState.bgColor} ${timerState.borderColor}`}>
-      <div className="flex items-center gap-2">
-        <span className="material-symbols-outlined text-sm" style={{ color: timerState.iconColor === 'text-red-500' ? '#ef4444' : timerState.iconColor === 'text-amber-500' ? '#f59e0b' : '#6b7280' }}>
-          schedule
+    <div className={`flex flex-col gap-2 p-3 rounded border ${timerState.bgColor} ${timerState.borderColor} transition-all ${timerState.pulse ? 'animate-pulse' : ''}`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+          Session
         </span>
-        <span className={`text-xs font-mono font-medium ${timerState.color}`}>
+        {timerState.urgency === 'critical' && (
+          <span className="text-[10px] font-bold text-red-400">Expiring!</span>
+        )}
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <span className={`text-lg font-mono font-bold ${timerState.textColor}`}>
           {formatTime(timeRemaining)}
         </span>
+        {timerState.urgency === 'critical' && (
+          <button
+            onClick={onLogout}
+            className="text-[10px] font-medium px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            title="Logout now"
+          >
+            Exit
+          </button>
+        )}
       </div>
-
-      {timerState.urgency === 'critical' && (
-        <button
-          onClick={onLogout}
-          className="text-xs font-medium px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          title="Logout now"
-        >
-          Logout
-        </button>
-      )}
     </div>
   );
 };
