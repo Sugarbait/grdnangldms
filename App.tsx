@@ -5,6 +5,7 @@ import { ConvexProvider, ConvexReactClient, useQuery, useMutation, useAction } f
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { api } from './convex/_generated/api';
 import { Id } from './convex/_generated/dataModel';
+import { useSessionTimeout } from './hooks/useSessionTimeout';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Vault from './pages/Vault';
@@ -20,7 +21,10 @@ import ResetPassword from './pages/ResetPassword';
 import Login from './pages/Login';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import Pricing from './pages/Pricing';
 import Onboarding from './pages/Onboarding';
+import Splash from './pages/Splash';
+import Toast from './components/Toast';
 
 // Initialize Convex Client
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
@@ -47,6 +51,7 @@ export interface UserProfile {
   emailVerified?: boolean;
   mfaEnabled?: boolean;
   mfaSetupRequired?: boolean;
+  subscriptionStatus?: string;
 }
 
 const AppContent: React.FC = () => {
@@ -58,12 +63,34 @@ const AppContent: React.FC = () => {
   const files = useQuery(api.files.list, userId ? { userId } : "skip") || [];
   const recipients = useQuery(api.recipients.list, userId ? { userId } : "skip") || [];
   const timerData = useQuery(api.timer.get, userId ? { userId } : "skip");
+  const subscriptionData = useQuery(api.subscriptions.getSubscriptionStatus, userId ? { userId } : "skip");
+
+  // Trial/subscription gating
+  // Default canAccessFeatures to true ONLY while loading (subscriptionData undefined)
+  // Once loaded, use actual value — guest/expired users get false
+  const isSubLoading = subscriptionData === undefined;
+  const canAccessFeatures = isSubLoading ? true : (subscriptionData?.canAccessPaidFeatures ?? false);
+  const isTrialUser = subscriptionData?.isTrialActive ?? false;
+  const trialEndsAt = subscriptionData?.trialEndsAt ?? 0;
+  const subStatus = subscriptionData?.status ?? "guest";
+  const userTier = (subscriptionData as any)?.tier ?? "guest";
+
+  // Check-in alert notification query
+  const checkInAlert = useQuery(api.timer.getCheckInAlertNotification, userId ? { userId } : "skip");
 
   const resetTimer = useMutation(api.timer.reset);
   const fullReset = useMutation(api.users.fullReset);
   const checkAndTriggerTimer = useMutation(api.timer.checkAndTrigger);
   const checkAndSendReminder = useAction(api.emails.checkAndSendReminder);
   const stopTimer = useMutation(api.timer.stop);
+
+  // 15-minute session timeout (900,000 milliseconds)
+  const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+  const { getTimeRemaining: getSessionTimeRemaining } = useSessionTimeout({
+    timeout: SESSION_TIMEOUT_MS,
+    onTimeout: () => handleLogout(),
+    enabled: isAuthenticated && currentUser?.emailVerified
+  });
 
   // SESSION VALIDATION: Only logout if user is confirmed deleted after multiple failed attempts
   // This prevents logout during server restarts, code changes, or temporary connection issues
@@ -177,7 +204,7 @@ const AppContent: React.FC = () => {
 
   // Client-side countdown: subtract elapsed milliseconds from server value
   useEffect(() => {
-    if (!isAuthenticated || isTriggered || lastServerSeconds === null) return;
+    if (!isAuthenticated || isTriggered || lastServerSeconds === null || !canAccessFeatures) return;
 
     let hasTriggered = false;
 
@@ -211,7 +238,7 @@ const AppContent: React.FC = () => {
     }, 100); // Update more frequently for smooth display
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, isTriggered, lastServerSeconds, serverRefreshTime, userId, checkAndTriggerTimer]);
+  }, [isAuthenticated, isTriggered, lastServerSeconds, serverRefreshTime, userId, checkAndTriggerTimer, canAccessFeatures]);
 
   // Check for reminder emails periodically (every 30 seconds)
   useEffect(() => {
@@ -231,6 +258,12 @@ const AppContent: React.FC = () => {
     return () => clearInterval(interval);
   }, [isAuthenticated, userId, isTriggered, checkAndSendReminder]);
 
+  // Check-in alert toast notification
+  const [dismissedAlertAt, setDismissedAlertAt] = useState<number | null>(null);
+  const showCheckInAlertToast = checkInAlert &&
+    checkInAlert.sentAt &&
+    dismissedAlertAt !== checkInAlert.sentAt;
+
   const timerSeconds = displaySeconds ?? 604800;
 
   // Loading State
@@ -247,6 +280,26 @@ const AppContent: React.FC = () => {
   return (
     <Router>
       <ScrollToTop />
+      {showCheckInAlertToast && checkInAlert && (
+        <Toast
+          icon="notifications_active"
+          onClose={() => setDismissedAlertAt(checkInAlert.sentAt)}
+          message={
+            <div>
+              <p className="font-semibold text-white mb-1">Check-in alert sent</p>
+              {checkInAlert.recipients.map((r, i) => (
+                <p key={i}>
+                  <span className="text-amber-400 font-medium">{r.name}</span>
+                  {' — '}
+                  {new Date(checkInAlert.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {' at '}
+                  {new Date(checkInAlert.sentAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                </p>
+              ))}
+            </div>
+          }
+        />
+      )}
       <Routes>
         <Route
           path="/login"
@@ -259,6 +312,7 @@ const AppContent: React.FC = () => {
         />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/splash" element={<Splash />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/mfa-setup" element={<MFASetup />} />
@@ -278,15 +332,23 @@ const AppContent: React.FC = () => {
             )
           }
         />
-        <Route 
-          path="/*" 
+        <Route
+          path="/*"
           element={
             !isAuthenticated ? (
-              <Navigate to="/login" replace />
+              <Navigate to="/splash" replace />
             ) : !currentUser?.emailVerified ? (
               <Navigate to="/login" replace />
             ) : (
-              <Layout>
+              <Layout
+                canAccessFeatures={canAccessFeatures}
+                isTrialUser={isTrialUser}
+                trialEndsAt={trialEndsAt}
+                userTier={userTier}
+                currentUser={currentUser}
+                getSessionTimeRemaining={getSessionTimeRemaining}
+                onSessionTimeout={handleLogout}
+              >
                 <Routes>
                   <Route
                     path="/"
@@ -312,12 +374,17 @@ const AppContent: React.FC = () => {
                           fileCount={files.length}
                           recipientCount={recipients.length}
                           currentUser={currentUser || { name: 'Identity', email: '', avatarUrl: '' }}
+                          canAccessFeatures={canAccessFeatures}
+                          isTrialUser={isTrialUser}
+                          userTier={userTier}
+                          trialEndsAt={trialEndsAt}
+                          subscriptionStatus={subStatus}
                         />
                       )
                     }
                   />
-                  <Route path="/vault" element={<Vault userId={userId!} />} />
-                  <Route path="/recipients" element={<Recipients recipients={recipients} files={files} />} />
+                  <Route path="/vault" element={<Vault userId={userId!} canAccessFeatures={canAccessFeatures} />} />
+                  <Route path="/recipients" element={<Recipients recipients={recipients} files={files} canAccessFeatures={canAccessFeatures} />} />
                   <Route path="/settings" element={
                     <Settings
                       onResetAll={() => userId && fullReset({ userId })}
@@ -328,10 +395,14 @@ const AppContent: React.FC = () => {
                       userId={userId!}
                       fileCount={files.length}
                       recipientCount={recipients.length}
+                      userTier={userTier}
+                      isTrialUser={isTrialUser}
+                      trialEndsAt={trialEndsAt}
                     />
                   } />
-                  <Route path="/upload" element={<UploadWizard recipients={recipients} userId={userId!} />} />
-                  <Route path="/add-recipient" element={<AddRecipient userId={userId!} recipientCount={recipients.length} />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/upload" element={<UploadWizard recipients={recipients} userId={userId!} canAccessFeatures={canAccessFeatures} />} />
+                  <Route path="/add-recipient" element={<AddRecipient userId={userId!} recipientCount={recipients.length} canAccessFeatures={canAccessFeatures} />} />
                 </Routes>
               </Layout>
             )
