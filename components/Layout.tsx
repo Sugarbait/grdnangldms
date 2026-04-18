@@ -137,6 +137,16 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* ── Main Content ── */}
       <main className="flex-1 flex flex-col h-full overflow-hidden md:ml-56">
+        {/* Session Timer - Mobile only */}
+        {getSessionTimeRemaining && onSessionTimeout && (
+          <div className="md:hidden px-4 py-2 border-b border-gray-800 bg-surface-dark/50">
+            <SessionTimer
+              getTimeRemaining={getSessionTimeRemaining}
+              onLogout={onSessionTimeout}
+            />
+          </div>
+        )}
+
         <div className={`flex-1 overflow-y-auto ${showMobileNav ? 'pb-24' : 'pb-0'} md:pb-0 no-scrollbar flex flex-col`}>
           {/* Content wrapper — constrained width on desktop so it doesn't stretch */}
           <div className="w-full md:max-w-2xl md:mx-auto px-4 md:px-6">
