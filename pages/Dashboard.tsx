@@ -190,7 +190,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
     }
 
     class Firework {
-      x: number; y: number; targetY: number; vy: number; color: string; exploded: boolean; trail: {x: number, y: number, alpha: number}[];
+      x: number; y: number; targetY: number; vy: number; color: string; exploded: boolean; trail: { x: number, y: number, alpha: number }[];
       constructor() {
         this.x = Math.random() * window.innerWidth;
         this.y = window.innerHeight;
@@ -201,7 +201,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         this.trail = [];
       }
       update() {
-        this.trail.push({x: this.x, y: this.y, alpha: 1});
+        this.trail.push({ x: this.x, y: this.y, alpha: 1 });
         if (this.trail.length > 8) this.trail.shift();
         this.trail.forEach(t => t.alpha *= 0.8);
         this.y += this.vy;
@@ -362,9 +362,9 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
       )}
 
       <header className="flex items-center justify-between">
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-1 md:hidden">
           <img
-            src="https://grdnangl.digitalac.app/images/grdnangl-full.png"
+            src="/images/New-GrdnAngl-Logo.png"
             alt="Guardian Angel DMS Logo"
             className="w-48 h-auto object-contain"
           />
@@ -372,7 +372,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         </div>
         <button
           onClick={() => navigate('/settings')}
-          className="rounded-full bg-surface-dark border border-gray-800 hover:border-gray-600 transition-all active:scale-95 shadow-lg overflow-hidden"
+          className="md:hidden rounded-full bg-surface-dark border border-gray-800 hover:border-gray-600 transition-all active:scale-95 shadow-lg overflow-hidden"
         >
           <div className="size-8 rounded-full bg-surface-darker flex items-center justify-center overflow-hidden border border-gray-700">
             {currentUser.avatarUrl ? (
@@ -388,7 +388,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{currentUser.name}</p>
       </div>
 
-      <div className={`relative group pt-2 ${isExpired ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className="relative group pt-2">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-all duration-1000"></div>
         <div className="flex gap-2 justify-center relative z-10">
           {[
@@ -421,12 +421,10 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
       <div className="px-1 py-4 space-y-3">
         <button
           onClick={canAccessFeatures ? handleCheckInClick : () => navigate('/pricing')}
-          disabled={isExpired}
-          className={`relative w-full group overflow-hidden h-32 sm:h-36 rounded-[32px] sm:rounded-[40px] shadow-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.97] border ${
-            canAccessFeatures
-              ? 'bg-primary shadow-primary/40 hover:bg-blue-600 border-white/20'
-              : 'bg-gray-700 shadow-none border-gray-600 opacity-60 cursor-not-allowed'
-          }`}
+          className={`relative w-full group overflow-hidden h-32 sm:h-36 rounded-[32px] sm:rounded-[40px] shadow-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.97] border ${canAccessFeatures
+            ? 'bg-primary shadow-primary/40 hover:bg-blue-600 border-white/20'
+            : 'bg-surface-dark border-gray-700 hover:border-primary/50 cursor-pointer'
+            }`}
         >
           {canAccessFeatures && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>}
           <div className="text-center relative z-10">
@@ -446,9 +444,8 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
       <div className="px-1">
         <button
           onClick={() => canAccessFeatures ? navigate('/upload') : navigate('/pricing')}
-          className={`w-full group relative flex items-center justify-between p-4 sm:p-5 bg-surface-dark border border-gray-800 rounded-[24px] sm:rounded-[28px] transition-all shadow-lg active:scale-[0.98] ${
-            canAccessFeatures ? 'hover:border-primary/40' : 'opacity-50'
-          }`}
+          className={`w-full group relative flex items-center justify-between p-4 sm:p-5 bg-surface-dark border border-gray-800 rounded-[24px] sm:rounded-[28px] transition-all shadow-lg active:scale-[0.98] ${canAccessFeatures ? 'hover:border-primary/40' : 'opacity-50'
+            }`}
         >
           <div className="flex items-center gap-4">
             <div className="size-10 sm:size-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors">

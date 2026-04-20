@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardian Angel DMS — App Screenshots</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0b0d;
+      color: white;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      font-style: italic;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4em;
+      margin-bottom: 48px;
+    }
+
+    .screenshots-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .screenshot-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .screenshot-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #1754cf;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+    }
+
+    /* iPhone frame */
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: #0f1115;
+      border-radius: 44px;
+      border: 3px solid #2a2d35;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: #0f1115;
+      border-radius: 0 0 18px 18px;
+      z-index: 100;
+      border-bottom: 2px solid #1a1d25;
+    }
+
+    .phone-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 42px 0 0 0;
+    }
+
+    .phone-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Shared tokens */
+    .bg-dark {
+      background: #0f1115;
+    }
+
+    .bg-surface {
+      background: #181b22;
+    }
+
+    .bg-surface-darker {
+      background: #13151a;
+    }
+
+    .text-primary {
+      color: #1754cf;
+    }
+
+    .bg-primary {
+      background: #1754cf;
+    }
+
+    .text-gray-400 {
+      color: #9ca3af;
+    }
+
+    .text-gray-500 {
+      color: #6b7280;
+    }
+
+    .text-gray-600 {
+      color: #4b5563;
+    }
+
+    .text-gray-700 {
+      color: #374151;
+    }
+
+    .border-gray {
+      border: 1px solid #262a33;
+    }
+
+    .rounded-card {
+      border-radius: 24px;
+    }
+
+    .rounded-big {
+      border-radius: 32px;
+    }
+
+    /* ===== LOGIN SCREEN ===== */
+    .login-screen {
+      padding: 40px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .login-logo {
+      width: 240px;
+      height: auto;
+    }
+
+    .login-tagline {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: -12px;
+    }
+
+    .login-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .login-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .login-input {
+      width: 100%;
+      height: 52px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid #262a33;
+      border-radius: 16px;
+      padding: 0 20px;
+      color: white;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .forgot-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .forgot-link {
+      color: #1754cf;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+    }
+
+    .login-btn {
+      width: 100%;
+      height: 56px;
+      background: #1754cf;
+      border: none;
+      border-radius: 16px;
+      color: white;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #6b7280;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #262a33;
+    }
+
+    .oauth-btn {
+      width: 100%;
+      height: 50px;
+      background: #1e222a;
+      border: 1px solid #262a33;
+      border-radius: 14px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .oauth-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .login-footer span {
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .login-footer a {
+      color: #1754cf;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .login-secure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #4b5563;
+      font-size: 10px;
+      margin-top: 4px;
+    }
+
+    .login-secure .material-symbols-outlined {
+      font-size: 12px;
+    }
+
+    /* ===== DASHBOARD ===== */
+    .dash-screen {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dash-logo {
+      width: 180px;
+      height: auto;
+    }
+
+    .dash-user-badge {
+      font-size: 9px;
+      font-weight: 800;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      text-align: center;
+    }
+
+    .dash-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #181b22;
+      border: 1px solid #374151;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: #1754cf;
+    }
+
+    .timer-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    .timer-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .timer-box {
+      width: 64px;
+      height: 80px;
+      background: rgba(24, 27, 34, 0.8);
+      border: 1px solid #262a33;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .timer-box.accent {
+      color: #f59e0b;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+    }
+
+    .timer-label {
+      font-size: 8px;
+      font-weight: 900;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .timer-label.accent {
+      color: #f59e0b;
+    }
+
+    .timer-colon {
+      display: flex;
+      height: 80px;
+      align-items: center;
+      padding-bottom: 16px;
+      color: #374151;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .checkin-btn {
+      width: 100%;
+      height: 128px;
+      background: #1754cf;
+      border: none;
+      border-radius: 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(23, 84, 207, 0.4);
+    }
+
+    .checkin-btn h2 {
+      font-size: 28px;
+      font-weight: 900;
+      color: white;
+      text-transform: uppercase;
+      font-style: italic;
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+
+    .checkin-btn .line {
+      width: 40px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 999px;
+      margin: 6px 0;
+    }
+
+    .checkin-btn .sub {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.5em;
+    }
+
+    .add-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #181b22;
+      border: 1px solid #262a33;
+      border-radius: 24px;
+    }
+
+    .add-item-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .add-item-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(23, 84, 207, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-item-icon .material-symbols-outlined {
+      color: #1754cf;
+      font-size: 20px;
+    }
+
+    .add-item-text p {
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .add-item-text span {
+      font-size: 9px;
+      color: #6b7280;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding-bottom: 40px;
+    }
+
+    .stat-card {
+      background: rgba(24, 27, 34, 0.4);
+      border: 1px solid rgba(38, 42, 51, 0.6);
+      border-radius: 28px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: #181b22;
+      border: 1px solid #262a33;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .stat-icon .material-symbols-outlined {
+      color: #60a5fa;
+      font-size: 20px;
+    }
+
+    .stat-num {
+      font-size: 48px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 900;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    /* ===== VAULT ===== */
+    .vault-screen {
+      padding: 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #181b22;
+      border: 1px solid #262a33;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .header-btn .material-symbols-outlined {
+      font-size: 20px;
+      color: #1754cf;
+    }
+
+    .header-title {
+      text-align: center;
+    }
+
+    .header-title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      font-style: normal;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .header-title p {
+      font-size: 9px;
+      color: #1754cf;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .sync-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .sync-text {
+      font-size: 10px;
+      color: #9ca3af;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .items-count {
+      font-size: 10px;
+      font-weight: 900;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      padding: 0 4px;
+    }
+
+    .file-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px;
+      background: #181b22;
+      border: 1px solid #262a33;
+      border-radius: 24px;
+    }
+
+    .file-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: rgba(23, 84, 207, 0.1);
+      border: 1px solid rgba(23, 84, 207, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-icon .material-symbols-outlined {
+      font-size: 24px;
+      color: #1754cf;
+    }
+
+    .file-info {
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .file-badge {
+      font-size: 9px;
+      color: #93c5fd;
+      background: rgba(23, 84, 207, 0.2);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .file-size {
+      font-size: 9px;
+      color: #4b5563;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .file-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0.4;
+    }
+
+    .file-right .material-symbols-outlined {
+      font-size: 20px;
+      color: #6b7280;
+    }
+
+    .file-right span:last-child {
+      font-size: 7px;
+      font-weight: 700;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .file-preview {
+      font-size: 9px;
+      color: #9ca3af;
+      margin-top: 6px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.5;
+    }
+
+    /* ===== RECIPIENTS ===== */
+    .recipients-screen {
+      padding: 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .recipients-desc {
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 500;
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .recipient-card {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: #181b22;
+      border: 1px solid #262a33;
+      border-radius: 24px;
+      align-items: center;
+    }
+
+    .recipient-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #13151a;
+      border: 2px solid #262a33;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .recipient-avatar span {
+      font-size: 13px;
+      font-weight: 900;
+      color: #1754cf;
+      text-transform: uppercase;
+    }
+
+    .recipient-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recipient-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .recipient-role {
+      font-size: 9px;
+      font-weight: 900;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-top: 2px;
+    }
+
+    .recipient-edit {
+      opacity: 0.4;
+    }
+
+    .recipient-edit .material-symbols-outlined {
+      font-size: 20px;
+      color: #6b7280;
+    }
+
+    .add-recipient-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid rgba(23, 84, 207, 0.3);
+      background: rgba(23, 84, 207, 0.1);
+      border-radius: 8px;
+      color: #1754cf;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    /* ===== PRICING ===== */
+    .pricing-screen {
+      padding: 24px 20px;
+    }
+
+    .pricing-back {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .pricing-back h1 {
+      font-size: 22px;
+    }
+
+    .pricing-hero {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .pricing-hero h2 {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      line-height: 1.2;
+      font-style: normal;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .pricing-hero p {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .pricing-card {
+      background: linear-gradient(135deg, #1754cf, #2563eb, #1d4ed8);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      box-shadow: 0 0 0 2px rgba(23, 84, 207, 0.5);
+      margin-bottom: 32px;
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: 24px;
+      right: 16px;
+      background: #f59e0b;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .pricing-card h3 {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      padding-right: 80px;
+    }
+
+    .pricing-card .desc {
+      color: #bfdbfe;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .pricing-card .trial {
+      color: #93c5fd;
+      font-size: 11px;
+      margin-bottom: 20px;
+    }
+
+    .pricing-price {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 2px;
+    }
+
+    .pricing-period {
+      color: #bfdbfe;
+      font-size: 11px;
+      margin-bottom: 20px;
+    }
+
+    .pricing-cta {
+      width: 100%;
+      height: 44px;
+      background: white;
+      border: none;
+      border-radius: 10px;
+      color: #1d4ed8;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .pricing-features {
+      border-top: 1px solid rgba(96, 165, 250, 0.3);
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pricing-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .pricing-feature .material-symbols-outlined {
+      color: white;
+      font-size: 18px;
+    }
+
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #181b22;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #374151;
+      margin-bottom: 28px;
+    }
+
+    .pricing-table th {
+      background: rgba(17, 24, 39, 0.5);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #374151;
+    }
+
+    .pricing-table th:first-child {
+      text-align: left;
+    }
+
+    .pricing-table td {
+      font-size: 11px;
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #374151;
+      color: #d1d5db;
+    }
+
+    .pricing-table td:first-child {
+      text-align: left;
+    }
+
+    .pricing-table .check {
+      color: #1754cf;
+      font-size: 16px;
+    }
+
+    .pricing-table .highlight {
+      color: #1754cf;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Guardian Angel DMS</h1>
+  <p class="subtitle">App Preview Screenshots</p>
+
+  <div class="screenshots-grid">
+
+    <!-- ===== 1. LOGIN ===== -->
+    <div class="screenshot-wrapper">
+      <span class="screenshot-label">Login</span>
+      <div class="phone-frame">
+        <div class="phone-content">
+          <div class="login-screen">
+            <img src="/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="login-logo">
+            <p class="login-tagline">Secure Digital Legacy Management</p>
+
+            <div class="login-form">
+              <label class="login-label">Email</label>
+              <input class="login-input" type="text" value="john@example.com" readonly>
+
+              <div class="forgot-row">
+                <label class="login-label">Password</label>
+                <a href="#" class="forgot-link">Forgot?</a>
+              </div>
+              <input class="login-input" type="password" value="••••••••" readonly>
+
+              <button class="login-btn">S I G N &nbsp; I N</button>
+            </div>
+
+            <div class="login-divider">Or Sign In With</div>
+
+            <button class="oauth-btn">
+              <svg class="oauth-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                <path fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continue with Google
+            </button>
+            <button class="oauth-btn">
+              <svg class="oauth-icon" viewBox="0 0 24 24">
+                <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+                <rect x="13" y="1" width="10" height="10" fill="#7FBA00" />
+                <rect x="1" y="13" width="10" height="10" fill="#00A4EF" />
+                <rect x="13" y="13" width="10" height="10" fill="#FFB900" />
+              </svg>
+              Continue with Microsoft
+            </button>
+
+            <div class="login-footer">
+              <span>New user? </span><a href="#">Create Account</a>
+            </div>
+            <div class="login-secure">
+              <span class="material-symbols-outlined">lock</span>
+              End-to-End Encrypted • AES-256 protected
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 2. DASHBOARD ===== -->
+    <div class="screenshot-wrapper">
+      <span class="screenshot-label">Dashboard</span>
+      <div class="phone-frame">
+        <div class="phone-content">
+          <div class="dash-screen">
+            <div class="dash-header">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <img src="/images/New-GrdnAngl-Logo.png" alt="" class="dash-logo">
+                <p style="font-size:9px;color:#1754cf;font-weight:900;text-transform:uppercase;letter-spacing:0.15em;">
+                  Your Digital Legacy</p>
+              </div>
+              <div class="dash-avatar">JD</div>
+            </div>
+
+            <p class="dash-user-badge">John Doe</p>
+
+            <div class="timer-row">
+              <div class="timer-unit">
+                <div class="timer-box">07</div>
+                <span class="timer-label">Days</span>
+              </div>
+              <div class="timer-colon">:</div>
+              <div class="timer-unit">
+                <div class="timer-box">12</div>
+                <span class="timer-label">Hours</span>
+              </div>
+              <div class="timer-colon">:</div>
+              <div class="timer-unit">
+                <div class="timer-box">34</div>
+                <span class="timer-label">Min</span>
+              </div>
+              <div class="timer-colon">:</div>
+              <div class="timer-unit">
+                <div class="timer-box accent">52</div>
+                <span class="timer-label accent">Sec</span>
+              </div>
+            </div>
+
+            <div style="padding: 0 4px;">
+              <div class="checkin-btn">
+                <h2>I AM ALIVE!</h2>
+                <div class="line"></div>
+                <span class="sub">Press to verify</span>
+              </div>
+            </div>
+
+            <div class="add-item-row">
+              <div class="add-item-left">
+                <div class="add-item-icon"><span class="material-symbols-outlined">upload_file</span></div>
+                <div class="add-item-text">
+                  <p>Add New Item</p>
+                  <span>Upload files or write messages</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined" style="color:#4b5563;">chevron_right</span>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-icon"><span class="material-symbols-outlined">lock</span></div>
+                <div class="stat-num">3</div>
+                <span class="stat-label">Saved Items</span>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon"><span class="material-symbols-outlined">group</span></div>
+                <div class="stat-num">2</div>
+                <span class="stat-label">Recipients</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 3. VAULT ===== -->
+    <div class="screenshot-wrapper">
+      <span class="screenshot-label">Vault</span>
+      <div class="phone-frame">
+        <div class="phone-content">
+          <div class="vault-screen">
+            <div class="page-header">
+              <div class="header-btns">
+                <div class="header-btn"><span class="material-symbols-outlined">arrow_back</span></div>
+                <div class="header-btn"><span class="material-symbols-outlined">home</span></div>
+              </div>
+              <div class="header-title">
+                <h1>My Items</h1>
+                <p>Guardian Angel DMS</p>
+              </div>
+              <div class="header-btns">
+                <div class="header-btn" style="background:rgba(23,84,207,0.1);border-color:rgba(23,84,207,0.3);"><span
+                    class="material-symbols-outlined">add</span></div>
+                <div class="header-btn"><span class="material-symbols-outlined"
+                    style="color:#ef4444;">delete_sweep</span></div>
+              </div>
+            </div>
+
+            <div class="sync-indicator">
+              <div class="sync-dot"></div>
+              <span class="sync-text">Synced & Secure</span>
+            </div>
+
+            <div class="items-count">3 Items</div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="file-card">
+                <div class="file-left">
+                  <div class="file-icon"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+                  <div class="file-info">
+                    <div class="file-name">Last Will & Testament.pdf</div>
+                    <div class="file-meta">
+                      <span class="file-badge">Sarah Williams</span>
+                      <span class="file-size">2.4 MB</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="file-right">
+                  <span class="material-symbols-outlined">manage_accounts</span>
+                  <span>Access</span>
+                </div>
+              </div>
+
+              <div class="file-card">
+                <div class="file-left">
+                  <div class="file-icon"><span class="material-symbols-outlined">mic</span></div>
+                  <div class="file-info">
+                    <div class="file-name">Voice Message for Kids</div>
+                    <div class="file-meta">
+                      <span class="file-badge">2 Recipients</span>
+                      <span class="file-size">1.2 MB</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="file-right">
+                  <span class="material-symbols-outlined">manage_accounts</span>
+                  <span>Access</span>
+                </div>
+              </div>
+
+              <div class="file-card">
+                <div class="file-left">
+                  <div class="file-icon"><span class="material-symbols-outlined">history_edu</span></div>
+                  <div class="file-info">
+                    <div class="file-name">Where to find everything</div>
+                    <div class="file-meta">
+                      <span class="file-badge">Sarah Williams</span>
+                      <span class="file-size">Note</span>
+                    </div>
+                    <div class="file-preview">Bank accounts are at Chase — joint checking and savings. Insurance
+                      documents are in the fireproof safe in the closet...</div>
+                  </div>
+                </div>
+                <div class="file-right">
+                  <span class="material-symbols-outlined">manage_accounts</span>
+                  <span>Access</span>
+                </div>
+              </div>
+
+              <div class="file-card">
+                <div class="file-left">
+                  <div class="file-icon"><span class="material-symbols-outlined">image</span></div>
+                  <div class="file-info">
+                    <div class="file-name">Family Photo Album.zip</div>
+                    <div class="file-meta">
+                      <span class="file-badge">3 Recipients</span>
+                      <span class="file-size">48.7 MB</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="file-right">
+                  <span class="material-symbols-outlined">manage_accounts</span>
+                  <span>Access</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 4. RECIPIENTS ===== -->
+    <div class="screenshot-wrapper">
+      <span class="screenshot-label">Recipients</span>
+      <div class="phone-frame">
+        <div class="phone-content">
+          <div class="recipients-screen">
+            <div class="page-header">
+              <div class="header-btns">
+                <div class="header-btn"><span class="material-symbols-outlined">arrow_back</span></div>
+                <div class="header-btn"><span class="material-symbols-outlined">home</span></div>
+              </div>
+              <div class="header-title">
+                <h1>Recipients</h1>
+                <p>Guardian Angel DMS</p>
+              </div>
+              <div class="header-btns">
+                <div class="header-btn" style="background:rgba(23,84,207,0.1);border-color:rgba(23,84,207,0.3);"><span
+                    class="material-symbols-outlined">person_add</span></div>
+              </div>
+            </div>
+
+            <p class="recipients-desc">People who will receive your saved items if you don't check in.</p>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="recipient-card">
+                <div class="recipient-avatar"><span>SW</span></div>
+                <div class="recipient-info">
+                  <div class="recipient-name">Sarah Williams</div>
+                  <div class="recipient-role">Spouse</div>
+                </div>
+                <div class="recipient-edit"><span class="material-symbols-outlined">edit</span></div>
+              </div>
+
+              <div class="recipient-card">
+                <div class="recipient-avatar"><span>JD</span></div>
+                <div class="recipient-info">
+                  <div class="recipient-name">James Davis</div>
+                  <div class="recipient-role">Lawyer</div>
+                </div>
+                <div class="recipient-edit"><span class="material-symbols-outlined">edit</span></div>
+              </div>
+
+              <div class="recipient-card">
+                <div class="recipient-avatar"><span>MJ</span></div>
+                <div class="recipient-info">
+                  <div class="recipient-name">Michael Johnson</div>
+                  <div class="recipient-role">Family</div>
+                </div>
+                <div class="recipient-edit"><span class="material-symbols-outlined">edit</span></div>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid #262a33;">
+              <div class="add-recipient-btn">
+                <span class="material-symbols-outlined" style="font-size:18px;">person_add</span>
+                Add Recipient (3/5)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 5. PRICING ===== -->
+    <div class="screenshot-wrapper">
+      <span class="screenshot-label">Pricing</span>
+      <div class="phone-frame">
+        <div class="phone-content">
+          <div class="pricing-screen">
+            <div class="pricing-back">
+              <div class="header-btn"><span class="material-symbols-outlined">arrow_back</span></div>
+              <h1>Pricing</h1>
+            </div>
+
+            <div class="pricing-hero">
+              <h2>Simple, Transparent Pricing</h2>
+              <p>No setup fees. No surprises. Cancel anytime.</p>
+            </div>
+
+            <div class="pricing-card">
+              <div class="pricing-badge">RECOMMENDED</div>
+              <h3>Guardian Angel Plus</h3>
+              <p class="desc">The complete solution</p>
+              <p class="trial">Includes 24-hour free trial</p>
+              <div class="pricing-price">$1.99</div>
+              <p class="pricing-period">per month, billed monthly</p>
+              <button class="pricing-cta">Upgrade Now</button>
+              <div class="pricing-features">
+                <div class="pricing-feature"><span class="material-symbols-outlined">check_circle</span> Unlimited file
+                  uploads</div>
+                <div class="pricing-feature"><span class="material-symbols-outlined">check_circle</span> All features
+                  included</div>
+                <div class="pricing-feature"><span class="material-symbols-outlined">check_circle</span> Priority email
+                  support</div>
+                <div class="pricing-feature"><span class="material-symbols-outlined">check_circle</span> Auto-renewal
+                  each month</div>
+                <div class="pricing-feature"><span class="material-symbols-outlined">check_circle</span> Cancel anytime
+                </div>
+              </div>
+            </div>
+
+            <table class="pricing-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Feature</th>
+                  <th>Free Trial</th>
+                  <th>Plus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>File Uploads</td>
+                  <td>5</td>
+                  <td class="highlight">Unlimited</td>
+                </tr>
+                <tr>
+                  <td>Duration</td>
+                  <td>24h</td>
+                  <td>Monthly</td>
+                </tr>
+                <tr>
+                  <td>Recipients</td>
+                  <td>Unlimited</td>
+                  <td>Unlimited</td>
+                </tr>
+                <tr>
+                  <td>Timer</td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                </tr>
+                <tr>
+                  <td>Reminders</td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                </tr>
+                <tr>
+                  <td>2FA</td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                </tr>
+                <tr>
+                  <td>Auto-Renewal</td>
+                  <td>—</td>
+                  <td><span class="material-symbols-outlined check">check_circle</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p
+    style="text-align:center;color:#374151;font-size:11px;font-weight:700;margin-top:48px;text-transform:uppercase;letter-spacing:0.3em;">
+    © Guardian Angel DMS • All Rights Reserved</p>
+</body>
+
+</html>

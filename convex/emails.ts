@@ -41,6 +41,18 @@ export const sendNotificationEmails = action({
       return { success: false, error: "No recipients configured" };
     }
 
+    // Double-check emails haven't already been sent this cycle
+    if (data.timer.emailsSentAt) {
+      console.log("[sendNotificationEmails] Emails already sent for this timer, skipping.");
+      return { success: false, error: "Emails already sent" };
+    }
+
+    // CRITICAL: Mark emails as sent BEFORE sending to prevent race conditions
+    // between cron job runs (every 5 min) and client-triggered sends
+    await ctx.runMutation(internal.emailHelpers.markEmailsSent, {
+      timerId: args.timerId,
+    });
+
     // Check SMTP configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
       console.error("[sendNotificationEmails] SMTP not fully configured");
@@ -65,7 +77,7 @@ export const sendNotificationEmails = action({
     for (const recipient of recipients) {
       const recipientIdString = recipient._id.toString();
       console.log(`[EMAIL] Recipient ID: ${recipientIdString} (type: ${typeof recipientIdString})`);
-      console.log(`[EMAIL] All file recipientIds:`, files.map(f => ({ name: f.name, recipientIds: f.recipientIds })));
+      console.log(`[EMAIL] All file recipientIds:`, files.map((f: any) => ({ name: f.name, recipientIds: f.recipientIds })));
 
       const recipientFiles = files.filter((f: Doc<"files">) => {
         const matches = f.recipientIds.includes(recipientIdString);
@@ -82,7 +94,7 @@ export const sendNotificationEmails = action({
       }
 
       // Collect all file data
-      const images: Array<{ name: string; base64: string; mimeType: string; cid: string }> = [];
+      const images: Array<{ name: string; url: string }> = [];
       const audios: Array<{ name: string; url: string }> = [];
       const documents: Array<{ name: string; url: string }> = [];
       const messages: Array<{ name: string; content: string }> = [];
@@ -91,21 +103,16 @@ export const sendNotificationEmails = action({
       for (const file of recipientFiles) {
         console.log(`[EMAIL] File: ${file.name}, audio=${!!file.audioStorageId}, image=${!!file.imageStorageId}, doc=${!!file.documentStorageId}, content=${!!file.content}`);
 
-        // Images - embed as base64
+        // Images - get download URL
         if (file.imageStorageId) {
           try {
-            const blob = await ctx.storage.get(file.imageStorageId);
-            if (blob) {
-              const buffer = Buffer.from(await blob.arrayBuffer());
-              const base64 = buffer.toString('base64');
-              const mimeType = file.type || 'image/jpeg';
-              const cid = `image_${file._id}@guardian`;
-
-              images.push({ name: file.name, base64, mimeType, cid });
-              console.log(`[EMAIL] Embedded image: ${file.name}`);
+            const url = await ctx.storage.getUrl(file.imageStorageId);
+            if (url) {
+              images.push({ name: file.name, url });
+              console.log(`[EMAIL] Image URL generated: ${file.name}`);
             }
           } catch (error: any) {
-            console.error(`[EMAIL] Error embedding image: ${error.message}`);
+            console.error(`[EMAIL] Error getting image URL: ${error.message}`);
           }
         }
 
@@ -148,9 +155,8 @@ export const sendNotificationEmails = action({
         <div style="margin: 20px 0; border-top: 1px solid #e5e7eb; padding-top: 20px;">
           <h3 style="color: #374151; margin-top: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Images</h3>
           ${images.map((img) => `
-            <div style="margin: 15px 0; text-align: center;">
-              <p style="margin: 0 0 10px 0; font-weight: 500; color: #374151; font-size: 14px;">${img.name}</p>
-              <img src="data:${img.mimeType};base64,${img.base64}" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #ddd; display: block; margin: 0 auto;">
+            <div style="margin: 10px 0;">
+              <a href="${img.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${img.name}</a>
             </div>
           `).join('')}
         </div>
@@ -202,7 +208,7 @@ export const sendNotificationEmails = action({
 
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
-      <img src="https://grdnangl.digitalac.app/images/grdnangl-full.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
       <p style="margin: 0; font-size: 18px; font-weight: 600;">Digital Legacy Notification</p>
     </div>
 
@@ -228,6 +234,16 @@ export const sendNotificationEmails = action({
         </p>
       </div>
 
+      <!-- Download Expiration Notice -->
+      <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 600;">
+          ⏰ Important: Download links expire in 7 days
+        </p>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #b45309;">
+          Please download all files within the next 7 days. After that, the links will no longer work and you'll need to request the files again.
+        </p>
+      </div>
+
       <!-- Messages -->
       ${messagesHtml}
 
@@ -245,7 +261,7 @@ export const sendNotificationEmails = action({
         This is an automated notification. Please treat this information with care and respect ${user.name}'s wishes.
       </p>
       <p style="font-size: 13px; color: #6b7280; margin-top: 15px;">
-        If you believe you received this message in error, or if you need assistance accessing the items, please contact Guardian Angel DMS support.
+        If you believe you received this message in error, or if you need assistance accessing the items, open Guardian Angel DMS on your device and select "Help" from the main menu for support options and FAQs.
       </p>
     </div>
 
@@ -266,14 +282,20 @@ ${user.name} has entrusted you with important digital items through Guardian Ang
 
 This message was sent because ${user.name} did not check in within their specified time period in the Guardian Angel DMS application.
 
-${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.content}`).join('\n\n')}\n\n` : ''}${images.length > 0 ? `IMAGES:\n${images.map(i => `- ${i.name}`).join('\n')}\n\n` : ''}${audios.length > 0 ? `AUDIO FILES:\n${audios.map(a => `- ${a.name}: ${a.url}`).join('\n')}\n\n` : ''}${documents.length > 0 ? `DOCUMENTS:\n${documents.map(d => `- ${d.name}: ${d.url}`).join('\n')}\n\n` : ''}This is an automated notification. Please treat this information with care.
+IMPORTANT: Download links expire in 7 days
+Please download all files within the next 7 days. After that, the links will no longer work.
+
+${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.content}`).join('\n\n')}\n\n` : ''}${images.length > 0 ? `IMAGES:\n${images.map(i => `- ${i.name}`).join('\n')}\n\n` : ''}${audios.length > 0 ? `AUDIO FILES:\n${audios.map(a => `- ${a.name}: ${a.url}`).join('\n')}\n\n` : ''}${documents.length > 0 ? `DOCUMENTS:\n${documents.map(d => `- ${d.name}: ${d.url}`).join('\n')}\n\n` : ''}NEED HELP?
+If you have questions or need assistance, open Guardian Angel DMS on your device and select "Help" from the main menu for support options, FAQs, and troubleshooting guides.
+
+This is an automated notification. Please treat this information with care.
 
 - Guardian Angel DMS`;
 
       // Send email
       let sendSuccess = false;
       let lastError: any = null;
-      
+
       // Retry logic: try up to 3 times with exponential backoff
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
@@ -294,7 +316,7 @@ ${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.
           lastError = error;
           const errorMsg = error?.message || error?.toString() || "Unknown error";
           console.error(`[EMAIL] FAILED attempt ${attempt}: ${recipient.email}: ${errorMsg}`);
-          
+
           // If not last attempt, wait before retrying (exponential backoff)
           if (attempt < 3) {
             const waitTime = Math.pow(2, attempt - 1) * 2000; // 2s, 4s, 8s (longer waits)
@@ -303,7 +325,7 @@ ${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.
           }
         }
       }
-      
+
       // If all retries failed, log the failure
       if (!sendSuccess) {
         const errorMsg = lastError?.message || lastError?.toString() || "Unknown error";
@@ -316,10 +338,12 @@ ${messages.length > 0 ? `MESSAGES:\n${messages.map(m => `--- ${m.name} ---\n${m.
       }
     }
 
-    // Mark emails as sent if at least one succeeded
     const anySuccess = results.some((r) => r.success);
-    if (anySuccess) {
-      await ctx.runMutation(internal.emailHelpers.markEmailsSent, {
+
+    // If ALL emails failed, clear the sent flag so it can retry on next cron cycle
+    if (!anySuccess && results.length > 0) {
+      console.log("[sendNotificationEmails] All emails failed, clearing sent flag for retry.");
+      await ctx.runMutation(internal.emailHelpers.clearEmailsSent, {
         timerId: args.timerId,
       });
     }
@@ -372,7 +396,7 @@ export const sendTestEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/grdnangl-full.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Email Test</p>
   </div>
   <div class="content">
@@ -431,7 +455,7 @@ const formatTimeRemaining = (seconds: number): string => {
 };
 
 export const sendReminderEmail = action({
-  args: { timerId: v.id("timers") },
+  args: { timerId: v.id("timers"), reminderThreshold: v.optional(v.number()) },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     const data = await ctx.runQuery(internal.emailHelpers.getTriggeredUserData, {
       timerId: args.timerId,
@@ -443,6 +467,34 @@ export const sendReminderEmail = action({
     }
 
     const { timer, user, recipients, files } = data;
+
+    // Only send reminder if timer is actively counting down
+    if (timer.status !== "active") {
+      console.log("Timer is not active, skipping reminder. Status:", timer.status);
+      return { success: false, error: "Timer is not active" };
+    }
+
+    // For new multi-reminder system: check if this specific reminder was already sent
+    if (args.reminderThreshold !== undefined) {
+      const remindersSentAt = (timer.remindersSentAt || {}) as Record<string, number>;
+      const alreadySent = remindersSentAt[args.reminderThreshold.toString()] && remindersSentAt[args.reminderThreshold.toString()] > timer.lastReset;
+      if (alreadySent) {
+        console.log(`Reminder for threshold ${args.reminderThreshold}s already sent this cycle, skipping.`);
+        return { success: false, error: "Reminder already sent for this threshold" };
+      }
+    } else {
+      // Fallback for old single-reminder system
+      if (timer.reminderSentAt && timer.reminderSentAt > timer.lastReset) {
+        console.log("Reminder already sent this cycle, skipping.");
+        return { success: false, error: "Reminder already sent" };
+      }
+    }
+
+    // CRITICAL: Mark as sent BEFORE sending to prevent race conditions with client polling
+    await ctx.runMutation(internal.emailHelpers.markReminderSent, {
+      timerId: args.timerId,
+      reminderThreshold: args.reminderThreshold,
+    });
 
     const now = Date.now();
     const elapsed = (now - timer.lastReset) / 1000;
@@ -466,53 +518,47 @@ export const sendReminderEmail = action({
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
-    .logo { max-width: 200px; margin: 0 auto 20px; display: block; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .header p { margin: 10px 0 0; opacity: 0.9; font-size: 14px; }
-    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; }
-    .reminder-badge { background: #1754cf; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px; }
-    .time-box { background: #dbeafe; border: 2px solid #1754cf; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
-    .time-box h2 { color: #0d3a8f; margin: 0 0 5px 0; font-size: 28px; }
-    .time-box p { color: #0c2956; margin: 0; font-size: 14px; }
-    .message-box { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    .warning { color: #DC2626; font-weight: bold; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-  <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/grdnangl-full.png" alt="Guardian Angel DMS" class="logo">
-    <p>Check-in Reminder</p>
-  </div>
-  <div class="content">
-    <div class="reminder-badge">REMINDER</div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
-    <p>Hi ${user.name},</p>
-
-    <div class="time-box">
-      <h2>${timeRemainingText}</h2>
-      <p>remaining until your timer expires</p>
+    <!-- Header with Logo -->
+    <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
+      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <p style="margin: 0; font-size: 18px; font-weight: 600;">Check-in Reminder</p>
     </div>
 
-    <div class="message-box">
-      <p>This is a friendly reminder that your Guardian Angel DMS check-in timer is about to expire.</p>
-      <p class="warning">If you don't check in before the timer runs out, your ${recipients.length} recipient${recipients.length !== 1 ? 's' : ''} will be notified and receive access to your ${files.length} saved item${files.length !== 1 ? 's' : ''}.</p>
+    <!-- Content -->
+    <div style="padding: 40px 30px;">
+      <div style="background: #1754cf; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px;">REMINDER</div>
+
+      <p style="font-size: 16px; margin-bottom: 20px;">Hi ${user.name},</p>
+
+      <div style="background: #dbeafe; border: 2px solid #1754cf; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+        <h2 style="color: #0d3a8f; margin: 0 0 5px 0; font-size: 28px;">${timeRemainingText}</h2>
+        <p style="color: #0c2956; margin: 0; font-size: 14px;">remaining until your timer expires</p>
+      </div>
+
+      <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <p style="margin: 0 0 10px 0;">This is a friendly reminder that your Guardian Angel DMS check-in timer is about to expire.</p>
+        <p style="color: #DC2626; font-weight: bold; margin: 10px 0 0 0;">If you don't check in before the timer runs out, your ${recipients.length} recipient${recipients.length !== 1 ? 's' : ''} will be notified and receive access to your ${files.length} saved item${files.length !== 1 ? 's' : ''}.</p>
+      </div>
+
+      <p style="font-weight: bold; margin: 20px 0 10px 0;"><strong>What to do:</strong></p>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Open Guardian Angel DMS</li>
+        <li>Press the "I AM ALIVE!" button to reset your timer</li>
+      </ul>
+
+      <p style="font-size: 12px; color: #6b7280; margin-top: 20px;">If you are unable to check in and want your recipients to be notified, simply ignore this reminder.</p>
     </div>
 
-    <p><strong>What to do:</strong></p>
-    <ul>
-      <li>Open Guardian Angel DMS</li>
-      <li>Press the "I AM ALIVE!" button to reset your timer</li>
-    </ul>
-
-    <p style="font-size: 12px; color: #6b7280; margin-top: 20px;">If you are unable to check in and want your recipients to be notified, simply ignore this reminder.</p>
-  </div>
-  <div class="footer">
-    <p>Guardian Angel DMS - Your Digital Legacy</p>
-    <p>This is an automated reminder. Please do not reply directly to this email.</p>
+    <!-- Footer -->
+    <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 30px; text-align: center; font-size: 12px; color: #6b7280;">
+      <p style="margin: 0;">Guardian Angel DMS - Your Digital Legacy</p>
+      <p style="margin: 5px 0 0 0;">This is an automated reminder. Please do not reply directly to this email.</p>
+    </div>
   </div>
 </body>
 </html>
@@ -527,14 +573,14 @@ export const sendReminderEmail = action({
         text: `Hi ${user.name},\n\nThis is a friendly reminder that your Guardian Angel DMS check-in timer is about to expire.\n\nTime Remaining: ${timeRemainingText}\n\nIf you don't check in before the timer runs out, your ${recipients.length} recipient(s) will be notified and receive access to your ${files.length} saved item(s).\n\nWhat to do:\n- Open Guardian Angel DMS\n- Press the "I AM ALIVE!" button to reset your timer\n\nIf you are unable to check in and want your recipients to be notified, simply ignore this reminder.\n\n- Guardian Angel DMS`,
       });
 
-      await ctx.runMutation(internal.emailHelpers.markReminderSent, {
-        timerId: args.timerId,
-      });
-
       console.log(`Reminder email sent successfully to ${user.email}`);
       return { success: true };
     } catch (error: any) {
       console.error(`Failed to send reminder email to ${user.email}:`, error);
+      // Clear the sent flag so it can retry on next cycle
+      await ctx.runMutation(internal.emailHelpers.clearReminderSent, {
+        timerId: args.timerId,
+      });
       return { success: false, error: error.message };
     }
   },
@@ -615,8 +661,9 @@ export const checkAndSendReminder = action({
       return { success: false, error: "No reminder configured" };
     }
 
-    if (timer.reminderSentAt) {
-      console.log("[checkAndSendReminder] Reminder already sent");
+    // Check if reminder already sent this cycle (compare against lastReset)
+    if (timer.reminderSentAt && timer.reminderSentAt > timer.lastReset) {
+      console.log("[checkAndSendReminder] Reminder already sent this cycle");
       return { success: false, error: "Reminder already sent" };
     }
 
@@ -635,6 +682,12 @@ export const checkAndSendReminder = action({
       console.log("[checkAndSendReminder] Not time to send reminder yet");
       return { success: false, error: "Not time to send reminder yet" };
     }
+
+    // CRITICAL: Mark as sent BEFORE sending the email to prevent race conditions
+    // between the cron job (every 5 min) and client polling (every 30 sec)
+    await ctx.runMutation(internal.emailHelpers.markReminderAsSent, {
+      timerId: timer._id,
+    });
 
     const user = await ctx.runQuery(internal.emailHelpers.getUserById, {
       userId: args.userId,
@@ -699,7 +752,7 @@ export const checkAndSendReminder = action({
                 </p>
               </div>
 
-              <a href="${process.env.VITE_APP_URL || 'https://guardian-angel-dms.app'}" style="display: inline-block; background: #1754cf; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">
+              <a href="${process.env.VITE_APP_URL || 'https://grdnangl.digitalac.app'}" style="display: inline-block; background: #1754cf; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">
                 Go to Dashboard
               </a>
             </div>
@@ -713,26 +766,27 @@ export const checkAndSendReminder = action({
       });
 
       console.log("[checkAndSendReminder] Reminder email sent successfully");
-
-      await ctx.runMutation(internal.emailHelpers.markReminderAsSent, {
-        timerId: timer._id,
-      });
-
       return { success: true, message: "Reminder email sent" };
     } catch (error: any) {
       console.error("[checkAndSendReminder] Error sending reminder:", error);
+      // Clear the sent flag so it can retry on next cycle
+      await ctx.runMutation(internal.emailHelpers.clearReminderSent, {
+        timerId: timer._id,
+      });
       return { success: false, error: error.message || "Failed to send reminder" };
     }
   },
 });
 
 export const sendCheckInAlertEmail = action({
-  args: { timerId: v.id("timers"), recipients: v.array(v.object({
-    _id: v.string(),
-    name: v.string(),
-    email: v.string(),
-    checkInAuthToken: v.string(),
-  })), userName: v.string() },
+  args: {
+    timerId: v.id("timers"), userId: v.id("users"), recipients: v.array(v.object({
+      _id: v.string(),
+      name: v.string(),
+      email: v.string(),
+      checkInAuthToken: v.string(),
+    })), userName: v.string()
+  },
   handler: async (ctx, args) => {
     console.log("[sendCheckInAlertEmail] Starting for timer:", args.timerId);
 
@@ -753,53 +807,66 @@ export const sendCheckInAlertEmail = action({
       socketTimeout: 30000, // 30 second socket timeout
     });
 
+    // CRITICAL: Mark alert as sent BEFORE sending emails to prevent race conditions
+    await ctx.runMutation(internal.emailHelpers.markCheckInAlertSent, {
+      timerId: args.timerId,
+    });
+
     const results: { email: string; success: boolean; error?: string }[] = [];
 
     for (const recipient of args.recipients) {
-      const checkInLink = `${process.env.VITE_APP_URL || 'https://grdnangl.digitalac.app'}/#/recipient-checkin?token=${recipient.checkInAuthToken}&userId=${args.timerId.split('"')[0]}&recipientId=${recipient._id}`;
+      const checkInLink = `${process.env.VITE_APP_URL || 'https://grdnangl.digitalac.app'}/#/recipient-checkin?token=${encodeURIComponent(recipient.checkInAuthToken)}&userId=${encodeURIComponent(args.userId)}&recipientId=${encodeURIComponent(recipient._id)}`;
 
       try {
         await transporter.sendMail({
-          from: process.env.SMTP_USER,
+          from: `"Guardian Angel DMS" <${process.env.SMTP_USER}>`,
           to: recipient.email,
           subject: `Action Needed: Help ${args.userName} Stay Connected`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%); padding: 40px; text-align: center; border-radius: 12px 12px 0 0;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">Action Needed</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Guardian Angel DMS</p>
-              </div>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 20px; margin: 0;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
-              <div style="background: #f6f6f8; padding: 40px; text-align: center;">
-                <h2 style="color: #DC2626; font-size: 24px; margin: 0 0 20px 0;">
-                  Help ${args.userName} Stay Connected
-                </h2>
-
-                <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                  ${args.userName} has designated you as an emergency contact. Their check-in timer expires in 24 hours.
-                </p>
-
-                <div style="background: white; border: 2px solid #DC2626; border-radius: 8px; padding: 20px; margin: 30px 0;">
-                  <p style="color: #666; margin: 0 0 15px 0; font-size: 14px;">
-                    If you've confirmed they're alive and well, you can help keep their account active by clicking the button below.
-                  </p>
-                  <p style="color: #999; margin: 0; font-size: 12px; font-style: italic;">
-                    Only click if you've personally verified they're okay.
-                  </p>
+                <!-- Header with Logo -->
+                <div style="background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+                  <p style="margin: 0; font-size: 18px; font-weight: 600;">Action Needed</p>
                 </div>
 
-                <a href="${checkInLink}" style="display: inline-block; background: #10B981; color: white; padding: 14px 36px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; font-size: 16px;">
-                  Confirm They're Alive
-                </a>
-              </div>
+                <!-- Content -->
+                <div style="padding: 40px 30px;">
+                  <h2 style="color: #DC2626; font-size: 24px; margin: 0 0 20px 0; text-align: center;">
+                    Help ${args.userName} Stay Connected
+                  </h2>
 
-              <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 0 0 12px 12px; color: #999; font-size: 12px;">
-                <p style="margin: 0;">Guardian Angel DMS - Your Digital Legacy Management System</p>
-                <p style="margin: 5px 0 0 0;">This is an automated request. Do not reply to this email.</p>
+                  <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                    ${args.userName} has designated you as an emergency contact. Their check-in timer is about to expire.
+                  </p>
+
+                  <div style="background: white; border: 2px solid #DC2626; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                    <p style="color: #666; margin: 0 0 15px 0; font-size: 14px;">
+                      If you've confirmed they're alive and well, you can help keep their account active by clicking the button below.
+                    </p>
+                    <p style="color: #999; margin: 0; font-size: 12px; font-style: italic;">
+                      Only click if you've personally verified they're okay.
+                    </p>
+                  </div>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${checkInLink}" style="display: inline-block; background: #10B981; color: white; padding: 14px 36px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                      Confirm They're Alive
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 30px; text-align: center; font-size: 12px; color: #6b7280;">
+                  <p style="margin: 0;">Guardian Angel DMS - Your Digital Legacy</p>
+                  <p style="margin: 5px 0 0 0;">This is an automated request. Do not reply to this email.</p>
+                </div>
               </div>
             </div>
           `,
-          text: `Help ${args.userName} Stay Connected\n\n${args.userName} has designated you as an emergency contact. Their check-in timer expires in 24 hours.\n\nIf you've confirmed they're alive and well, visit this link to confirm the check-in:\n${checkInLink}`,
+          text: `Help ${args.userName} Stay Connected\n\n${args.userName} has designated you as an emergency contact. Their check-in timer is about to expire.\n\nIf you've confirmed they're alive and well, visit this link to confirm the check-in:\n${checkInLink}`,
         });
 
         console.log(`[sendCheckInAlertEmail] Email sent to ${recipient.email}`);
@@ -814,17 +881,17 @@ export const sendCheckInAlertEmail = action({
       }
     }
 
-    if (results.some((r) => r.success)) {
-      try {
-        await ctx.runMutation(internal.emailHelpers.markCheckInAlertSent, {
-          timerId: args.timerId,
-        });
-      } catch (error) {
-        console.error("[sendCheckInAlertEmail] Error marking alert as sent:", error);
-      }
+    const anySuccess = results.some((r) => r.success);
+
+    // If ALL emails failed, clear the sent flag so it can retry on next cron cycle
+    if (!anySuccess && results.length > 0) {
+      console.log("[sendCheckInAlertEmail] All emails failed, clearing sent flag for retry.");
+      await ctx.runMutation(internal.emailHelpers.clearCheckInAlertSent, {
+        timerId: args.timerId,
+      });
     }
 
-    return { success: results.some((r) => r.success), results };
+    return { success: anySuccess, results };
   },
 });
 
@@ -850,7 +917,7 @@ export const sendPasswordResetEmail = action({
       socketTimeout: 30000, // 30 second socket timeout
     });
 
-    const resetLink = `${process.env.VITE_SITE_URL || "https://grdnangl.digitalac.app"}/#/reset-password?token=${args.resetToken}&email=${encodeURIComponent(args.email)}`;
+    const resetLink = `${process.env.VITE_APP_URL || "https://grdnangl.digitalac.app"}/#/reset-password?token=${encodeURIComponent(args.resetToken)}&email=${encodeURIComponent(args.email)}`;
 
     const emailHtml = `
 <!DOCTYPE html>
@@ -874,7 +941,7 @@ export const sendPasswordResetEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/grdnangl-full.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Reset Your Password</p>
   </div>
   <div class="content">
@@ -963,7 +1030,7 @@ export const sendVerificationEmail = action({
       socketTimeout: 30000, // 30 second socket timeout
     });
 
-    const verificationLink = `${process.env.VITE_SITE_URL || "https://grdnangl.digitalac.app"}/#/verify-email?token=${args.verificationToken}&email=${encodeURIComponent(args.email)}`;
+    const verificationLink = `${process.env.VITE_APP_URL || "https://grdnangl.digitalac.app"}/#/verify-email?token=${encodeURIComponent(args.verificationToken)}&email=${encodeURIComponent(args.email)}`;
 
     const emailHtml = `
 <!DOCTYPE html>
@@ -986,7 +1053,7 @@ export const sendVerificationEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/grdnangl-full.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Verify Your Email Address</p>
   </div>
   <div class="content">
@@ -1033,6 +1100,338 @@ export const sendVerificationEmail = action({
       return { success: true };
     } catch (error: any) {
       console.error(`[sendVerificationEmail] Failed to send email to ${args.email}:`, error);
+      return { success: false, error: error.message };
+    }
+  },
+});
+
+// Action: Send trial expiring soon email
+export const sendTrialExpiringEmail = action({
+  args: {
+    userId: v.id("users"),
+    userName: v.string(),
+    userEmail: v.string(),
+    expiresAt: v.number(),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
+    console.log("[sendTrialExpiringEmail] Starting for user:", args.userId);
+
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("[sendTrialExpiringEmail] SMTP not configured");
+      return { success: false, error: "SMTP not configured" };
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "465"),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      connectionTimeout: 30000,
+      socketTimeout: 30000,
+    });
+
+    const expiresInMinutes = Math.ceil((args.expiresAt - Date.now()) / 60000);
+    const expiresTime = new Date(args.expiresAt).toLocaleString();
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+    <!-- Header with Logo -->
+    <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
+      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <p style="margin: 0; font-size: 18px; font-weight: 600;">Trial Expiring Soon</p>
+    </div>
+
+    <!-- Content -->
+    <div style="padding: 40px 30px; text-align: center;">
+      <div style="background: #F59E0B; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px;">TRIAL EXPIRING</div>
+
+      <p style="font-size: 16px; margin-bottom: 20px; text-align: left;">Hi ${args.userName},</p>
+
+      <div style="background: #fef3c7; border: 2px solid #F59E0B; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+        <h2 style="color: #92400e; margin: 0 0 5px 0; font-size: 28px;">~${expiresInMinutes} minute${expiresInMinutes !== 1 ? 's' : ''}</h2>
+        <p style="color: #b45309; margin: 0; font-size: 14px;">until your free trial ends</p>
+      </div>
+
+      <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+        <p style="margin: 0 0 10px 0;">Your free 24-hour trial of Guardian Angel DMS is expiring soon!</p>
+        <p style="color: #1754cf; font-weight: bold; margin: 10px 0 0 0;">Trial ends at: ${expiresTime}</p>
+      </div>
+
+      <p style="font-weight: bold; margin: 20px 0 10px 0; text-align: left;"><strong>What happens next:</strong></p>
+      <ul style="margin: 0; padding-left: 20px; color: #333; text-align: left;">
+        <li style="margin-bottom: 6px;">Your free trial will end and you'll no longer be able to upload new files</li>
+        <li style="margin-bottom: 6px;">You can still view your existing files with a free trial</li>
+        <li>To continue using Guardian Angel DMS, consider upgrading to a paid subscription for only $1.99/month</li>
+      </ul>
+
+      <p style="font-size: 12px; color: #6b7280; margin-top: 20px;">With a paid subscription, you'll enjoy unlimited file uploads, full features, and complete peace of mind.</p>
+
+      <a href="https://grdnangl.digitalac.app/#/pricing" style="display: inline-block; background: #1754cf; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px;">
+        Upgrade Now
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 30px; text-align: center; font-size: 12px; color: #6b7280;">
+      <p style="margin: 0;">Guardian Angel DMS - Your Digital Legacy</p>
+      <p style="margin: 5px 0 0 0;">This is an automated notification. Please do not reply directly to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: `"Guardian Angel DMS" <${process.env.SMTP_USER}>`,
+        to: args.userEmail,
+        subject: `Guardian Angel DMS - Your Free Trial Expires in ${expiresInMinutes} Minute${expiresInMinutes !== 1 ? 's' : ''}`,
+        html: emailHtml,
+        text: `Hi ${args.userName},\n\nYour free 24-hour trial of Guardian Angel DMS is expiring soon!\n\nTrial ends at: ${expiresTime}\n\nWhat happens next:\n- Your free trial will end and you'll no longer be able to upload new files\n- You can still view your existing files\n- To continue, consider upgrading to a paid subscription for only $1.99/month\n\nWith a paid subscription, you'll enjoy unlimited file uploads, full features, and complete peace of mind.\n\nUpgrade Now: https://grdnangl.digitalac.app/#/pricing\n\n- Guardian Angel DMS`,
+      });
+
+      console.log(`[sendTrialExpiringEmail] Email sent successfully to ${args.userEmail}`);
+      return { success: true };
+    } catch (error: any) {
+      console.error(`[sendTrialExpiringEmail] Failed to send email to ${args.userEmail}:`, error);
+      return { success: false, error: error.message };
+    }
+  },
+});
+
+// Action: Send trial expired email
+export const sendTrialExpiredEmail = action({
+  args: {
+    userId: v.id("users"),
+    userName: v.string(),
+    userEmail: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
+    console.log("[sendTrialExpiredEmail] Starting for user:", args.userId);
+
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("[sendTrialExpiredEmail] SMTP not configured");
+      return { success: false, error: "SMTP not configured" };
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "465"),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      connectionTimeout: 30000,
+      socketTimeout: 30000,
+    });
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+    <!-- Header with Logo -->
+    <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
+      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <p style="margin: 0; font-size: 18px; font-weight: 600;">Trial Period Ended</p>
+    </div>
+
+    <!-- Content -->
+    <div style="padding: 40px 30px; text-align: center;">
+      <div style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px;">TRIAL ENDED</div>
+
+      <p style="font-size: 16px; margin-bottom: 20px; text-align: left;">Hi ${args.userName},</p>
+
+      <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+        <h2 style="color: #7f1d1d; margin: 0 0 5px 0; font-size: 28px;">Trial Expired</h2>
+        <p style="color: #991b1b; margin: 0; font-size: 14px;">Your free trial period has ended</p>
+      </div>
+
+      <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+        <p style="margin: 0 0 10px 0;">Your 24-hour free trial of Guardian Angel DMS has ended.</p>
+        <p style="color: #333; margin: 10px 0 0 0;">
+          <strong>Good news:</strong> You can still view your existing files and recipients. To upload new files and continue using all features, please upgrade to a paid subscription.
+        </p>
+      </div>
+
+      <p style="font-weight: bold; margin: 20px 0 10px 0; text-align: left;"><strong>What you can still do:</strong></p>
+      <ul style="margin: 0; padding-left: 20px; color: #333; text-align: left;">
+        <li style="margin-bottom: 6px;">View all your existing files and recipients</li>
+        <li style="margin-bottom: 6px;">Manage your timer and check-in settings</li>
+        <li>Access your digital legacy dashboard</li>
+      </ul>
+
+      <p style="font-weight: bold; margin: 20px 0 10px 0; text-align: left;"><strong>To upload new files:</strong></p>
+      <p style="color: #333; margin: 0; text-align: left;">Upgrade to Guardian Angel DMS Plus for just <strong>$1.99/month</strong> and unlock:</p>
+      <ul style="margin: 5px 0 0 0; padding-left: 20px; color: #333; text-align: left;">
+        <li style="margin-bottom: 6px;">Unlimited file uploads</li>
+        <li style="margin-bottom: 6px;">Full feature access</li>
+        <li style="margin-bottom: 6px;">Premium support</li>
+        <li>Complete peace of mind</li>
+      </ul>
+
+      <a href="https://grdnangl.digitalac.app/#/pricing" style="display: inline-block; background: #1754cf; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px;">
+        Upgrade to Premium
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 30px; text-align: center; font-size: 12px; color: #6b7280;">
+      <p style="margin: 0;">Guardian Angel DMS - Your Digital Legacy</p>
+      <p style="margin: 5px 0 0 0;">This is an automated notification. Please do not reply directly to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: `"Guardian Angel DMS" <${process.env.SMTP_USER}>`,
+        to: args.userEmail,
+        subject: `Guardian Angel DMS - Your Trial Has Ended`,
+        html: emailHtml,
+        text: `Hi ${args.userName},\n\nYour 24-hour free trial of Guardian Angel DMS has ended.\n\nYou can still view your existing files and recipients. To upload new files and continue using all features, please upgrade to a paid subscription for just $1.99/month.\n\nBenefits of upgrading:\n- Unlimited file uploads\n- Full feature access\n- Premium support\n- Complete peace of mind\n\nUpgrade Now: https://grdnangl.digitalac.app/#/pricing\n\n- Guardian Angel DMS`,
+      });
+
+      console.log(`[sendTrialExpiredEmail] Email sent successfully to ${args.userEmail}`);
+      return { success: true };
+    } catch (error: any) {
+      console.error(`[sendTrialExpiredEmail] Failed to send email to ${args.userEmail}:`, error);
+      return { success: false, error: error.message };
+    }
+  },
+});
+
+/**
+ * Send welcome email to new users (after email verification or OAuth signup)
+ */
+export const sendWelcomeEmail = action({
+  args: { userId: v.id("users"), email: v.string(), name: v.string() },
+  handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
+    console.log("[sendWelcomeEmail] Sending welcome email to:", args.email);
+
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("[sendWelcomeEmail] SMTP not fully configured!");
+      return { success: false, error: "SMTP not configured" };
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "465"),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      connectionTimeout: 30000,
+      socketTimeout: 30000,
+    });
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center; }
+    .logo { max-width: 200px; margin: 0 auto 20px; display: block; }
+    .header p { margin: 0; font-size: 18px; font-weight: 600; }
+    .content { background: #f9fafb; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; }
+    .feature-box { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 15px 0; }
+    .feature-title { font-weight: 600; color: #1754cf; margin: 0 0 10px 0; display: flex; align-items: center; }
+    .feature-icon { font-size: 24px; margin-right: 10px; }
+    .button { background: #1754cf; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold; margin: 20px 0; }
+    .button:hover { background: #0d3a8f; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; }
+    .badge { background: #dbeafe; color: #1754cf; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
+    <p>Welcome to Your Digital Legacy Vault</p>
+  </div>
+  <div class="content">
+    <div class="badge">🎉 WELCOME TO GUARDIAN ANGEL DMS</div>
+
+    <p>Hi ${args.name},</p>
+
+    <p style="font-size: 16px; margin: 20px 0;">Welcome to Guardian Angel DMS! We're thrilled to have you join our community of people protecting their digital legacies.</p>
+
+    <p style="font-weight: 600; margin: 25px 0 15px 0;">Here's what you can do now:</p>
+
+    <div class="feature-box">
+      <div class="feature-title"><span class="feature-icon">⏱️</span> Set Up Your Check-In Timer</div>
+      <p style="margin: 0; color: #666; font-size: 14px;">Configure a 24-hour countdown. If you don't check in, your emergency protocol activates automatically.</p>
+    </div>
+
+    <div class="feature-box">
+      <div class="feature-title"><span class="feature-icon">🔐</span> Secure Your Files</div>
+      <p style="margin: 0; color: #666; font-size: 14px;">Upload documents, photos, messages, and audio files. Everything is end-to-end encrypted with AES-256.</p>
+    </div>
+
+    <div class="feature-box">
+      <div class="feature-title"><span class="feature-icon">👥</span> Add Trusted Recipients</div>
+      <p style="margin: 0; color: #666; font-size: 14px;">Designate who receives what. Your recipients only see the files you assign to them.</p>
+    </div>
+
+    <div class="feature-box">
+      <div class="feature-title"><span class="feature-icon">🛡️</span> Multi-Factor Authentication</div>
+      <p style="margin: 0; color: #666; font-size: 14px;">Protect your account with authenticator app or backup codes for extra security.</p>
+    </div>
+
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="https://grdnangl.digitalac.app/#/dashboard" class="button">Go to Your Dashboard</a>
+    </p>
+
+    <p style="background: #f0f9ff; border-left: 4px solid #1754cf; padding: 15px; border-radius: 4px; margin: 20px 0; color: #0c4a6e; font-size: 14px;">
+      <strong>💡 Pro Tip:</strong> Start by setting your timer duration in Settings, then add your recipients and files. Your first check-in will activate your 24-hour countdown.
+    </p>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">
+      Have questions? Visit our help center or reply to this email. We're here to help you every step of the way.
+    </p>
+  </div>
+  <div class="footer">
+    <p style="margin: 0 0 10px 0;">Guardian Angel DMS - Your Digital Legacy Protected</p>
+    <p style="margin: 0;">This is an automated message. Please do not reply directly to this email.</p>
+  </div>
+</body>
+</html>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: `"Guardian Angel DMS" <${process.env.SMTP_USER}>`,
+        to: args.email,
+        subject: "Welcome to Guardian Angel DMS 🎉",
+        html: emailHtml,
+        text: `Hi ${args.name},\n\nWelcome to Guardian Angel DMS! We're excited to have you protecting your digital legacy.\n\nHere's what you can do now:\n\n✓ Set up your 24-hour check-in timer\n✓ Securely upload and encrypt your files (end-to-end encrypted with AES-256)\n✓ Add trusted recipients\n✓ Enable multi-factor authentication\n\nGet started: https://grdnangl.digitalac.app/#/dashboard\n\nHave questions? We're here to help!\n\n- Guardian Angel DMS`,
+      });
+
+      console.log(`[sendWelcomeEmail] Email sent successfully to ${args.email}`);
+      return { success: true };
+    } catch (error: any) {
+      console.error(`[sendWelcomeEmail] Failed to send email to ${args.email}:`, error);
       return { success: false, error: error.message };
     }
   },

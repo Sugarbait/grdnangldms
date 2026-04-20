@@ -64,6 +64,10 @@ export const add = mutation({
 export const remove = mutation({
   args: { userId: v.id("users"), fileId: v.id("files") },
   handler: async (ctx, args) => {
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== args.userId) {
+      throw new Error("File not found or access denied");
+    }
     await ctx.db.delete(args.fileId);
   },
 });
@@ -71,7 +75,10 @@ export const remove = mutation({
 export const updateAccess = mutation({
   args: { userId: v.id("users"), fileId: v.id("files"), recipientIds: v.array(v.string()) },
   handler: async (ctx, args) => {
-    // Validate user owns the file? Original didn't.
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== args.userId) {
+      throw new Error("File not found or access denied");
+    }
     await ctx.db.patch(args.fileId, { recipientIds: args.recipientIds });
   },
 });
@@ -102,8 +109,33 @@ export const updateDocumentStorageId = mutation({
 });
 
 export const rename = mutation({
-  args: { fileId: v.id("files"), newName: v.string() },
+  args: { userId: v.id("users"), fileId: v.id("files"), newName: v.string() },
   handler: async (ctx, args) => {
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== args.userId) {
+      throw new Error("File not found or access denied");
+    }
     await ctx.db.patch(args.fileId, { name: args.newName });
+  },
+});
+
+export const updateContent = mutation({
+  args: {
+    userId: v.id("users"),
+    fileId: v.id("files"),
+    content: v.string(),
+    plaintext: v.string(),
+    isEncrypted: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== args.userId) {
+      throw new Error("File not found or access denied");
+    }
+    await ctx.db.patch(args.fileId, {
+      content: args.content,
+      plaintext: args.plaintext,
+      isEncrypted: args.isEncrypted,
+    });
   },
 });

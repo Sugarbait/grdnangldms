@@ -14,7 +14,7 @@ const VerifyEmail: React.FC = () => {
   const token = searchParams.get('token');
   const email = searchParams.get('email');
 
-  const verifyEmailToken = useMutation(api.users.verifyEmailToken);
+  const verifyEmailToken = useAction(api.users.verifyEmailToken);
 
   useEffect(() => {
     if (!token || !email) {

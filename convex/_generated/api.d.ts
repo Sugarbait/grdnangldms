@@ -15,6 +15,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as auth from "../auth.js";
+import type * as coupons from "../coupons.js";
 import type * as cronHandler from "../cronHandler.js";
 import type * as crons from "../crons.js";
 import type * as emailHelpers from "../emailHelpers.js";
@@ -22,7 +23,10 @@ import type * as emails from "../emails.js";
 import type * as encryption from "../encryption.js";
 import type * as fileStorage from "../fileStorage.js";
 import type * as files from "../files.js";
+import type * as http from "../http.js";
 import type * as recipients from "../recipients.js";
+import type * as stripeActions from "../stripeActions.js";
+import type * as subscriptions from "../subscriptions.js";
 import type * as timer from "../timer.js";
 import type * as totp from "../totp.js";
 import type * as users from "../users.js";
@@ -37,6 +41,7 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  coupons: typeof coupons;
   cronHandler: typeof cronHandler;
   crons: typeof crons;
   emailHelpers: typeof emailHelpers;
@@ -44,7 +49,10 @@ declare const fullApi: ApiFromModules<{
   encryption: typeof encryption;
   fileStorage: typeof fileStorage;
   files: typeof files;
+  http: typeof http;
   recipients: typeof recipients;
+  stripeActions: typeof stripeActions;
+  subscriptions: typeof subscriptions;
   timer: typeof timer;
   totp: typeof totp;
   users: typeof users;

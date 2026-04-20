@@ -10,18 +10,26 @@ const RECIPIENT_CAP = 5;
 interface AddRecipientProps {
   userId: Id<"users">;
   recipientCount?: number;
+  canAccessFeatures?: boolean;
 }
 
-const AddRecipient: React.FC<AddRecipientProps> = ({ userId, recipientCount = 0 }) => {
+const AddRecipient: React.FC<AddRecipientProps> = ({ userId, recipientCount = 0, canAccessFeatures }) => {
   const navigate = useNavigate();
   const isAtCap = recipientCount >= RECIPIENT_CAP;
-  
+
   // Redirect if at cap
   React.useEffect(() => {
     if (isAtCap) {
       navigate('/recipients');
     }
   }, [isAtCap, navigate]);
+
+  // Redirect expired trial users to pricing
+  React.useEffect(() => {
+    if (canAccessFeatures === false) {
+      navigate('/pricing');
+    }
+  }, [canAccessFeatures, navigate]);
   // Fix: Use imported api object instead of string literal for Convex mutation
   const addMutation = useMutation(api.recipients.add);
   const fileInputRef = useRef<HTMLInputElement>(null);

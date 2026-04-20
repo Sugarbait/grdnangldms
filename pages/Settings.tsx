@@ -15,6 +15,9 @@ interface SettingsProps {
   userId: Id<"users">;
   fileCount?: number;
   recipientCount?: number;
+  userTier?: string;
+  isTrialUser?: boolean;
+  trialEndsAt?: number;
 }
 
 // Helper to convert seconds to display format
@@ -38,34 +41,96 @@ const toSeconds = (value: number, unit: string): number => {
   }
 };
 
-const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout, onStopTimer, currentUser, userId, fileCount = 0, recipientCount = 0 }) => {
+const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout, onStopTimer, currentUser, userId, fileCount = 0, recipientCount = 0, userTier = 'guest', isTrialUser = false, trialEndsAt = 0 }) => {
   const navigate = useNavigate();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempProfile, setTempProfile] = useState(currentUser);
   const [modal, setModal] = useState<{type: string; title: string; message: string} | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Timer duration state
   const [customValue, setCustomValue] = useState(48);
   const [customUnit, setCustomUnit] = useState('hours');
 
-  // Reminder state
+  // Reminder state (old single-reminder system)
   const [reminderValue, setReminderValue] = useState<number | null>(null);
   const [reminderUnit, setReminderUnit] = useState('minutes');
   const [isSavingReminder, setIsSavingReminder] = useState(false);
 
+  // Multi-reminder state (new system)
+  const [remindersList, setRemindersList] = useState<Array<{ value: number; unit: string }>>([]);
+  const [newReminderValue, setNewReminderValue] = useState<number>(5);
+  const [newReminderUnit, setNewReminderUnit] = useState<string>('minutes');
+
+  // Check-in alert threshold state
+  const [checkInAlertValue, setCheckInAlertValue] = useState<number | null>(null);
+  const [checkInAlertUnit, setCheckInAlertUnit] = useState('hours');
+  const [isSavingCheckInAlert, setIsSavingCheckInAlert] = useState(false);
+
   // MFA state
   const [showMFAStatus, setShowMFAStatus] = useState(false);
+  const [showMFADisableModal, setShowMFADisableModal] = useState(false);
+  const [isDisablingMFA, setIsDisablingMFA] = useState(false);
+  const disableMFAAction = useAction(api.auth.disableMFA);
 
   // Stop timer confirmation state
   const [timerStopped, setTimerStopped] = useState(false);
+
+  // Stripe billing portal state
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [isVerifyingSub, setIsVerifyingSub] = useState(false);
+  const getBillingPortalUrl = useAction(api.stripeActions.getPortalUrl);
+  const verifySubscription = useAction(api.stripeActions.verifySubscription);
+  const subscriptionData = useQuery(api.subscriptions.getSubscriptionStatus, { userId });
+
+  // Auto-verify subscription if user appears to be on trial but has a real Stripe customer
+  const hasAutoVerified = useRef(false);
+  useEffect(() => {
+    if (
+      subscriptionData &&
+      subscriptionData.stripeCustomerId &&
+      !subscriptionData.stripeCustomerId.startsWith('temp_') &&
+      subscriptionData.tier !== 'subscriber' &&
+      subscriptionData.status !== 'guest' &&
+      !hasAutoVerified.current
+    ) {
+      hasAutoVerified.current = true;
+      verifySubscription({ userId: userId.toString() })
+        .then((result) => {
+          console.log('[Settings] Auto-verify subscription result:', result);
+        })
+        .catch((err) => {
+          console.error('[Settings] Auto-verify failed:', err);
+        });
+    }
+  }, [subscriptionData]);
+
+  // Help modal states
+  const [helpModalType, setHelpModalType] = useState<string | null>(null);
+
+  // Trial countdown
+  const [trialRemaining, setTrialRemaining] = useState('');
+  useEffect(() => {
+    if (!isTrialUser || !trialEndsAt) return;
+    const update = () => {
+      const remaining = Math.max(0, trialEndsAt - Date.now());
+      const h = Math.floor(remaining / (1000 * 60 * 60));
+      const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      setTrialRemaining(h > 0 ? `${h}h ${m}m` : `${m}m`);
+    };
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [isTrialUser, trialEndsAt]);
 
   // Convex hooks
   const updateUser = useMutation(api.users.update);
   const updateTimerDuration = useMutation(api.timer.updateDuration);
   const updateTimerReminder = useMutation(api.timer.updateReminder);
+  const updateCheckInAlertThreshold = useMutation(api.timer.updateCheckInAlertThreshold);
   const deleteAccountMutation = useMutation(api.users.deleteAccount);
   const timer = useQuery(api.timer.get, { userId });
 
@@ -76,15 +141,26 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       setCustomValue(value);
       setCustomUnit(unit);
     }
-    // Load reminder if set
-    if (timer?.reminderSeconds) {
-      const { value, unit } = secondsToDisplay(timer.reminderSeconds);
-      setReminderValue(value);
-      setReminderUnit(unit);
+    // Load multi-reminders if set
+    if (timer?.reminderSecondsArray && timer.reminderSecondsArray.length > 0) {
+      const reminders = timer.reminderSecondsArray.map(seconds => {
+        const { value, unit } = secondsToDisplay(seconds);
+        return { value, unit };
+      });
+      setRemindersList(reminders);
     } else {
-      setReminderValue(null);
+      setRemindersList([]);
     }
-  }, [timer?.durationSeconds, timer?.reminderSeconds]);
+    // Load check-in alert threshold if set
+    if (timer?.checkInAlertSeconds) {
+      const { value, unit } = secondsToDisplay(timer.checkInAlertSeconds);
+      setCheckInAlertValue(value);
+      setCheckInAlertUnit(unit);
+    } else {
+      setCheckInAlertValue(24); // Default to 24 hours
+      setCheckInAlertUnit('hours');
+    }
+  }, [timer?.durationSeconds, timer?.reminderSecondsArray, timer?.checkInAlertSeconds]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,7 +269,31 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
     });
   };
 
+  const handleDisableMFA = async () => {
+    setIsDisablingMFA(true);
+    try {
+      await disableMFAAction({ userId: userId.toString() });
+      setShowMFADisableModal(false);
+      setModal({
+        type: 'info',
+        title: '2FA Disabled',
+        message: 'Two-factor authentication has been disabled. You can re-enable it anytime in Settings.'
+      });
+      // Reload page to reflect changes
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (error: any) {
+      setModal({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to disable 2FA. Please try again.'
+      });
+    } finally {
+      setIsDisablingMFA(false);
+    }
+  };
+
   return (
+    <>
     <div className="p-4 flex flex-col gap-8 animate-in slide-in-from-right duration-300">
       <header className="sticky top-0 z-50 flex items-center bg-background-dark py-2 justify-between">
         <div className="flex gap-2">
@@ -227,12 +327,55 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             <h3 className="text-white font-black text-lg truncate tracking-tight">{currentUser.name}</h3>
             <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest truncate">{currentUser.email}</p>
           </div>
-          <button 
+          <button
             onClick={() => setIsEditingProfile(!isEditingProfile)}
             className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
           >
             <span className="material-symbols-outlined text-xl">{isEditingProfile ? 'close' : 'edit_square'}</span>
           </button>
+        </div>
+
+        {/* Tier Badge */}
+        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl w-full ${
+          userTier === 'subscriber' ? 'bg-primary/10 border border-primary/20' :
+          userTier === 'trial' ? 'bg-amber-500/10 border border-amber-500/20' :
+          'bg-red-500/10 border border-red-500/20'
+        }`}>
+          <div className={`size-8 rounded-lg flex items-center justify-center ${
+            userTier === 'subscriber' ? 'bg-primary/20' :
+            userTier === 'trial' ? 'bg-amber-500/20' :
+            'bg-red-500/20'
+          }`}>
+            <span className={`material-symbols-outlined text-lg ${
+              userTier === 'subscriber' ? 'text-primary' :
+              userTier === 'trial' ? 'text-amber-500' :
+              'text-red-500'
+            }`}>
+              {userTier === 'subscriber' ? 'verified' :
+               userTier === 'trial' ? 'timer' :
+               'lock'}
+            </span>
+          </div>
+          <div className="flex-1">
+            <p className={`text-[10px] font-black uppercase tracking-widest ${
+              userTier === 'subscriber' ? 'text-primary' :
+              userTier === 'trial' ? 'text-amber-500' :
+              'text-red-500'
+            }`}>
+              {userTier === 'subscriber' ? 'Subscriber — Active' :
+               userTier === 'trial' ? 'Free Trial — Active' :
+               userTier === 'guest' ? 'Guest — Upgrade Required' :
+               'Expired — Upgrade Required'}
+            </p>
+            {userTier === 'trial' && trialRemaining && (
+              <p className="text-amber-300/80 text-[9px] mt-0.5">{trialRemaining} remaining</p>
+            )}
+          </div>
+          <div className={`h-2 w-2 rounded-full ${
+            userTier === 'subscriber' ? 'bg-primary animate-pulse' :
+            userTier === 'trial' ? 'bg-amber-500 animate-pulse' :
+            'bg-red-500'
+          }`}></div>
         </div>
 
         {isEditingProfile && (
@@ -301,6 +444,137 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         )}
       </section>
 
+
+      {/* Manage Subscription */}
+      {(userTier === 'subscriber' || userTier === 'trial' || userTier === 'expired') && subscriptionData?.stripeCustomerId && !subscriptionData.stripeCustomerId.startsWith('temp_') && (
+        <section className="bg-primary/5 border border-primary/20 p-6 rounded-[28px] shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary text-3xl">credit_card</span>
+              <h3 className="text-lg font-bold">Manage Subscription</h3>
+            </div>
+            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
+              userTier === 'subscriber' ? 'text-primary bg-primary/10' :
+              userTier === 'trial' ? 'text-amber-500 bg-amber-500/10' :
+              'text-red-500 bg-red-500/10'
+            }`}>
+              {userTier === 'subscriber' ? 'Active' : userTier === 'trial' ? 'Trial' : 'Expired'}
+            </span>
+          </div>
+
+          <p className="text-gray-400 text-[11px] leading-relaxed mb-6">
+            View your billing details, update payment method, or manage your subscription through our secure payment portal.
+          </p>
+
+          <button
+            onClick={async () => {
+              setIsOpeningPortal(true);
+              try {
+                const result = await getBillingPortalUrl({
+                  userId: userId.toString(),
+                  returnUrl: window.location.href,
+                });
+                if (result?.url) {
+                  window.location.href = result.url;
+                }
+              } catch (error: any) {
+                setModal({
+                  type: 'error',
+                  title: 'Portal Error',
+                  message: error.message || 'Could not open the billing portal. Please try again.'
+                });
+              } finally {
+                setIsOpeningPortal(false);
+              }
+            }}
+            disabled={isOpeningPortal}
+            className="w-full h-14 bg-primary text-white rounded-xl flex items-center justify-center gap-3 hover:bg-blue-600 transition-colors font-bold uppercase tracking-wider text-[10px] disabled:opacity-50 shadow-lg shadow-primary/20"
+          >
+            {isOpeningPortal ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                Opening Portal...
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-lg">open_in_new</span>
+                Open Billing Portal
+              </>
+            )}
+          </button>
+
+          {userTier !== 'subscriber' && (
+            <button
+              onClick={async () => {
+                setIsVerifyingSub(true);
+                try {
+                  const result = await verifySubscription({ userId: userId.toString() });
+                  if (result.verified && result.status === 'active') {
+                    setModal({
+                      type: 'info',
+                      title: 'Subscription Synced',
+                      message: 'Your subscription status has been updated. The page will refresh shortly.'
+                    });
+                    setTimeout(() => window.location.reload(), 2000);
+                  } else {
+                    setModal({
+                      type: 'info',
+                      title: 'No Active Subscription',
+                      message: 'No active subscription was found in Stripe. If you recently subscribed, please wait a moment and try again.'
+                    });
+                  }
+                } catch (error: any) {
+                  setModal({
+                    type: 'error',
+                    title: 'Sync Error',
+                    message: error.message || 'Could not verify subscription status.'
+                  });
+                } finally {
+                  setIsVerifyingSub(false);
+                }
+              }}
+              disabled={isVerifyingSub}
+              className="w-full h-12 mt-3 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500/20 transition-colors font-bold uppercase tracking-wider text-[10px] disabled:opacity-50"
+            >
+              {isVerifyingSub ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-sm">sync</span>
+                  Sync Subscription Status
+                </>
+              )}
+            </button>
+          )}
+
+          <p className="text-[9px] text-gray-500 px-2 mt-3 text-center">
+            Powered by Stripe — update payment, view invoices, or cancel your plan.
+          </p>
+        </section>
+      )}
+
+      {/* Upgrade prompt for guests or users without Stripe customer */}
+      {(userTier === 'guest' || userTier === 'expired') && (!subscriptionData?.stripeCustomerId || subscriptionData.stripeCustomerId.startsWith('temp_')) && (
+        <section className="bg-red-950/20 border border-red-500/20 p-6 rounded-[28px] shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="material-symbols-outlined text-red-500 text-3xl">credit_card</span>
+            <h3 className="text-lg font-bold">Subscription</h3>
+          </div>
+          <p className="text-gray-400 text-[11px] leading-relaxed mb-6">
+            Upgrade to Guardian Angel Plus to unlock unlimited uploads, continuous timer protection, and more.
+          </p>
+          <button
+            onClick={() => navigate('/pricing')}
+            className="w-full h-14 bg-primary text-white rounded-xl flex items-center justify-center gap-3 hover:bg-blue-600 transition-colors font-bold uppercase tracking-wider text-[10px] shadow-lg shadow-primary/20"
+          >
+            <span className="material-symbols-outlined text-lg">upgrade</span>
+            View Plans & Upgrade
+          </button>
+        </section>
+      )}
 
       {/* Check-in Window */}
       <section className="flex flex-col gap-4 pb-8">
@@ -378,11 +652,31 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 return (
                   <button
                     key={preset.label}
-                    onClick={() => {
+                    onClick={async () => {
                       setCustomValue(preset.value);
                       setCustomUnit(preset.unit);
+                      // Auto-save when preset is clicked
+                      setIsSaving(true);
+                      try {
+                        const durationSeconds = toSeconds(preset.value, preset.unit);
+                        await updateTimerDuration({ userId, durationSeconds });
+                        setModal({
+                          type: 'info',
+                          title: 'Settings Saved',
+                          message: `Your check-in window has been set to ${preset.value} ${preset.unit}. The timer has been reset.`
+                        });
+                      } catch (error: any) {
+                        setModal({
+                          type: 'error',
+                          title: 'Save Failed',
+                          message: `Could not save settings: ${error.message}`
+                        });
+                      } finally {
+                        setIsSaving(false);
+                      }
                     }}
-                    className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${isActive ? 'bg-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-400'}`}
+                    disabled={isSaving}
+                    className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${isActive ? 'bg-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-400'} disabled:opacity-50`}
                   >
                     {preset.label}
                   </button>
@@ -429,45 +723,210 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         </div>
       </section>
 
-      {/* Pre-Expiry Reminder */}
+      {/* Pre-Expiry Reminders (Multiple) */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold">Pre-Expiry Reminder</h3>
-          <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">Optional</p>
+          <h3 className="text-lg font-bold">Pre-Expiry Reminders</h3>
+          <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">Multiple times supported</p>
         </div>
         <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
           <p className="text-gray-400 text-[11px] leading-relaxed mb-6">
-            Get a reminder email before your check-in window expires so you don't miss the deadline.
+            Get reminder emails before your check-in window expires. You can set multiple reminders at different times (e.g., 5 minutes AND 25 minutes before).
           </p>
 
           <div className="space-y-4">
-            {/* Quick presets for reminders */}
+            {/* Active Reminders List */}
+            {remindersList.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1 block">Active Reminders</label>
+                <div className="space-y-2">
+                  {remindersList.map((reminder, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-surface-darker rounded-lg border border-primary/20">
+                      <span className="text-white font-bold text-sm">{reminder.value} {reminder.unit}</span>
+                      <button
+                        onClick={() => setRemindersList(remindersList.filter((_, i) => i !== idx))}
+                        className="text-red-500 hover:text-red-400 transition-colors"
+                        title="Remove"
+                      >
+                        <span className="material-symbols-outlined text-lg">close</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add New Reminder */}
+            <div className="border-t border-gray-800 pt-4">
+              <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1 mb-2 block">Add Reminder</label>
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="1440"
+                    value={newReminderValue}
+                    onChange={e => {
+                      const val = parseInt(e.target.value) || 1;
+                      setNewReminderValue(Math.max(1, Math.min(1440, val)));
+                    }}
+                    className="w-full h-12 bg-background-dark border border-gray-800 rounded-xl px-4 text-lg font-black text-white text-center focus:border-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+                    <button
+                      onClick={() => setNewReminderValue(Math.min(1440, newReminderValue + 1))}
+                      className="w-5 h-4 bg-primary/10 hover:bg-primary/20 rounded-sm flex items-center justify-center text-primary transition-colors"
+                      type="button"
+                    >
+                      <span className="material-symbols-outlined text-[10px]">expand_less</span>
+                    </button>
+                    <button
+                      onClick={() => setNewReminderValue(Math.max(1, newReminderValue - 1))}
+                      className="w-5 h-4 bg-primary/10 hover:bg-primary/20 rounded-sm flex items-center justify-center text-primary transition-colors"
+                      type="button"
+                    >
+                      <span className="material-symbols-outlined text-[10px]">expand_more</span>
+                    </button>
+                  </div>
+                </div>
+                <select
+                  value={newReminderUnit}
+                  onChange={e => setNewReminderUnit(e.target.value)}
+                  className="flex-1 h-12 bg-background-dark border border-gray-800 rounded-xl px-4 text-sm font-bold text-white focus:border-primary transition-all"
+                >
+                  <option value="seconds">Seconds</option>
+                  <option value="minutes">Minutes</option>
+                  <option value="hours">Hours</option>
+                </select>
+                <button
+                  onClick={() => {
+                    // Check if this reminder already exists
+                    const newSeconds = toSeconds(newReminderValue, newReminderUnit);
+                    const exists = remindersList.some(r => toSeconds(r.value, r.unit) === newSeconds);
+                    if (!exists) {
+                      setRemindersList([...remindersList, { value: newReminderValue, unit: newReminderUnit }]);
+                    }
+                  }}
+                  className="h-12 px-6 bg-primary hover:bg-blue-600 text-white font-black rounded-xl transition-colors text-[10px] uppercase tracking-widest"
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Quick presets for reminders */}
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Quick Presets</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: '1 min', value: 1, unit: 'minutes' },
+                    { label: '5 min', value: 5, unit: 'minutes' },
+                    { label: '10 min', value: 10, unit: 'minutes' },
+                    { label: '25 min', value: 25, unit: 'minutes' },
+                  ].map((preset) => (
+                    <button
+                      key={`${preset.value}-${preset.unit}`}
+                      onClick={() => {
+                        const newSeconds = toSeconds(preset.value, preset.unit);
+                        const exists = remindersList.some(r => toSeconds(r.value, r.unit) === newSeconds);
+                        if (!exists) {
+                          setRemindersList([...remindersList, preset]);
+                        }
+                      }}
+                      className="h-10 px-3 rounded-lg bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-800 text-[9px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Save Reminders Button */}
+            <button
+              onClick={async () => {
+                setIsSavingReminder(true);
+                try {
+                  const reminderSecondsArray = remindersList.map(r => toSeconds(r.value, r.unit));
+                  await updateTimerReminder({ userId, reminderSecondsArray });
+                  setModal({
+                    type: 'info',
+                    title: 'Reminders Saved',
+                    message: reminderSecondsArray.length > 0
+                      ? `You'll receive ${reminderSecondsArray.length} reminder email(s) before expiry.`
+                      : 'Reminders have been disabled.'
+                  });
+                } catch (error: any) {
+                  setModal({
+                    type: 'error',
+                    title: 'Save Failed',
+                    message: `Could not save reminders: ${error.message}`
+                  });
+                } finally {
+                  setIsSavingReminder(false);
+                }
+              }}
+              disabled={isSavingReminder}
+              className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/40 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
+            >
+              {isSavingReminder ? 'Saving...' : 'Save Reminders'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Check-in Helper Alert Threshold */}
+      <section className="flex flex-col gap-4 pb-8">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-lg font-bold">Check-in Helper Alert</h3>
+          <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">When to Notify</p>
+        </div>
+        <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
+          <p className="text-gray-400 text-[11px] leading-relaxed mb-6">
+            Determine when authorized recipients (check-in helpers) should receive an alert about your timer expiring so they can help keep your account active.
+          </p>
+
+          <div className="space-y-4">
+            {/* Quick presets for alert threshold */}
             <div className="space-y-2">
               <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1 block">Quick Select</label>
               <div className="flex flex-col gap-2">
                 {[
-                  { label: '1 minute before', value: 60, unit: 'seconds' },
-                  { label: '5 minutes before', value: 5, unit: 'minutes' },
-                  { label: '10 minutes before', value: 10, unit: 'minutes' },
-                  { label: '25 minutes before', value: 25, unit: 'minutes' },
-                  { label: 'No Reminder', value: null, unit: 'minutes' },
+                  { label: '12 hours before expiry', value: 12, unit: 'hours' },
+                  { label: '24 hours before expiry (Default)', value: 24, unit: 'hours' },
+                  { label: '48 hours before expiry', value: 48, unit: 'hours' },
+                  { label: '7 days before expiry', value: 7, unit: 'days' },
                 ].map((preset) => (
                   <button
                     key={preset.label}
-                    onClick={() => {
-                      if (preset.value === null) {
-                        setReminderValue(null);
-                      } else {
-                        setReminderValue(preset.value);
-                        setReminderUnit(preset.unit);
+                    onClick={async () => {
+                      setCheckInAlertValue(preset.value);
+                      setCheckInAlertUnit(preset.unit);
+                      // Auto-save when preset is clicked
+                      setIsSavingCheckInAlert(true);
+                      try {
+                        const checkInAlertSeconds = toSeconds(preset.value, preset.unit);
+                        await updateCheckInAlertThreshold({ userId, checkInAlertSeconds });
+                        setModal({
+                          type: 'info',
+                          title: 'Alert Threshold Saved',
+                          message: `Check-in helpers will be notified ${preset.value} ${preset.unit} before your timer expires.`
+                        });
+                      } catch (error: any) {
+                        setModal({
+                          type: 'error',
+                          title: 'Save Failed',
+                          message: `Could not save alert threshold: ${error.message}`
+                        });
+                      } finally {
+                        setIsSavingCheckInAlert(false);
                       }
                     }}
+                    disabled={isSavingCheckInAlert}
                     className={`h-12 px-4 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest ${
-                      (preset.value === null && reminderValue === null) ||
-                      (preset.value !== null && reminderValue === preset.value && reminderUnit === preset.unit)
+                      checkInAlertValue === preset.value && checkInAlertUnit === preset.unit
                         ? 'bg-primary text-white shadow-lg'
                         : 'bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800'
-                    }`}
+                    } disabled:opacity-50`}
                   >
                     {preset.label}
                   </button>
@@ -475,26 +934,26 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               </div>
             </div>
 
-            {/* Custom reminder */}
+            {/* Custom alert threshold */}
             <div className="border-t border-gray-800 pt-4">
-              <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1 mb-2 block">Custom Reminder</label>
+              <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1 mb-2 block">Custom Time</label>
               <div className="flex gap-3">
                 <div className="flex-1 relative">
                   <input
                     type="number"
                     min="1"
-                    max="1440"
-                    value={reminderValue ?? ''}
+                    max="365"
+                    value={checkInAlertValue ?? ''}
                     placeholder="0"
                     onChange={e => {
                       const val = e.target.value ? parseInt(e.target.value) : null;
-                      setReminderValue(val);
+                      setCheckInAlertValue(val);
                     }}
                     className="w-full h-14 bg-background-dark border border-gray-800 rounded-xl px-4 text-2xl font-black text-white text-center focus:border-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1">
                     <button
-                      onClick={() => setReminderValue((reminderValue || 0) + 1)}
+                      onClick={() => setCheckInAlertValue((checkInAlertValue || 0) + 1)}
                       className="w-5 h-4 bg-primary/10 hover:bg-primary/20 rounded-sm flex items-center justify-center text-primary transition-colors"
                       type="button"
                       title="Increase"
@@ -502,7 +961,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                       <span className="material-symbols-outlined text-[10px]">expand_less</span>
                     </button>
                     <button
-                      onClick={() => setReminderValue(Math.max(1, (reminderValue || 0) - 1))}
+                      onClick={() => setCheckInAlertValue(Math.max(1, (checkInAlertValue || 0) - 1))}
                       className="w-5 h-4 bg-primary/10 hover:bg-primary/20 rounded-sm flex items-center justify-center text-primary transition-colors"
                       type="button"
                       title="Decrease"
@@ -513,52 +972,77 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 </div>
                 <div className="flex-1">
                   <select
-                    value={reminderUnit}
-                    onChange={e => setReminderUnit(e.target.value)}
+                    value={checkInAlertUnit}
+                    onChange={e => setCheckInAlertUnit(e.target.value)}
                     className="w-full h-14 bg-background-dark border border-gray-800 rounded-xl px-4 text-sm font-bold text-white focus:border-primary transition-all"
                   >
-                    <option value="seconds">Seconds</option>
-                    <option value="minutes">Minutes</option>
                     <option value="hours">Hours</option>
+                    <option value="days">Days</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* Save Reminder Button */}
+            {/* Save Check-in Alert Button */}
             <button
               onClick={async () => {
-                setIsSavingReminder(true);
+                setIsSavingCheckInAlert(true);
                 try {
-                  let reminderSeconds: number | undefined;
-                  if (reminderValue !== null && reminderValue > 0) {
-                    reminderSeconds = toSeconds(reminderValue, reminderUnit);
+                  let checkInAlertSeconds: number | undefined;
+                  if (checkInAlertValue !== null && checkInAlertValue > 0) {
+                    checkInAlertSeconds = toSeconds(checkInAlertValue, checkInAlertUnit);
                   }
-                  await updateTimerReminder({ userId, reminderSeconds });
+                  await updateCheckInAlertThreshold({ userId, checkInAlertSeconds });
                   setModal({
                     type: 'info',
-                    title: 'Reminder Saved',
-                    message: reminderSeconds
-                      ? `You'll receive a reminder email ${reminderValue} ${reminderUnit} before expiry.`
-                      : 'Reminder has been disabled.'
+                    title: 'Alert Threshold Saved',
+                    message: checkInAlertSeconds
+                      ? `Check-in helpers will be notified ${checkInAlertValue} ${checkInAlertUnit} before your timer expires.`
+                      : 'Check-in helper alerts have been disabled.'
                   });
                 } catch (error: any) {
                   setModal({
                     type: 'error',
                     title: 'Save Failed',
-                    message: `Could not save reminder: ${error.message}`
+                    message: `Could not save alert threshold: ${error.message}`
                   });
                 } finally {
-                  setIsSavingReminder(false);
+                  setIsSavingCheckInAlert(false);
                 }
               }}
-              disabled={isSavingReminder}
+              disabled={isSavingCheckInAlert}
               className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/40 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
             >
-              {isSavingReminder ? 'Saving...' : 'Save Reminder'}
+              {isSavingCheckInAlert ? 'Saving...' : 'Save Alert Threshold'}
             </button>
           </div>
         </div>
+      </section>
+
+      {/* Check-in Helpers */}
+      <section className="bg-primary/5 border border-primary/20 p-8 rounded-[32px] flex flex-col items-center text-center gap-5 relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
+
+        <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-105 transition-transform duration-500 shadow-2xl shadow-primary/10">
+          <span className="material-symbols-outlined text-primary text-5xl font-bold">emergency_share</span>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Check-in Helpers</h3>
+          <p className="text-[10px] text-primary font-black uppercase tracking-[0.4em]">Emergency Assistance</p>
+        </div>
+
+        <p className="text-xs text-gray-400 max-w-[280px] leading-relaxed font-medium">
+          Allow trusted recipients to help keep your account active if you're unavailable.
+        </p>
+
+        <button
+          onClick={() => navigate('/recipients')}
+          className="w-full h-16 bg-primary text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 hover:bg-blue-600 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+        >
+          <span>Manage Check-in Helpers</span>
+          <span className="material-symbols-outlined">person_add</span>
+        </button>
       </section>
 
       {/* Stop Timer */}
@@ -608,32 +1092,6 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         )}
       </section>
 
-      {/* Check-in Helpers */}
-      <section className="bg-primary/5 border border-primary/20 p-8 rounded-[32px] flex flex-col items-center text-center gap-5 relative overflow-hidden group">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
-
-        <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-105 transition-transform duration-500 shadow-2xl shadow-primary/10">
-          <span className="material-symbols-outlined text-primary text-5xl font-bold">emergency_share</span>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Check-in Helpers</h3>
-          <p className="text-[10px] text-primary font-black uppercase tracking-[0.4em]">Emergency Assistance</p>
-        </div>
-
-        <p className="text-xs text-gray-400 max-w-[280px] leading-relaxed font-medium">
-          Allow trusted recipients to help keep your account active if you're unavailable.
-        </p>
-
-        <button
-          onClick={() => navigate('/recipients')}
-          className="w-full h-16 bg-primary text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 hover:bg-blue-600 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-        >
-          <span>Manage Check-in Helpers</span>
-          <span className="material-symbols-outlined">person_add</span>
-        </button>
-      </section>
-
       {/* Account Statistics */}
       <section className="bg-surface-dark border border-gray-800 p-6 rounded-[28px] shadow-lg">
         <h3 className="text-lg font-bold mb-4">Account Overview</h3>
@@ -647,8 +1105,22 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Recipients</p>
           </div>
           <div className="bg-background-dark p-4 rounded-2xl text-center">
-            <p className="text-3xl font-black text-green-500">✓</p>
-            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Active</p>
+            {userTier === 'subscriber' ? (
+              <>
+                <p className="text-3xl font-black text-green-500">✓</p>
+                <p className="text-[9px] text-green-500 font-bold uppercase tracking-widest mt-1">Active</p>
+              </>
+            ) : userTier === 'trial' ? (
+              <>
+                <p className="text-3xl font-black text-amber-400">~</p>
+                <p className="text-[9px] text-amber-400 font-bold uppercase tracking-widest mt-1">Trial</p>
+              </>
+            ) : (
+              <>
+                <p className="text-3xl font-black text-red-500">✕</p>
+                <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1">Not Active</p>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -713,8 +1185,15 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 <span className="material-symbols-outlined">refresh</span>
                 Regenerate Codes
               </button>
+              <button
+                onClick={() => setShowMFADisableModal(true)}
+                className="w-full h-12 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/20 transition-colors font-bold uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined">security</span>
+                Disable 2FA
+              </button>
               <p className="text-[9px] text-gray-500 text-center">
-                Get a new set of backup codes. Your authenticator app will still work.
+                Get new backup codes or disable 2FA to reconfigure your authenticator app.
               </p>
             </div>
           )}
@@ -743,28 +1222,20 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </h4>
             <p className="text-xs text-gray-400 mb-3">Learn the basics of Guardian Angel DMS and set up your digital legacy plan.</p>
             <div className="space-y-2">
-              <a 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert('📚 Getting Started Guide\n\n1. Set Your Check-in Timer\nConfigure how often you need to check in (weekly, monthly, etc.)\n\n2. Upload Important Files\nAdd messages, documents, photos, and audio files to your vault.\n\n3. Add Recipients\nDesignate who should receive your files when the timer expires.\n\n4. Assign Files to Recipients\nDecide which files each recipient gets.\n\n5. Your Plan is Ready\nJust check in regularly - the app handles the rest!');
-                }}
-                className="text-xs text-primary hover:text-blue-400 transition-colors flex items-center gap-1"
+              <button
+                onClick={() => setHelpModalType('setup')}
+                className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 How to Set Up Your Legacy Plan
-              </a>
-              <a 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert('⏱️ Check-in Timer Explained\n\nYour timer counts down from your configured duration (7 days by default).\n\nEach time you "Check In", the timer resets.\n\nWhen the timer reaches 0, the emergency protocol triggers automatically:\n\n✓ Recipient notifications sent\n✓ Your files distributed\n✓ Recipients can download their files\n\nYou can stop the timer anytime, or adjust the duration in Settings.');
-                }}
-                className="text-xs text-primary hover:text-blue-400 transition-colors flex items-center gap-1"
+              </button>
+              <button
+                onClick={() => setHelpModalType('timer')}
+                className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 Understanding the Check-in Timer
-              </a>
+              </button>
             </div>
           </div>
 
@@ -775,29 +1246,29 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               FAQ
             </h4>
             <div className="space-y-2">
-              <button 
-                onClick={() => alert('🔐 Encryption & Security\n\nGuardian Angel uses end-to-end encryption:\n\n• Your encryption key is derived from your password\n• Only you can decrypt your files\n• Even our servers cannot access your data\n• Files remain encrypted until delivery\n\nYour data is protected with AES-256 encryption.')}
+              <button
+                onClick={() => setHelpModalType('encryption')}
                 className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">expand_more</span>
                 How is my data encrypted?
               </button>
-              <button 
-                onClick={() => alert('📧 Multi-Device Support\n\nYes! You can access your account from multiple devices:\n\n• Your encryption key is securely stored\n• You can log in from phone, tablet, or computer\n• Your vault syncs across all devices\n• Timer state remains synchronized\n\nJust log in with the same email and password.')}
+              <button
+                onClick={() => setHelpModalType('devices')}
                 className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">expand_more</span>
                 Can I use this on multiple devices?
               </button>
-              <button 
-                onClick={() => alert('👥 Recipient Notifications\n\nRecipients are notified when your timer expires:\n\n• They receive an email with download links\n• Links remain active for 90 days\n• They can download assigned files anytime\n• No special account needed\n• You can preview emails before sending\n\nRecipients see only the files you assign to them.')}
+              <button
+                onClick={() => setHelpModalType('notifications')}
                 className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">expand_more</span>
                 How do recipients get notified?
               </button>
-              <button 
-                onClick={() => alert('🛑 Emergency Protocol\n\nIf you miss check-ins, the protocol automatically triggers:\n\n1. Timer Expires → All recipients notified\n2. Files Distributed → Sent via secure email\n3. Download Links → Active for 90 days\n4. Proof of Delivery → You can verify delivery\n\nYou can cancel anytime by checking in or stopping the timer.')}
+              <button
+                onClick={() => setHelpModalType('protocol')}
                 className="w-full text-left text-xs text-primary hover:text-blue-400 transition-colors py-1 px-2 hover:bg-primary/5 rounded flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-sm">expand_more</span>
@@ -813,6 +1284,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               Pro Tips
             </h4>
             <ul className="text-xs text-gray-400 space-y-1 ml-4">
+              <li>✓ Enable pre-expiry reminders to get email alerts before your timer expires</li>
               <li>✓ Set a calendar reminder to check in regularly</li>
               <li>✓ Tell your recipients about this service beforehand</li>
               <li>✓ Keep your recovery codes in a safe place</li>
@@ -828,16 +1300,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               Need More Help?
             </h4>
             <p className="text-xs text-gray-400 mb-3">If you have questions or issues, we're here to help.</p>
-            <button 
-              onClick={() => {
-                const email = 'support@grdnangl.digitalac.app';
-                window.location.href = `mailto:${email}?subject=Guardian Angel DMS Support Request`;
-              }}
+            <a
+              href="mailto:support@grdnangl.digitalac.app"
               className="w-full h-10 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-black uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-sm">mail</span>
+              <span className="material-symbols-outlined text-sm">help</span>
               Email Support
-            </button>
+            </a>
           </div>
         </div>
       </section>
@@ -877,6 +1346,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
           </div>
         )}
       </section>
+    </div>
 
       {/* In-App Modal */}
       {modal && (
@@ -925,7 +1395,227 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
           </div>
         </div>
       )}
-    </div>
+
+      {/* Help Modal for Getting Started and FAQ */}
+      {helpModalType && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-black text-white">
+                {helpModalType === 'setup' && 'How to Set Up Your Legacy Plan'}
+                {helpModalType === 'timer' && 'Understanding the Check-in Timer'}
+                {helpModalType === 'encryption' && 'Encryption & Security'}
+                {helpModalType === 'devices' && 'Multi-Device Support'}
+                {helpModalType === 'notifications' && 'Recipient Notifications'}
+                {helpModalType === 'protocol' && 'Emergency Protocol'}
+              </h3>
+              <button
+                onClick={() => setHelpModalType(null)}
+                className="text-gray-400 hover:text-gray-200 transition-colors flex-shrink-0"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-4 text-sm text-gray-300">
+              {helpModalType === 'setup' && (
+                <div>
+                  <h4 className="font-bold text-primary mb-3">📚 Getting Started Guide</h4>
+                  <ol className="space-y-3 list-decimal list-inside">
+                    <li><strong>Set Your Check-in Timer</strong><br/>Configure how often you need to check in (weekly, monthly, etc.)</li>
+                    <li><strong>Upload Important Files</strong><br/>Add messages, documents, photos, and audio files to your vault.</li>
+                    <li><strong>Add Recipients</strong><br/>Designate who should receive your files when the timer expires.</li>
+                    <li><strong>Assign Files to Recipients</strong><br/>Decide which files each recipient gets.</li>
+                    <li><strong>Your Plan is Ready</strong><br/>Just check in regularly - the app handles the rest!</li>
+                  </ol>
+                </div>
+              )}
+              {helpModalType === 'timer' && (
+                <div>
+                  <h4 className="font-bold text-primary mb-3">⏱️ Check-in Timer Explained</h4>
+                  <p className="mb-3">Your timer counts down from your configured duration (7 days by default).</p>
+                  <p className="mb-3">Each time you "Check In", the timer resets.</p>
+                  <p className="mb-3">When the timer reaches 0, the emergency protocol triggers automatically:</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>✓ Recipient notifications sent</li>
+                    <li>✓ Your files distributed</li>
+                    <li>✓ Recipients can download their files</li>
+                  </ul>
+                  <p className="mt-3">You can stop the timer anytime, or adjust the duration in Settings.</p>
+                </div>
+              )}
+              {helpModalType === 'encryption' && (
+                <div>
+                  <h4 className="font-bold text-primary mb-3">🔐 Encryption & Security</h4>
+                  <p className="mb-3">Guardian Angel uses end-to-end encryption:</p>
+                  <ul className="space-y-2 ml-4">
+                    <li>• Your encryption key is derived from your password</li>
+                    <li>• Only you can decrypt your files</li>
+                    <li>• Even our servers cannot access your data</li>
+                    <li>• Files remain encrypted until delivery</li>
+                  </ul>
+                  <p className="mt-3">Your data is protected with AES-256 encryption.</p>
+                </div>
+              )}
+              {helpModalType === 'devices' && (
+                <div>
+                  <h4 className="font-bold text-primary mb-3">📧 Multi-Device Support</h4>
+                  <p className="mb-3">Yes! You can access your account from multiple devices:</p>
+                  <ul className="space-y-2 ml-4">
+                    <li>• Your encryption key is securely stored</li>
+                    <li>• You can log in from phone, tablet, or computer</li>
+                    <li>• Your vault syncs across all devices</li>
+                    <li>• Timer state remains synchronized</li>
+                  </ul>
+                  <p className="mt-3">Just log in with the same email and password.</p>
+                </div>
+              )}
+              {helpModalType === 'notifications' && (
+                <div>
+                  <h4 className="font-bold text-primary mb-3">👥 Recipient Notifications</h4>
+                  <p className="mb-3">Recipients are notified when your timer expires:</p>
+                  <ul className="space-y-2 ml-4">
+                    <li>• They receive an email with download links</li>
+                    <li>• Links remain active for 90 days</li>
+                    <li>• They can download assigned files anytime</li>
+                    <li>• No special account needed</li>
+                    <li>• You can preview emails before sending</li>
+                  </ul>
+                  <p className="mt-3">Recipients see only the files you assign to them.</p>
+                </div>
+              )}
+              {helpModalType === 'protocol' && (
+                <div>
+                  <h4 className="font-bold text-primary mb-3">🛑 Emergency Protocol</h4>
+                  <p className="mb-3">If you miss check-ins, the protocol automatically triggers:</p>
+                  <ol className="space-y-2 list-decimal list-inside ml-2">
+                    <li>Timer Expires → All recipients notified</li>
+                    <li>Files Distributed → Sent via secure email</li>
+                    <li>Download Links → Active for 90 days</li>
+                    <li>Proof of Delivery → You can verify delivery</li>
+                  </ol>
+                  <p className="mt-3">You can cancel anytime by checking in or stopping the timer.</p>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setHelpModalType(null)}
+              className="w-full h-10 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-black uppercase tracking-wider text-[10px] mt-6"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Support Modal */}
+      {showSupportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-black text-white">Help & Support</h3>
+              <button
+                onClick={() => setShowSupportModal(false)}
+                className="text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* FAQ Section */}
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                <h4 className="text-sm font-black text-primary uppercase tracking-wider mb-2">Frequently Asked Questions</h4>
+                <ul className="text-xs text-gray-400 space-y-2">
+                  <li><span className="text-primary font-bold">Q: How often should I check in?</span><br/>A: As frequently as you set your timer. Regular check-ins prevent accidental activation of your emergency protocol.</li>
+                  <li><span className="text-primary font-bold">Q: Can I change my timer duration?</span><br/>A: Yes, you can adjust it anytime in Settings. The new duration takes effect immediately.</li>
+                  <li><span className="text-primary font-bold">Q: How long do download links last?</span><br/>A: Download links expire after 7 days. Recipients should download files promptly after receiving the notification.</li>
+                  <li><span className="text-primary font-bold">Q: What if I accidentally trigger the protocol?</span><br/>A: Contact your recipients immediately to let them know. You can stop any active timers from your Dashboard.</li>
+                </ul>
+              </div>
+
+              {/* Troubleshooting Section */}
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+                <h4 className="text-sm font-black text-amber-500 uppercase tracking-wider mb-2">Troubleshooting</h4>
+                <ul className="text-xs text-gray-400 space-y-2">
+                  <li><span className="text-amber-400 font-bold">Recipients not receiving emails?</span><br/>Check that they have files assigned, SMTP is configured, and verify their email address is correct.</li>
+                  <li><span className="text-amber-400 font-bold">Download links not working?</span><br/>Links expire after 7 days. Have recipients check the email date and request new files if needed.</li>
+                  <li><span className="text-amber-400 font-bold">Pre-expiry reminders not arriving?</span><br/>Enable reminders in Settings and specify how long before expiry you want to be notified.</li>
+                </ul>
+              </div>
+
+              {/* Getting Started Section */}
+              <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4">
+                <h4 className="text-sm font-black text-green-500 uppercase tracking-wider mb-2">Getting Started Tips</h4>
+                <ul className="text-xs text-gray-400 space-y-1">
+                  <li>✓ Set up all your recipients first</li>
+                  <li>✓ Upload and assign files to each recipient</li>
+                  <li>✓ Enable a pre-expiry reminder for alerts</li>
+                  <li>✓ Test email delivery with the test button</li>
+                  <li>✓ Review email addresses for typos</li>
+                  <li>✓ Mark recipients who can help you reset the timer</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-800">
+              <p className="text-xs text-gray-500 mb-3">Have other questions? Contact us at support@grdnangl.digitalac.app</p>
+              <button
+                onClick={() => setShowSupportModal(false)}
+                className="w-full h-10 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-black uppercase tracking-wider text-[10px]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MFA Disable Confirmation Modal */}
+      {showMFADisableModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface-dark border border-red-500/30 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-black text-white">Disable 2FA?</h3>
+              <button
+                onClick={() => setShowMFADisableModal(false)}
+                className="text-gray-400 hover:text-gray-200 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <p className="text-gray-300 text-sm mb-6">
+              Are you sure you want to disable two-factor authentication? You'll be able to log in with just your password until you re-enable it.
+            </p>
+
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
+              <p className="text-xs text-red-400">
+                <strong>⚠️ Security Note:</strong> Disabling 2FA reduces your account security. Re-enable it as soon as you've reconfigured your authenticator app.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowMFADisableModal(false)}
+                disabled={isDisablingMFA}
+                className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDisableMFA}
+                disabled={isDisablingMFA}
+                className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {isDisablingMFA ? 'Disabling...' : 'Disable 2FA'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

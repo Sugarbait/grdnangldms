@@ -49,7 +49,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
     {
       title: 'Welcome to Guardian Angel DMS',
       subtitle: 'Your Digital Legacy',
-      description: 'A secure system to protect and distribute your digital legacy. Let\'s get you started!',
+      description: 'A secure system to protect and distribute your digital legacy. You have a 24-hour free trial to explore all features -- no credit card required! Let\'s get you started.',
       icon: '',
       action: 'Next',
     },
@@ -98,7 +98,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
     {
       title: 'You\'re All Set!',
       subtitle: 'Ready to Protect Your Legacy',
-      description: 'You\'re now ready to use Guardian Angel DMS. Remember to check in regularly, and your digital legacy will be safe. Press the button below to start!',
+      description: 'You\'re now ready to use Guardian Angel DMS. Your 24-hour free trial is active -- explore all features and when you\'re ready, upgrade to Guardian Angel Plus for just $1.99/month. Remember to check in regularly!',
       icon: 'check_circle',
       action: 'Go to Dashboard',
       actionPath: '/',
@@ -125,13 +125,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
           {steps.map((_, index) => (
             <div
               key={index}
-              className={`h-2 rounded-full transition-all ${
-                index === step
-                  ? 'bg-primary w-8'
-                  : index < step
+              className={`h-2 rounded-full transition-all ${index === step
+                ? 'bg-primary w-8'
+                : index < step
                   ? 'bg-primary/60 w-2'
                   : 'bg-gray-700 w-2'
-              }`}
+                }`}
             ></div>
           ))}
         </div>
@@ -142,7 +141,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
           <div className="flex justify-center">
             {step === 0 ? (
               <img
-                src="https://grdnangl.digitalac.app/images/grdnangl-full.png"
+                src="/images/New-GrdnAngl-Logo.png"
                 alt="Guardian Angel DMS"
                 className="h-auto w-56 object-contain"
               />

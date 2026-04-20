@@ -11,6 +11,7 @@ import CryptoJS from 'crypto-js';
 interface UploadWizardProps {
   recipients: Doc<"recipients">[];
   userId: Id<"users">;
+  canAccessFeatures?: boolean;
 }
 
 interface FileEntry {
@@ -23,13 +24,20 @@ interface FileEntry {
   noteContent?: string;
 }
 
-// Hostinger SMTP email limits
-const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB per file (safety margin below 25 MB limit)
-const MAX_EMAIL_SIZE_BYTES = 30 * 1024 * 1024; // 30 MB total email (safety margin below 35 MB limit)
-const FILE_SIZE_DISPLAY = '20 MB';
+// File size limits (using download links, no longer constrained by email size)
+const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500 MB per file
+const MAX_EMAIL_SIZE_BYTES = Number.MAX_SAFE_INTEGER; // No longer applicable with download links
+const FILE_SIZE_DISPLAY = '500 MB';
 
-const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
+const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAccessFeatures }) => {
   const navigate = useNavigate();
+
+  // Redirect expired trial users to pricing
+  React.useEffect(() => {
+    if (canAccessFeatures === false) {
+      navigate('/pricing');
+    }
+  }, [canAccessFeatures, navigate]);
   const addFileMutation = useMutation(api.files.add);
   const generateUploadUrl = useAction(api.fileStorage.generateUploadUrl);
   const deriveEncryptionKey = useAction(api.auth.deriveEncryptionKeyAction);
@@ -129,21 +137,10 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size against Hostinger SMTP limit
+      // Check file size limit
       if (file.size > MAX_FILE_SIZE_BYTES) {
         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-        setErrorMessage(`❌ File too large: ${fileSizeMB} MB. Maximum file size is ${FILE_SIZE_DISPLAY} due to email delivery limits.`);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
-
-      // Calculate total size if this file is added
-      const currentTotalSize = selectedFiles.reduce((sum, f) => sum + (f.blob?.size || 0), 0);
-      const newTotalSize = currentTotalSize + file.size;
-      
-      if (newTotalSize > MAX_EMAIL_SIZE_BYTES) {
-        const totalMB = (newTotalSize / (1024 * 1024)).toFixed(1);
-        setErrorMessage(`❌ Combined files too large: ${totalMB} MB. Maximum combined size is 30 MB to ensure reliable email delivery.`);
+        setErrorMessage(`❌ File too large: ${fileSizeMB} MB. Maximum file size is ${FILE_SIZE_DISPLAY}.`);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
@@ -772,33 +769,37 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom duration-300">
             <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] px-1">Added Items ({selectedFiles.length})</h2>
             {selectedFiles.map(file => (
-              <div key={file.id} className="flex items-center gap-4 p-4 bg-surface-dark rounded-2xl border border-gray-800">
-                <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-2xl text-primary">{getTypeIcon(file.type)}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-bold truncate">{file.name}</p>
-                  <p className="text-gray-500 text-[10px] uppercase tracking-wider">{file.size}</p>
+              <div key={file.id} className="p-3 sm:p-4 bg-surface-dark rounded-2xl border border-gray-800 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex-shrink-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-2xl text-primary">{getTypeIcon(file.type)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold truncate text-sm sm:text-base leading-snug">{file.name}</p>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider whitespace-nowrap mt-0.5">{file.size}</p>
+                  </div>
+                  <button
+                    onClick={() => removeFile(file.id)}
+                    className="size-7 sm:size-8 rounded-full bg-red-500/10 text-red-500 flex-shrink-0 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-base sm:text-lg">close</span>
+                  </button>
                 </div>
                 {file.type === 'audio' && file.url && (
-                  <AudioPlayer src={file.url} compact />
+                  <div className="w-full">
+                    <AudioPlayer src={file.url} compact />
+                  </div>
                 )}
-                <button
-                  onClick={() => removeFile(file.id)}
-                  className="size-8 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-lg">close</span>
-                </button>
               </div>
             ))}
           </div>
         )}
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
+        <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
           <button
             onClick={() => setStep(2)}
             disabled={!canProceed}
-            className={`w-full h-16 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all ${
+            className={`md:max-w-2xl md:mx-auto w-full h-16 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all ${
               canProceed
                 ? 'bg-primary text-white shadow-xl shadow-primary/30 active:scale-[0.98]'
                 : 'bg-gray-800 text-gray-600 cursor-not-allowed'
@@ -887,10 +888,10 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
           )}
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
+        <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
           <button
             onClick={() => setStep(3)}
-            className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/30 active:scale-[0.98]"
+            className="md:max-w-2xl md:mx-auto w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/30 active:scale-[0.98]"
           >
             <span>{selectedRecipientIds.length > 0 ? 'Continue' : 'Continue (Skip Recipients)'}</span>
             <span className="material-symbols-outlined">arrow_forward</span>
@@ -968,11 +969,11 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId }) => {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
+      <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
         <button
           onClick={finalize}
           disabled={isSaving}
-          className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="md:max-w-2xl md:mx-auto w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? (
             <>

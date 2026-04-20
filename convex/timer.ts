@@ -83,7 +83,8 @@ export const reset = mutation({
         lastReset: Date.now(),
         status: "active",
         emailsSentAt: undefined, // Clear emails sent flag when resetting
-        reminderSentAt: undefined, // Clear reminder sent flag when resetting
+        reminderSentAt: undefined, // Clear old reminder sent flag when resetting
+        remindersSentAt: {}, // Clear new reminders sent tracking when resetting
         checkInAlertSentAt: undefined, // Clear check-in alert flag when resetting
       });
     }
@@ -117,7 +118,8 @@ export const updateDuration = mutation({
         durationSeconds: args.durationSeconds,
         lastReset: Date.now(), // Reset the timer when duration changes
         emailsSentAt: undefined, // Clear email sent flag
-        reminderSentAt: undefined, // Clear reminder sent flag
+        reminderSentAt: undefined, // Clear reminder sent flag when resetting timer
+        // Preserve reminderSeconds - do not clear the reminder setting
       });
     } else {
       // Create a new timer if one doesn't exist
@@ -132,7 +134,11 @@ export const updateDuration = mutation({
 });
 
 export const updateReminder = mutation({
-  args: { userId: v.id("users"), reminderSeconds: v.optional(v.number()) },
+  args: {
+    userId: v.id("users"),
+    reminderSeconds: v.optional(v.number()), // DEPRECATED: kept for backwards compatibility
+    reminderSecondsArray: v.optional(v.array(v.number())), // New: array of reminder thresholds
+  },
   handler: async (ctx, args) => {
     const timer = await ctx.db
       .query("timers")
@@ -141,8 +147,28 @@ export const updateReminder = mutation({
 
     if (timer) {
       await ctx.db.patch(timer._id, {
+        // Support both old single-value and new array-based approach
         reminderSeconds: args.reminderSeconds,
-        reminderSentAt: undefined, // Clear reminder sent flag when setting changes
+        reminderSecondsArray: args.reminderSecondsArray,
+        reminderSentAt: undefined, // Clear old reminder sent flag
+        remindersSentAt: {}, // Clear new reminders sent tracking
+      });
+    }
+  },
+});
+
+export const updateCheckInAlertThreshold = mutation({
+  args: { userId: v.id("users"), checkInAlertSeconds: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const timer = await ctx.db
+      .query("timers")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (timer) {
+      await ctx.db.patch(timer._id, {
+        checkInAlertSeconds: args.checkInAlertSeconds,
+        checkInAlertSentAt: undefined, // Clear alert sent flag when setting changes
       });
     }
   },
@@ -162,6 +188,41 @@ export const stop = mutation({
         lastReset: 0,
       });
     }
+  },
+});
+
+// Query to get check-in alert notification info for the current user
+export const getCheckInAlertNotification = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const timer = await ctx.db
+      .query("timers")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (!timer) return null;
+
+    // Only return notification if alert was sent during the current timer cycle
+    if (!timer.checkInAlertSentAt || timer.checkInAlertSentAt <= timer.lastReset) {
+      return null;
+    }
+
+    // Get authorized recipients who were alerted
+    const recipients = await ctx.db
+      .query("recipients")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const alertedRecipients = recipients
+      .filter((r) => r.canTriggerCheckIn && r.checkInAuthToken)
+      .map((r) => ({ name: r.name }));
+
+    if (alertedRecipients.length === 0) return null;
+
+    return {
+      sentAt: timer.checkInAlertSentAt,
+      recipients: alertedRecipients,
+    };
   },
 });
 
@@ -205,7 +266,12 @@ export const resetViaRecipientAuthorization = mutation({
       throw new Error("Invalid authentication token");
     }
 
-    // Token doesn't expire, but verify it exists
+    // Verify token hasn't expired
+    if (recipient.checkInAuthTokenExpiry && Date.now() > recipient.checkInAuthTokenExpiry) {
+      throw new Error("Check-in token has expired. Please ask the user to generate a new authorization link.");
+    }
+
+    // Verify token exists
     if (!recipient.checkInAuthToken) {
       throw new Error("No valid authentication token");
     }

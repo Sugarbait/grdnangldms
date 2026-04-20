@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAction, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
+import QRCode from 'qrcode';
 
 const MFASetup: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const MFASetup: React.FC = () => {
   const [totpSecret, setTotpSecret] = useState('');
   const [copiedSecret, setCopiedSecret] = useState(false);
   const [copiedBackup, setCopiedBackup] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
   const generateTOTPSecret = useAction(api.auth.generateTOTPSecretAction);
   const setupMFAAction = useAction(api.auth.setupMFA);
@@ -48,6 +50,47 @@ const MFASetup: React.FC = () => {
       generateSecret();
     }
   }, [userId, generateTOTPSecret]);
+
+  // Generate QR code when TOTP secret is available
+  useEffect(() => {
+    if (totpSecret) {
+      const generateQR = async () => {
+        try {
+          const email = localStorage.getItem('guardian_user_email') || 'user@example.com';
+          console.log('[MFASetup] Generating QR code for email:', email);
+          console.log('[MFASetup] TOTP Secret:', totpSecret);
+
+          // Generate otpauth URL for QR code (standard format for authenticator apps)
+          // The label format is: issuer:account — both must be URI-encoded
+          // The issuer query param must match the label prefix exactly
+          const issuer = 'Guardian Angel DMS';
+          const label = `${encodeURIComponent(issuer)}:${encodeURIComponent(email)}`;
+          const otpauthUrl = `otpauth://totp/${label}?secret=${totpSecret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+          console.log('[MFASetup] otpauth URL:', otpauthUrl);
+
+          // Generate QR code as data URL with proper options
+          const qrUrl = await QRCode.toDataURL(otpauthUrl, {
+            errorCorrectionLevel: 'H',
+            type: 'image/png',
+            width: 280,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#ffffff',
+            },
+          });
+          console.log('[MFASetup] QR code generated successfully, length:', qrUrl.length);
+          console.log('[MFASetup] QR code starts with:', qrUrl.substring(0, 50));
+          setQrCodeUrl(qrUrl);
+        } catch (err: any) {
+          console.error("[MFASetup] Failed to generate QR code:", err);
+          console.error('[MFASetup] Error details:', JSON.stringify(err, null, 2));
+          // QR code generation failure shouldn't block the flow
+        }
+      };
+      generateQR();
+    }
+  }, [totpSecret]);
 
   const handleVerifyCode = async () => {
     if (totpCode.length !== 6) {
@@ -140,9 +183,36 @@ const MFASetup: React.FC = () => {
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
           </div>
 
+          {/* QR Code Section */}
+          <div className="mb-8 p-4 bg-background-dark rounded-xl border border-gray-800 flex flex-col items-center min-h-64">
+            <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-4">Scan with Authenticator App</p>
+            {qrCodeUrl ? (
+              <>
+                <img
+                  src={qrCodeUrl}
+                  alt="QR Code for 2FA setup"
+                  className="w-48 h-48 rounded-lg border-2 border-gray-700 bg-white p-2"
+                  onError={(e) => {
+                    console.error('[MFASetup] Image failed to load');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => console.log('[MFASetup] QR code image loaded successfully')}
+                />
+                <p className="text-gray-500 text-xs mt-3 text-center">Use Google Authenticator, Authy, or Microsoft Authenticator</p>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-56">
+                <div className="animate-pulse mb-3">
+                  <span className="material-symbols-outlined text-gray-600 text-5xl">qr_code_2</span>
+                </div>
+                <p className="text-gray-500 text-xs">Generating QR code...</p>
+              </div>
+            )}
+          </div>
+
           {/* Authentication Code Section */}
           <div className="mb-8 p-4 bg-background-dark rounded-xl border border-gray-800">
-            <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3">Authentication Code</p>
+            <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3">Or Enter Code Manually</p>
             <div className="flex gap-2 items-center">
               <p className="text-gray-300 font-mono text-lg break-all flex-1">{totpSecret}</p>
               <button
@@ -159,8 +229,11 @@ const MFASetup: React.FC = () => {
 
           {/* Instructions */}
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-            <p className="text-blue-400 text-sm">
+            <p className="text-blue-400 text-sm mb-3">
               Enter this code manually in Google Authenticator, Authy, or Microsoft Authenticator.
+            </p>
+            <p className="text-blue-300 text-xs">
+              <strong>Timing is critical:</strong> Make sure your device time is synchronized. The 6-digit code changes every 30 seconds.
             </p>
           </div>
 

@@ -1,6 +1,7 @@
 
-import { mutation, query, internalQuery, internalMutation } from "./_generated/server";
+import { mutation, query, internalQuery, internalMutation, action } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
+import { api, internal } from "./_generated/api";
 
 /**
  * Internal query: Get user by email
@@ -22,6 +23,46 @@ export const getUserById = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.userId as any);
+  },
+});
+
+/**
+ * Internal query: Get user's TOTP secret for login verification
+ * Used during MFA login to retrieve the secret needed for verification
+ */
+export const getTOTPSecretForLogin = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const user = (await ctx.db.get(args.userId as any)) as any;
+    if (!user) {
+      throw new ConvexError("User not found.");
+    }
+
+    if (!user.mfaEnabled) {
+      throw new ConvexError("MFA is not enabled for this user.");
+    }
+
+    if (!user.totpSecret) {
+      throw new ConvexError("TOTP secret not found.");
+    }
+
+    return { totpSecret: user.totpSecret };
+  },
+});
+
+/**
+ * Query: Check if MFA is enabled for a user (public - safe to expose)
+ * Frontend calls this during login to determine if TOTP verification is needed
+ */
+export const checkMFAEnabled = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const user = (await ctx.db.get(args.userId as any)) as any;
+    if (!user) {
+      throw new ConvexError("User not found.");
+    }
+
+    return { mfaEnabled: user.mfaEnabled ?? false };
   },
 });
 
@@ -60,6 +101,42 @@ export const createNewUser = internalMutation({
       lastReset: Date.now(),
     });
 
+    // Check if this email has already had a free trial
+    const now = Date.now();
+    const previousTrial = await ctx.db
+      .query("usedTrialEmails")
+      .withIndex("by_email", (q) => q.eq("email", args.email.toLowerCase()))
+      .first();
+
+    const trialGranted = !previousTrial;
+    const trialEndsAt = trialGranted ? now + 24 * 60 * 60 * 1000 : 0;
+    const trialStatus = trialGranted ? "trial" : "trial_expired";
+    const tempCustomerId = `temp_${userId}_${Date.now()}`;
+
+    const subscriptionId = await ctx.db.insert("subscriptions", {
+      userId: userId,
+      stripeCustomerId: tempCustomerId,
+      status: trialStatus,
+      trialEndsAt,
+      createdAt: now,
+      updatedAt: now,
+      cancelAtPeriodEnd: false,
+    });
+
+    await ctx.db.patch(userId, {
+      stripeCustomerId: tempCustomerId,
+      subscriptionStatus: trialStatus,
+    });
+
+    // Record this email as having used a trial (only if trial was actually granted)
+    if (trialGranted) {
+      await ctx.db.insert("usedTrialEmails", {
+        email: args.email.toLowerCase(),
+        usedAt: now,
+      });
+    }
+
+    console.log(`[createNewUser] Created user ${userId} with subscription status: ${trialStatus}`);
     return userId;
   },
 });
@@ -69,17 +146,36 @@ export const createNewUser = internalMutation({
  */
 export const saveMFASettings = internalMutation({
   args: {
-    userId: v.id("users"),
+    userId: v.string(),
     totpSecret: v.string(),
     backupCodes: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.userId, {
+    await ctx.db.patch(args.userId as any, {
       mfaEnabled: true,
       totpSecret: args.totpSecret,
       backupCodes: args.backupCodes,
       mfaSetupRequired: false,
     });
+  },
+});
+
+/**
+ * Internal mutation: Update user fields (for MFA rate limiting, etc)
+ */
+export const updateUserFields = internalMutation({
+  args: {
+    userId: v.string(),
+    updates: v.any(), // Flexible updates object
+  },
+  handler: async (ctx, args) => {
+    const updateObj: Record<string, any> = args.updates;
+    // Filter out undefined values
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updateObj).filter(([_, v]) => v !== undefined)
+    );
+
+    await ctx.db.patch(args.userId as any, cleanUpdates);
   },
 });
 
@@ -193,12 +289,12 @@ export const deleteAccount = mutation({
 });
 
 /**
- * Verify email token and mark email as verified
+ * Internal mutation: Verify email token and mark email as verified
  */
-export const verifyEmailToken = mutation({
+export const verifyEmailTokenMutation = internalMutation({
   args: { email: v.string(), verificationToken: v.string() },
   handler: async (ctx, args) => {
-    console.log("[verifyEmailToken] Verifying email:", args.email);
+    console.log("[verifyEmailTokenMutation] Verifying email:", args.email);
 
     const user = await ctx.db
       .query("users")
@@ -206,28 +302,28 @@ export const verifyEmailToken = mutation({
       .first();
 
     if (!user) {
-      console.error("[verifyEmailToken] User not found for email:", args.email);
+      console.error("[verifyEmailTokenMutation] User not found for email:", args.email);
       throw new ConvexError("This email address is not registered. Please create an account first.");
     }
 
     // Check if already verified
     if (user.emailVerified) {
-      console.log("[verifyEmailToken] Email already verified for user:", user._id);
+      console.log("[verifyEmailTokenMutation] Email already verified for user:", user._id);
       throw new ConvexError("This email has already been verified! You can now log in.");
     }
 
     // Check token validity
     if (user.verificationToken !== args.verificationToken) {
-      console.error("[verifyEmailToken] Invalid verification token");
+      console.error("[verifyEmailTokenMutation] Invalid verification token");
       throw new ConvexError("This verification link is invalid. Please check your email for the correct link.");
     }
 
     if (!user.verificationTokenExpiry || user.verificationTokenExpiry < Date.now()) {
-      console.error("[verifyEmailToken] Token expired for user:", user._id);
+      console.error("[verifyEmailTokenMutation] Token expired for user:", user._id);
       throw new ConvexError("Your verification link has expired. We can send you a new one!");
     }
 
-    console.log("[verifyEmailToken] Token is valid, marking email as verified");
+    console.log("[verifyEmailTokenMutation] Token is valid, marking email as verified");
     // Mark email as verified
     await ctx.db.patch(user._id, {
       emailVerified: true,
@@ -236,8 +332,62 @@ export const verifyEmailToken = mutation({
       verifiedAt: Date.now(),
     });
 
-    console.log("[verifyEmailToken] Email verified successfully for user:", user._id);
-    return { success: true, userId: user._id.toString() };
+    return { success: true, userId: user._id.toString(), userEmail: user.email, userName: user.name };
+  },
+});
+
+/**
+ * Action: Verify email token and set up Stripe + trial subscription
+ */
+export const verifyEmailToken = action({
+  args: { email: v.string(), verificationToken: v.string() },
+  handler: async (ctx, args): Promise<{ success: boolean; userId: string }> => {
+    console.log("[verifyEmailToken] Starting email verification for:", args.email);
+
+    // Call internal mutation to verify token and mark email
+    const result: any = await ctx.runMutation(internal.users.verifyEmailTokenMutation, {
+      email: args.email,
+      verificationToken: args.verificationToken,
+    });
+
+    const userId: string = result.userId;
+    const userEmail: string = result.userEmail;
+    const userName: string = result.userName;
+
+    // Create Stripe customer
+    console.log("[verifyEmailToken] Creating Stripe customer for user:", userId);
+    const stripeResult: any = await ctx.runAction(api.stripeActions.createStripeCustomer, {
+      email: userEmail,
+      name: userName,
+    });
+    const stripeCustomerId: string = stripeResult.id;
+
+    // Initialize trial subscription
+    console.log("[verifyEmailToken] Initializing trial subscription for user:", userId);
+    await ctx.runMutation(internal.subscriptions.initializeTrial, {
+      userId: userId as any,
+      stripeCustomerId: stripeCustomerId,
+    });
+
+    console.log("[verifyEmailToken] Email verified and trial initialized for user:", userId);
+
+    // Send welcome email to newly verified user
+    console.log("[verifyEmailToken] Sending welcome email to:", userEmail);
+    try {
+      const emailResult: any = await ctx.runAction(api.emails.sendWelcomeEmail, {
+        userId: userId as any,
+        email: userEmail,
+        name: userName,
+      });
+      console.log("[verifyEmailToken] Welcome email result:", emailResult);
+      if (!emailResult.success) {
+        console.error("[verifyEmailToken] Failed to send welcome email:", emailResult.error);
+      }
+    } catch (emailError: any) {
+      console.error("[verifyEmailToken] Error sending welcome email:", emailError);
+    }
+
+    return { success: true, userId };
   },
 });
 
@@ -415,6 +565,42 @@ export const createOAuthUser = internalMutation({
       lastReset: Date.now(),
     });
 
+    // Check if this email has already had a free trial
+    const now = Date.now();
+    const emailToCheck = (args.oauthEmail || "").toLowerCase();
+    const previousTrial = await ctx.db
+      .query("usedTrialEmails")
+      .withIndex("by_email", (q) => q.eq("email", emailToCheck))
+      .first();
+
+    const trialGranted = !previousTrial && !!emailToCheck;
+    const trialEndsAt = trialGranted ? now + 24 * 60 * 60 * 1000 : 0;
+    const trialStatus = trialGranted ? "trial" : "trial_expired";
+    const tempCustomerId = `temp_${userId}_${Date.now()}`;
+
+    const subscriptionId = await ctx.db.insert("subscriptions", {
+      userId: userId,
+      stripeCustomerId: tempCustomerId,
+      status: trialStatus,
+      trialEndsAt,
+      createdAt: now,
+      updatedAt: now,
+      cancelAtPeriodEnd: false,
+    });
+
+    await ctx.db.patch(userId, {
+      stripeCustomerId: tempCustomerId,
+      subscriptionStatus: trialStatus,
+    });
+
+    if (trialGranted) {
+      await ctx.db.insert("usedTrialEmails", {
+        email: emailToCheck,
+        usedAt: now,
+      });
+    }
+
+    console.log(`[createOAuthUser] Created OAuth user ${userId} with subscription status: ${trialStatus}`);
     return userId;
   },
 });

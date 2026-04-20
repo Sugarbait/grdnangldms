@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react';
 
 interface AudioPlayerProps {
   src: string;
+  compact?: boolean;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, compact = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -49,6 +50,87 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
   };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  if (compact) {
+    return (
+      <div className="w-full bg-surface-darker/50 px-3 py-2 rounded-xl border border-gray-800">
+        <audio
+          ref={audioRef}
+          src={src}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => setIsPlaying(false)}
+        />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePlayPause}
+            className="flex-shrink-0 size-9 rounded-full bg-primary hover:bg-blue-600 flex items-center justify-center transition-all"
+          >
+            <span className="material-symbols-outlined text-lg text-white">
+              {isPlaying ? 'pause' : 'play_arrow'}
+            </span>
+          </button>
+          <div className="flex-1 min-w-0">
+            <div className="relative flex items-center py-1">
+              <div className="absolute w-full h-0.5 bg-gray-700 rounded-full"></div>
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                value={currentTime}
+                onChange={handleSeek}
+                className="w-full appearance-none cursor-pointer bg-transparent relative z-10 compact-range"
+              />
+            </div>
+            <div className="flex justify-between text-[9px] text-gray-500 font-medium mt-0.5">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+        </div>
+        <style>{`
+          .compact-range {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 14px;
+            padding: 0;
+          }
+          .compact-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 1.5px solid white;
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+            margin-top: -4.5px;
+          }
+          .compact-range::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 1.5px solid white;
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+          }
+          .compact-range::-webkit-slider-runnable-track {
+            background: transparent;
+            height: 0.5px;
+            border: none;
+          }
+          .compact-range::-moz-range-track {
+            background: transparent;
+            border: none;
+            height: 0.5px;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-gradient-to-br from-surface-dark to-surface-darker p-6 rounded-3xl border border-gray-800 shadow-lg">

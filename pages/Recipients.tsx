@@ -11,9 +11,10 @@ const RECIPIENT_CAP = 5;
 interface RecipientsProps {
   recipients: Recipient[];
   files?: SecureFile[];
+  canAccessFeatures?: boolean;
 }
 
-const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [] }) => {
+const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAccessFeatures }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editingRecipient, setEditingRecipient] = useState<Recipient | null>(null);
@@ -369,9 +370,15 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [] }) => {
           <h1 className="text-xl font-bold">Recipients</h1>
           <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
         </div>
-        <button onClick={() => navigate('/add-recipient')} className="size-10 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new recipient">
-          <span className="material-symbols-outlined">person_add</span>
-        </button>
+        {canAccessFeatures !== false ? (
+          <button onClick={() => navigate('/add-recipient')} className="size-10 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new recipient">
+            <span className="material-symbols-outlined">person_add</span>
+          </button>
+        ) : (
+          <button onClick={() => navigate('/pricing')} className="size-10 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors" title="Upgrade to add recipients">
+            <span className="material-symbols-outlined">lock</span>
+          </button>
+        )}
       </header>
 
       <div className="px-1 text-center">
@@ -390,9 +397,9 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [] }) => {
             <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 mb-8 max-w-[200px] leading-relaxed">
               Add someone you trust to receive your items.
             </p>
-            <button onClick={() => navigate('/add-recipient')} className="px-8 py-4 bg-primary rounded-2xl text-white font-bold uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-all">
-              <span className="material-symbols-outlined">person_add</span>
-              Add Recipient
+            <button onClick={() => canAccessFeatures !== false ? navigate('/add-recipient') : navigate('/pricing')} className="px-8 py-4 bg-primary rounded-2xl text-white font-bold uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-all">
+              <span className="material-symbols-outlined">{canAccessFeatures !== false ? 'person_add' : 'lock'}</span>
+              {canAccessFeatures !== false ? 'Add Recipient' : 'Upgrade to Add'}
             </button>
           </div>
         ) : (
@@ -437,12 +444,16 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [] }) => {
                   </div>
                 </div>
               ) : (
-                <button 
-                  onClick={() => navigate('/add-recipient')}
-                  className="w-full h-11 bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors rounded-lg font-bold uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+                <button
+                  onClick={() => canAccessFeatures !== false ? navigate('/add-recipient') : navigate('/pricing')}
+                  className={`w-full h-11 border transition-colors rounded-lg font-bold uppercase tracking-wider text-[10px] flex items-center justify-center gap-2 ${
+                    canAccessFeatures !== false
+                      ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
+                      : 'bg-gray-800 border-gray-700 text-gray-500'
+                  }`}
                 >
-                  <span className="material-symbols-outlined text-lg">person_add</span>
-                  Add Recipient ({recipients.length}/{RECIPIENT_CAP})
+                  <span className="material-symbols-outlined text-lg">{canAccessFeatures !== false ? 'person_add' : 'lock'}</span>
+                  {canAccessFeatures !== false ? `Add Recipient (${recipients.length}/${RECIPIENT_CAP})` : 'Upgrade to Add More'}
                 </button>
               )}
             </div>

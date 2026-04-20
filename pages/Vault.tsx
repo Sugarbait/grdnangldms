@@ -9,6 +9,7 @@ import CryptoJS from 'crypto-js';
 
 interface VaultProps {
   userId: Id<"users">;
+  canAccessFeatures?: boolean;
 }
 
 // Image Preview Component
@@ -40,33 +41,28 @@ const ImagePreviewThumbnail: React.FC<{ storageId: string; fileName: string }> =
   return <span className="material-symbols-outlined text-3xl">image</span>;
 };
 
-const Vault: React.FC<VaultProps> = ({ userId }) => {
+const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
   const navigate = useNavigate();
   const [editingFile, setEditingFile] = useState<Doc<"files"> | null>(null);
   const [tempRecipientIds, setTempRecipientIds] = useState<string[]>([]);
   const [tempFileName, setTempFileName] = useState<string>('');
-  const [modal, setModal] = useState<{type: 'delete' | 'purge'} | null>(null);
+  const [tempContent, setTempContent] = useState<string>('');
+  const [tempIsEncrypted, setTempIsEncrypted] = useState<boolean>(false);
+  const [modal, setModal] = useState<{type: 'delete' | 'purge' | 'listDelete', fileId?: string, fileName?: string} | null>(null);
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [previewingFile, setPreviewingFile] = useState<Doc<"files"> | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [encryptionKey, setEncryptionKey] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [closingModal, setClosingModal] = useState<'delete' | 'purge' | 'preview' | 'listDelete' | null>(null);
   const getFileUrl = useAction(api.fileStorage.getFileUrl);
 
-  // Load encryption key on mount
+  // Load encryption key on mount — sessionStorage only (cleared on browser close)
   useEffect(() => {
-    // Check sessionStorage first (current session), then localStorage (multi-device support)
-    let stored = sessionStorage.getItem('guardian_encryption_key');
-    if (!stored) {
-      stored = localStorage.getItem('guardian_encryption_key');
-    }
+    const stored = sessionStorage.getItem('guardian_encryption_key');
     if (stored) {
       setEncryptionKey(stored);
-      // If we loaded from localStorage, also set in sessionStorage for consistency
-      if (!sessionStorage.getItem('guardian_encryption_key')) {
-        sessionStorage.setItem('guardian_encryption_key', stored);
-      }
     }
   }, []);
 
@@ -94,6 +90,7 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
   const deleteFile = useMutation(api.files.remove);
   const purgeAll = useMutation(api.files.purge);
   const renameFile = useMutation(api.files.rename);
+  const updateFileContent = useMutation(api.files.updateContent);
 
   const getRecipientName = (ids: string[]) => {
     if (ids.length === 0) return 'No Contact';
@@ -151,14 +148,42 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
     }
   };
 
+  const handleDeleteFromList = (fileId: string, fileName: string) => {
+    setModal({ type: 'listDelete', fileId, fileName });
+  };
+
+  const confirmDeleteFromList = () => {
+    if (modal?.type === 'listDelete' && modal?.fileId) {
+      deleteFile({ userId, fileId: modal.fileId as unknown as Id<"files"> });
+      setModal(null);
+    }
+  };
+
   const openEdit = (file: Doc<"files">) => {
     setEditingFile(file);
     setTempRecipientIds([...(file.recipientIds || [])]);
     setTempFileName(file.name);
+    // For notes, show the decrypted content; for other types, show empty
+    if (file.type === 'note' && file.content) {
+      setTempContent(file.isEncrypted ? decryptContent(file.content) : file.content);
+    } else {
+      setTempContent('');
+    }
+    setTempIsEncrypted(file.isEncrypted);
   };
 
   const closeEdit = () => {
     setEditingFile(null);
+    setTempContent('');
+    setTempIsEncrypted(false);
+  };
+
+  const closeWithAnimation = (type: 'delete' | 'purge' | 'preview' | 'listDelete', onComplete: () => void) => {
+    setClosingModal(type);
+    setTimeout(() => {
+      setClosingModal(null);
+      onComplete();
+    }, 180);
   };
 
   const openPreview = async (file: Doc<"files">) => {
@@ -201,8 +226,10 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
   };
 
   const closePreview = () => {
-    setPreviewingFile(null);
-    setPreviewUrl(null);
+    closeWithAnimation('preview', () => {
+      setPreviewingFile(null);
+      setPreviewUrl(null);
+    });
   };
 
   const toggleRecipient = (id: string | Id<"recipients">) => {
@@ -227,9 +254,28 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
         // Update file name if it changed
         if (tempFileName !== editingFile.name && tempFileName.trim()) {
           await renameFile({
+            userId,
             fileId: editingFile._id,
             newName: tempFileName.trim()
           });
+        }
+
+        // Update content if it's a note and content changed
+        if (editingFile.type === 'note') {
+          const originalContent = editingFile.isEncrypted ? decryptContent(editingFile.content || '') : (editingFile.content || '');
+          if (tempContent !== originalContent) {
+            let encryptedContent = tempContent;
+            if (tempIsEncrypted && encryptionKey) {
+              encryptedContent = CryptoJS.AES.encrypt(tempContent, encryptionKey).toString();
+            }
+            await updateFileContent({
+              userId,
+              fileId: editingFile._id,
+              content: encryptedContent,
+              plaintext: tempContent,
+              isEncrypted: tempIsEncrypted,
+            });
+          }
         }
 
         setIsSaving(false);
@@ -286,10 +332,24 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
 
         {editingFile.type === 'note' && editingFile.content && (
           <div className="bg-surface-dark p-6 rounded-[32px] border border-primary/20 shadow-xl">
-            <h3 className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Message Content</h3>
-            <div className="bg-surface-darker p-4 rounded-2xl border border-gray-800 max-h-[300px] overflow-y-auto">
-              <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">{editingFile.isEncrypted ? decryptContent(editingFile.content) : editingFile.content}</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[10px] font-black text-primary uppercase tracking-widest">Message Content</h3>
+              <label className="flex items-center gap-2 text-[10px] text-gray-400 cursor-pointer hover:text-primary transition-colors">
+                <input
+                  type="checkbox"
+                  checked={tempIsEncrypted}
+                  onChange={(e) => setTempIsEncrypted(e.target.checked)}
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <span className="font-bold uppercase">Encrypt</span>
+              </label>
             </div>
+            <textarea
+              value={tempContent}
+              onChange={(e) => setTempContent(e.target.value)}
+              className="w-full bg-surface-darker border border-gray-800 rounded-2xl px-4 py-3 text-white text-sm leading-relaxed focus:border-primary/50 focus:outline-none transition-colors font-sans min-h-[200px] resize-none"
+              placeholder="Edit your message here..."
+            />
           </div>
         )}
 
@@ -359,13 +419,13 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-[60] space-y-3">
+        <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-[60] space-y-3">
           {saveError && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-bold">
+            <div className="md:max-w-2xl md:mx-auto p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-bold">
               {saveError}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="md:max-w-2xl md:mx-auto flex gap-3">
             <button
               onClick={handleDeleteFile}
               disabled={isSaving}
@@ -386,13 +446,13 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
 
         {/* Delete Modal */}
         {modal?.type === 'delete' && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'delete' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
+            <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'delete' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
               <h3 className="text-xl font-black text-white mb-2">Delete Item</h3>
               <p className="text-gray-400 text-sm mb-6">Are you sure you want to permanently delete "{editingFile.name}"? This cannot be undone.</p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setModal(null)}
+                  onClick={() => closeWithAnimation('delete', () => setModal(null))}
                   className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
                 >
                   Cancel
@@ -427,35 +487,39 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
           <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => navigate('/upload')} className="size-10 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new item">
-            <span className="material-symbols-outlined">add</span>
-          </button>
+          {canAccessFeatures !== false && (
+            <button onClick={() => navigate('/upload')} className="size-10 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new item">
+              <span className="material-symbols-outlined">add</span>
+            </button>
+          )}
           <button onClick={handlePurge} className={`size-10 rounded-full flex items-center justify-center transition-colors ${files.length > 0 ? 'text-red-500 hover:bg-red-500/10' : 'text-gray-700'}`}>
             <span className="material-symbols-outlined">delete_sweep</span>
           </button>
         </div>
       </header>
 
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Synced & Secure</p>
+      {files.length > 0 && canAccessFeatures !== false && (
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+            <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Synced & Secure</p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 flex flex-col space-y-4">
         {files.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-10 text-center animate-in fade-in zoom-in duration-500">
-            <div className="size-24 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center mb-6 shadow-2xl">
-              <span className="material-symbols-outlined text-5xl text-gray-700">lock_open</span>
+          <div className="flex-1 flex flex-col items-center py-20 text-center animate-in fade-in zoom-in duration-500">
+            <div className="size-20 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center mb-6 shadow-2xl">
+              <span className="material-symbols-outlined text-4xl text-gray-700">lock_open</span>
             </div>
             <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">No Items Yet</h3>
             <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 mb-8 max-w-[200px] leading-relaxed">
               Add files, messages, or recordings to share.
             </p>
-            <button onClick={() => navigate('/upload')} className="px-8 py-4 bg-primary rounded-2xl text-white font-bold uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-all">
-              <span className="material-symbols-outlined">upload_file</span>
-              Add First Item
+            <button onClick={() => canAccessFeatures !== false ? navigate('/upload') : navigate('/pricing')} className="px-8 py-4 bg-primary rounded-2xl text-white font-bold uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-all">
+              <span className="material-symbols-outlined">{canAccessFeatures !== false ? 'upload_file' : 'lock'}</span>
+              {canAccessFeatures !== false ? 'Add First Item' : 'Upgrade to Add Items'}
             </button>
           </div>
         ) : (
@@ -498,9 +562,22 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col items-center opacity-40 group-hover:opacity-100 transition-opacity">
-                    <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">manage_accounts</span>
-                    <span className="text-[8px] font-bold text-gray-600 uppercase tracking-tighter">Access</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFromList(file._id as unknown as string, file.name);
+                      }}
+                      className="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 text-gray-500"
+                      title="Delete this item"
+                    >
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                      <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter">Delete</span>
+                    </button>
+                    <div className="flex flex-col items-center opacity-40 group-hover:opacity-100 transition-opacity">
+                      <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">manage_accounts</span>
+                      <span className="text-[8px] font-bold text-gray-600 uppercase tracking-tighter">Access</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -514,11 +591,11 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
       {previewingFile && (
         <div
           onClick={closePreview}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm ${closingModal === 'preview' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-surface-dark border border-gray-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl animate-in zoom-in-95 duration-300"
+            className={`bg-surface-dark border border-gray-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl ${closingModal === 'preview' ? 'animate-out zoom-out-95 slide-out-to-bottom-4 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-8 duration-300'}`}
           >
             <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-800 bg-surface-dark/95 backdrop-blur">
               <h3 className="text-sm sm:text-lg md:text-xl font-black text-white truncate pr-2">{previewingFile.name}</h3>
@@ -610,13 +687,13 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
 
       {/* Purge Modal */}
       {modal?.type === 'purge' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'purge' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
+          <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'purge' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
             <h3 className="text-xl font-black text-white mb-2">Delete All Items</h3>
             <p className="text-gray-400 text-sm mb-6">Are you sure you want to delete all {files.length} items? This cannot be undone.</p>
             <div className="flex gap-3">
               <button
-                onClick={() => setModal(null)}
+                onClick={() => closeWithAnimation('purge', () => setModal(null))}
                 className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
               >
                 Cancel
@@ -626,6 +703,30 @@ const Vault: React.FC<VaultProps> = ({ userId }) => {
                 className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors"
               >
                 Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* List Delete Modal */}
+      {modal?.type === 'listDelete' && (
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'listDelete' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
+          <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'listDelete' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
+            <h3 className="text-xl font-black text-white mb-2">Delete Item</h3>
+            <p className="text-gray-400 text-sm mb-6">Are you sure you want to delete "{modal.fileName}"? This cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => closeWithAnimation('listDelete', () => setModal(null))}
+                className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => closeWithAnimation('listDelete', () => confirmDeleteFromList())}
+                className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>

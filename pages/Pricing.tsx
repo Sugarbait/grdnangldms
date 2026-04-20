@@ -12,7 +12,7 @@ const Pricing: React.FC = () => {
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const createCheckoutSession = useAction(api.stripeActions.createCheckoutSession);
-  const getBillingPortalUrl = useAction(api.stripeActions.getBillingPortalUrl);
+  const getBillingPortalUrl = useAction(api.stripeActions.getPortalUrl);
   const verifySubscription = useAction(api.stripeActions.verifySubscription);
 
   const userId = localStorage.getItem('guardian_user_id') as Id<"users"> | null;
@@ -131,7 +131,7 @@ const Pricing: React.FC = () => {
                 setIsOpeningPortal(true);
                 try {
                   const result = await getBillingPortalUrl({
-                    customerId: subscriptionData.stripeCustomerId,
+                    userId: userId as string,
                     returnUrl: window.location.href,
                   });
                   if (result?.url) {
@@ -160,24 +160,24 @@ const Pricing: React.FC = () => {
             </button>
 
             <div className="space-y-3 border-t border-green-400 border-opacity-30 pt-6">
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Unlimited file uploads</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">All features included</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Priority email support</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Auto-renewal each month</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Cancel anytime</span>
               </div>
             </div>
@@ -206,24 +206,24 @@ const Pricing: React.FC = () => {
             </button>
 
             <div className="space-y-3 border-t border-blue-400 border-opacity-30 pt-6">
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Unlimited file uploads</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">All features included</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Priority email support</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Auto-renewal each month</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-white text-lg flex-shrink-0 mt-0.5">check_circle</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Cancel anytime</span>
               </div>
             </div>
