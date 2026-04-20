@@ -23,4 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 .env.production
+# Never commit Stripe secrets or setup files
 STRIPE_KEYS.txt
+STRIPE_SETUP.md
+STRIPE_INTEGRATION_SUMMARY.md
+STRIPE_SETUP_COMPLETE.md
+# Environment variables
+.env
+.env.local
