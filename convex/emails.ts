@@ -1350,19 +1350,25 @@ export const sendWelcomeEmail = action({
 <html>
 <head>
   <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    body { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0f1115; }
     .header { background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .logo { max-width: 280px; margin: 0 auto 20px; display: block; }
-    .header p { margin: 0; font-size: 15px; font-weight: 600; }
-    .content { background: #f9fafb; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; }
-    .feature-box { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 15px 0; }
-    .feature-title { font-weight: 600; color: #1754cf; margin: 0 0 10px 0; display: flex; align-items: center; }
+    .header p { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+    .content { background: #1a1d24; padding: 40px 30px; border: 1px solid #2d3139; border-top: none; }
+    .feature-box { background: #14161b; border: 1px solid #2d3139; border-radius: 8px; padding: 20px; margin: 15px 0; transition: all 0.2s; }
+    .feature-title { font-weight: 600; color: #1754cf; margin: 0 0 10px 0; display: flex; align-items: center; font-size: 15px; }
     .feature-icon { font-size: 24px; margin-right: 10px; }
-    .button { background: #1754cf; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold; margin: 20px 0; }
-    .button:hover { background: #0d3a8f; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; }
-    .badge { background: #dbeafe; color: #1754cf; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
+    .feature-text { margin: 0; color: #a0a0a0; font-size: 14px; line-height: 1.5; }
+    .button { background: #1754cf; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 600; margin: 20px 0; font-family: 'Manrope', sans-serif; letter-spacing: 0.3px; }
+    .button:hover { background: #0d3a8f; opacity: 0.95; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px; background: #14161b; border: 1px solid #2d3139; border-top: none; }
+    .badge { background: rgba(23, 84, 207, 0.2); color: #1754cf; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pro-tip { background: rgba(23, 84, 207, 0.15); border-left: 4px solid #1754cf; padding: 15px; border-radius: 4px; margin: 20px 0; color: #a0a0a0; font-size: 14px; }
+    .pro-tip strong { color: #1754cf; }
+    p { color: #a0a0a0; }
+    a { color: #1754cf; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -1371,49 +1377,49 @@ export const sendWelcomeEmail = action({
     <p>Welcome to Your Digital Legacy Vault</p>
   </div>
   <div class="content">
-    <div class="badge">🎉 WELCOME TO GUARDIAN ANGEL DMS</div>
+    <div class="badge">🎉 Welcome to Guardian Angel DMS</div>
 
-    <p>Hi ${args.name},</p>
+    <p style="font-weight: 500; font-size: 16px;">Hi ${args.name},</p>
 
-    <p style="font-size: 16px; margin: 20px 0;">Welcome to Guardian Angel DMS! We're thrilled to have you join our community of people protecting their digital legacies.</p>
+    <p style="font-size: 16px; margin: 20px 0; line-height: 1.7;">Welcome to Guardian Angel DMS! We're thrilled to have you join our community of people protecting their digital legacies.</p>
 
-    <p style="font-weight: 600; margin: 25px 0 15px 0;">Here's what you can do now:</p>
+    <p style="font-weight: 600; margin: 25px 0 15px 0; color: #ffffff;">Here's what you can do now:</p>
 
     <div class="feature-box">
       <div class="feature-title"><span class="feature-icon">⏱️</span> Set Up Your Check-In Timer</div>
-      <p style="margin: 0; color: #666; font-size: 14px;">Configure a 24-hour countdown. If you don't check in, your emergency protocol activates automatically.</p>
+      <p class="feature-text">Configure a 24-hour countdown. If you don't check in, your emergency protocol activates automatically.</p>
     </div>
 
     <div class="feature-box">
       <div class="feature-title"><span class="feature-icon">🔐</span> Secure Your Files</div>
-      <p style="margin: 0; color: #666; font-size: 14px;">Upload documents, photos, messages, and audio files. Everything is end-to-end encrypted with AES-256.</p>
+      <p class="feature-text">Upload documents, photos, messages, and audio files. Everything is end-to-end encrypted with AES-256.</p>
     </div>
 
     <div class="feature-box">
       <div class="feature-title"><span class="feature-icon">👥</span> Add Trusted Recipients</div>
-      <p style="margin: 0; color: #666; font-size: 14px;">Designate who receives what. Your recipients only see the files you assign to them.</p>
+      <p class="feature-text">Designate who receives what. Your recipients only see the files you assign to them.</p>
     </div>
 
     <div class="feature-box">
       <div class="feature-title"><span class="feature-icon">🛡️</span> Multi-Factor Authentication</div>
-      <p style="margin: 0; color: #666; font-size: 14px;">Protect your account with authenticator app or backup codes for extra security.</p>
+      <p class="feature-text">Protect your account with authenticator app or backup codes for extra security.</p>
     </div>
 
     <p style="text-align: center; margin: 30px 0;">
       <a href="https://grdnangl.digitalac.app/#/dashboard" class="button">Go to Your Dashboard</a>
     </p>
 
-    <p style="background: #f0f9ff; border-left: 4px solid #1754cf; padding: 15px; border-radius: 4px; margin: 20px 0; color: #0c4a6e; font-size: 14px;">
+    <p class="pro-tip">
       <strong>💡 Pro Tip:</strong> Start by setting your timer duration in Settings, then add your recipients and files. Your first check-in will activate your 24-hour countdown.
     </p>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">
+    <p style="color: #a0a0a0; font-size: 14px; margin-top: 30px;">
       Have questions? Visit our help center or reply to this email. We're here to help you every step of the way.
     </p>
   </div>
   <div class="footer">
     <p style="margin: 0 0 10px 0;">Guardian Angel DMS - Your Digital Legacy Protected</p>
-    <p style="margin: 0;">This is an automated message. Please do not reply directly to this email.</p>
+    <p style="margin: 0; font-size: 11px;">This is an automated message. Please do not reply directly to this email.</p>
   </div>
 </body>
 </html>
