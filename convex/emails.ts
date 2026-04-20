@@ -1354,7 +1354,7 @@ export const sendWelcomeEmail = action({
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
     .header { background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .logo { max-width: 280px; margin: 0 auto 20px; display: block; }
-    .header p { margin: 0; font-size: 18px; font-weight: 600; }
+    .header p { margin: 0; font-size: 15px; font-weight: 600; }
     .content { background: #f9fafb; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; }
     .feature-box { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 15px 0; }
     .feature-title { font-weight: 600; color: #1754cf; margin: 0 0 10px 0; display: flex; align-items: center; }
