@@ -1364,7 +1364,7 @@ export const sendWelcomeEmail = action({
     .button { background: #1754cf; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 600; margin: 20px 0; font-family: 'Manrope', sans-serif; letter-spacing: 0.3px; }
     .button:hover { background: #0d3a8f; opacity: 0.95; }
     .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px; background: #14161b; border: 1px solid #2d3139; border-top: none; }
-    .badge { background: rgba(23, 84, 207, 0.2); color: #1754cf; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge { background: rgba(23, 84, 207, 0.2); color: #1754cf; padding: 8px 16px; border-radius: 20px; display: block; width: fit-content; margin: 0 auto 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .pro-tip { background: rgba(23, 84, 207, 0.15); border-left: 4px solid #1754cf; padding: 15px; border-radius: 4px; margin: 20px 0; color: #a0a0a0; font-size: 14px; }
     .pro-tip strong { color: #1754cf; }
     p { color: #a0a0a0; }
