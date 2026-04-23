@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -445,7 +446,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
         </div>
 
         {/* Delete Modal */}
-        {modal?.type === 'delete' && (
+        {modal?.type === 'delete' && ReactDOM.createPortal(
           <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'delete' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
             <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'delete' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
               <h3 className="text-xl font-black text-white mb-2">Delete Item</h3>
@@ -465,7 +466,8 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );
@@ -587,33 +589,36 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
       </div>
 
 
-      {/* File Preview Modal */}
-      {previewingFile && (
+      {/* File Preview Modal — rendered via portal so fixed positioning is relative to viewport, not the animated Vault container */}
+      {previewingFile && ReactDOM.createPortal(
         <div
           onClick={closePreview}
           className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm ${closingModal === 'preview' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`bg-surface-dark border border-gray-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl ${closingModal === 'preview' ? 'animate-out zoom-out-95 slide-out-to-bottom-4 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-8 duration-300'}`}
+            className={`bg-surface-dark border border-gray-800 rounded-3xl max-w-4xl w-full flex flex-col shadow-2xl overflow-hidden ${closingModal === 'preview' ? 'animate-out zoom-out-95 slide-out-to-bottom-4 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-8 duration-300'}`}
+            style={{ maxHeight: '75vh' }}
           >
-            <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-800 bg-surface-dark/95 backdrop-blur">
+            {/* Fixed header — never scrolls away */}
+            <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-gray-800 bg-surface-dark rounded-t-3xl">
               <h3 className="text-sm sm:text-lg md:text-xl font-black text-white truncate pr-2">{previewingFile.name}</h3>
               <button
                 onClick={closePreview}
-                className="size-10 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+                className="size-10 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors flex-shrink-0"
               >
                 <span className="material-symbols-outlined text-2xl text-gray-400">close</span>
               </button>
             </div>
 
-            <div className="p-6">
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto p-6 min-h-0">
               {previewingFile.type === 'image' && previewUrl ? (
                 <img src={previewUrl} alt={previewingFile.name} className="w-full h-auto rounded-2xl" />
               ) : previewingFile.type === 'pdf' && previewUrl ? (
                 <iframe
                   src={`${previewUrl}#toolbar=1`}
-                  className="w-full h-[50vh] sm:h-[60vh] md:h-[70vh] rounded-2xl border border-gray-700"
+                  className="w-full h-[40vh] sm:h-[60vh] md:h-[70vh] rounded-2xl border border-gray-700"
                   title="PDF Preview"
                 />
               ) : previewingFile.type === 'note' && previewingFile.content ? (
@@ -633,7 +638,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                   </a>
                 </div>
               ) : previewingFile.type === 'audio' ? (
-                <div className="bg-background-dark rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
+                <div className="bg-background-dark rounded-2xl p-8 text-center flex flex-col items-center justify-center">
                   <span className="material-symbols-outlined text-5xl md:text-7xl text-primary mx-auto block mb-6">volume_2</span>
                   {previewUrl ? (
                     <>
@@ -662,31 +667,33 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-800 bg-surface-dark/95 backdrop-blur items-center sm:items-center justify-between">
+            {/* Fixed footer — never scrolls away */}
+            <div className="flex-shrink-0 flex flex-row gap-3 p-5 border-t border-gray-800 bg-surface-dark items-center justify-between">
               <p className="text-gray-500 text-sm whitespace-nowrap">
                 {previewingFile.size} • {previewingFile.type.toUpperCase()}
               </p>
-              <div className="flex gap-3 w-full sm:w-auto">
+              <div className="flex gap-3">
                 <button
                   onClick={openEditFromPreview}
-                  className="flex-1 sm:flex-none px-6 py-2 bg-primary text-white font-bold rounded-xl hover:bg-blue-600 transition-colors"
+                  className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-blue-600 transition-colors text-sm"
                 >
                   Edit Details
                 </button>
                 <button
                   onClick={closePreview}
-                  className="flex-1 sm:flex-none px-6 py-2 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700 transition-colors"
+                  className="px-5 py-2.5 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700 transition-colors text-sm"
                 >
                   Close
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Purge Modal */}
-      {modal?.type === 'purge' && (
+      {modal?.type === 'purge' && ReactDOM.createPortal(
         <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'purge' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
           <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'purge' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
             <h3 className="text-xl font-black text-white mb-2">Delete All Items</h3>
@@ -706,11 +713,12 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* List Delete Modal */}
-      {modal?.type === 'listDelete' && (
+      {modal?.type === 'listDelete' && ReactDOM.createPortal(
         <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'listDelete' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
           <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'listDelete' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
             <h3 className="text-xl font-black text-white mb-2">Delete Item</h3>
@@ -730,7 +738,8 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

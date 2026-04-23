@@ -21,6 +21,8 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
   const [formData, setFormData] = useState<Partial<Recipient>>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isSavingPermission, setIsSavingPermission] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Convex Mutations
   const updateRecipient = useMutation(api.recipients.update);
@@ -43,7 +45,10 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
   };
 
   const handleSave = async () => {
-    if (editingRecipient && formData.name && formData.email) {
+    if (!editingRecipient || !formData.name || !formData.email) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
       const userId = localStorage.getItem('guardian_user_id') as Id<"users">;
       await updateRecipient({
         userId,
@@ -52,9 +57,13 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
         relationship: formData.relationship || 'Friend',
         email: formData.email,
         phone: formData.phone || '',
-        avatarUrl: formData.avatarUrl
+        avatarUrl: formData.avatarUrl || undefined,
       });
       handleCloseEdit();
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to save. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -312,12 +321,18 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
         </div>
 
         <div className="space-y-3 pb-24">
+          {saveError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-bold">
+              {saveError}
+            </div>
+          )}
           <button
             onClick={handleSave}
-            className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            disabled={isSaving}
+            className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>Update Profile</span>
-            <span className="material-symbols-outlined">save</span>
+            <span>{isSaving ? 'Saving...' : 'Update Profile'}</span>
+            <span className="material-symbols-outlined">{isSaving ? 'hourglass_empty' : 'save'}</span>
           </button>
 
           <button
