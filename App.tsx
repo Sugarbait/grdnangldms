@@ -55,8 +55,16 @@ export interface UserProfile {
 }
 
 const AppContent: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('guardian_user_id'));
-  const [userId, setUserId] = useState<Id<"users"> | null>(localStorage.getItem('guardian_user_id') as Id<"users"> | null);
+  // Check if session is expired on initial load
+  const isSessionExpired = () => {
+    const expiresAt = localStorage.getItem('guardian_session_expires_at');
+    if (!expiresAt) return true; // No expiration timestamp = expired
+    return Date.now() > parseInt(expiresAt);
+  };
+
+  const isValidSession = !!localStorage.getItem('guardian_user_id') && !isSessionExpired();
+  const [isAuthenticated, setIsAuthenticated] = useState(isValidSession);
+  const [userId, setUserId] = useState<Id<"users"> | null>(isValidSession ? localStorage.getItem('guardian_user_id') as Id<"users"> | null : null);
   const [testModeActive, setTestModeActive] = useState(false);
 
   const currentUser = useQuery(api.users.get, userId ? { userId } : "skip") as UserProfile | null | undefined;
@@ -141,14 +149,36 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
+  // Session expiration check: Verify session hasn't expired every 10 seconds
+  // This catches cases where user left the app open but session expired due to inactivity
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const checkSessionExpiration = () => {
+      const expiresAt = localStorage.getItem('guardian_session_expires_at');
+      if (!expiresAt || Date.now() > parseInt(expiresAt)) {
+        console.warn("[SESSION] Session expired - logging out");
+        handleLogout();
+      }
+    };
+
+    checkSessionExpiration();
+    const interval = setInterval(checkSessionExpiration, 10000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   const handleLogin = (newUserId: Id<"users">) => {
+    const sessionExpiresAt = Date.now() + SESSION_TIMEOUT_MS;
     localStorage.setItem('guardian_user_id', newUserId);
+    localStorage.setItem('guardian_session_expires_at', sessionExpiresAt.toString());
     setUserId(newUserId);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('guardian_user_id');
+    localStorage.removeItem('guardian_session_expires_at');
     localStorage.removeItem('guardian_encryption_key');
     sessionStorage.removeItem('guardian_encryption_key');
     sessionStorage.removeItem('guardian_encryption_key_source');

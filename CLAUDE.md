@@ -46,7 +46,7 @@ The timer uses a **hybrid client-server approach** to maintain accuracy across p
    - Calculates elapsed time locally: `elapsed = Date.now() - serverRefreshTime`
    - Display uses: `displaySeconds = remainingSeconds - elapsed`
    - **Critical**: When syncing from server, set `serverRefreshTime = Date.now() - (elapsedOnServer * 1000)` to ensure countdown continues from correct position after page refresh
-   - **Session Management**: Uses 5 consecutive null checks before logging out (timeout ~15+ seconds) to prevent logout during server restarts or code changes. Session stored in localStorage with key `guardian_user_id`
+   - **Session Management**: 15-minute inactivity timeout enforced even across page refreshes. Session stored in localStorage with keys `guardian_user_id` (user ID) and `guardian_session_expires_at` (expiration timestamp). On page load, session is validated against expiration time. On inactivity (no user interaction), session expires after 15 minutes and user is logged out. Activity extends session automatically.
 
 3. **Trigger Threshold** (`timer.ts` line 61):
    - Trigger occurs when `remaining <= 2` (not `<= 0`) to handle 2-second client-server timing window

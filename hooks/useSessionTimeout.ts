@@ -25,6 +25,11 @@ export const useSessionTimeout = ({
     // Update last activity time
     lastActivityRef.current = Date.now();
 
+    // Update session expiration in localStorage
+    // This ensures the session persists across page refreshes as long as user is active
+    const newExpiresAt = Date.now() + timeout;
+    localStorage.setItem('guardian_session_expires_at', newExpiresAt.toString());
+
     // Set new timeout
     timeoutRef.current = setTimeout(() => {
       onTimeout();
