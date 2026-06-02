@@ -117,7 +117,7 @@ const Privacy: React.FC = () => {
             <li>• <strong className="text-white">Opt-Out:</strong> Unsubscribe from marketing communications</li>
           </ul>
           <p className="text-gray-400 leading-relaxed mt-3">
-            To exercise any of these rights, contact us at support@grdnangl.com.
+            To exercise any of these rights, contact us at support@ga.neoncell.ca.
           </p>
         </section>
 
@@ -147,7 +147,7 @@ const Privacy: React.FC = () => {
             Last Updated: March 2026
           </p>
           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed text-center">
-            Questions about privacy? Contact us at support@grdnangl.com
+            Questions about privacy? Contact us at support@ga.neoncell.ca
           </p>
         </section>
       </div>

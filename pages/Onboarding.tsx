@@ -98,7 +98,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
     {
       title: 'You\'re All Set!',
       subtitle: 'Ready to Protect Your Legacy',
-      description: 'You\'re now ready to use Guardian Angel DMS. Your 24-hour free trial is active -- explore all features and when you\'re ready, upgrade to Guardian Angel Plus for just $1.99/month. Remember to check in regularly!',
+      description: 'You\'re now ready to use Guardian Angel DMS. Your 24-hour free trial is active -- explore all features and when you\'re ready, upgrade to Guardian Angel Plus for just $7.99/month (or $59.99/year). Remember to check in regularly!',
       icon: 'check_circle',
       action: 'Go to Dashboard',
       actionPath: '/',

@@ -361,18 +361,20 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         </div>
       )}
 
-      <header className="flex items-center justify-between">
+      <header className="relative flex items-center justify-center">
         <div className="flex flex-col items-center gap-1 md:hidden">
-          <img
-            src="/images/New-GrdnAngl-Logo.png"
-            alt="Guardian Angel DMS Logo"
-            className="w-48 h-auto object-contain"
-          />
+          <button onClick={() => navigate('/')} aria-label="Guardian Angel DMS home" className="transition-opacity hover:opacity-80">
+            <img
+              src="/images/New-GrdnAngl-Logo.png"
+              alt="Guardian Angel DMS Logo"
+              className="w-48 h-auto object-contain"
+            />
+          </button>
           <p className="text-[9px] text-primary font-black uppercase tracking-widest">Your Digital Legacy</p>
         </div>
         <button
           onClick={() => navigate('/settings')}
-          className="md:hidden rounded-full bg-surface-dark border border-gray-800 hover:border-gray-600 transition-all active:scale-95 shadow-lg overflow-hidden"
+          className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-surface-dark border border-gray-800 hover:border-gray-600 transition-all active:scale-95 shadow-lg overflow-hidden"
         >
           <div className="size-8 rounded-full bg-surface-darker flex items-center justify-center overflow-hidden border border-gray-700">
             {currentUser.avatarUrl ? (
@@ -433,7 +435,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
             </h2>
             <div className="flex flex-col items-center">
               <div className="h-0.5 w-10 sm:w-12 bg-white/40 mb-2 rounded-full"></div>
-              <p className="text-[10px] sm:text-[11px] text-white/80 font-black uppercase tracking-[0.5em]">{isExpired ? '$1.99/month for full access' : 'Press to verify'}</p>
+              <p className="text-[10px] sm:text-[11px] text-white/80 font-black uppercase tracking-[0.5em]">{isExpired ? '$7.99/mo for full access' : 'Press to verify'}</p>
             </div>
           </div>
           {canAccessFeatures && <div className="absolute inset-0 rounded-[32px] sm:rounded-[40px] pulse-ring pointer-events-none"></div>}

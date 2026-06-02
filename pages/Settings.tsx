@@ -1301,7 +1301,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </h4>
             <p className="text-xs text-gray-400 mb-3">If you have questions or issues, we're here to help.</p>
             <a
-              href="mailto:support@grdnangl.digitalac.app"
+              href="mailto:support@ga.neoncell.ca"
               className="w-full h-10 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-black uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-sm">help</span>
@@ -1560,7 +1560,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-800">
-              <p className="text-xs text-gray-500 mb-3">Have other questions? Contact us at support@grdnangl.digitalac.app</p>
+              <p className="text-xs text-gray-500 mb-3">Have other questions? Contact us at support@ga.neoncell.ca</p>
               <button
                 onClick={() => setShowSupportModal(false)}
                 className="w-full h-10 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-black uppercase tracking-wider text-[10px]"

@@ -63,7 +63,7 @@ const Terms: React.FC = () => {
             <li className="flex gap-3">
               <span className="text-primary font-black flex-shrink-0">•</span>
               <div className="text-gray-400">
-                <strong className="text-white">Paid Subscription:</strong> Guardian Angel Plus costs $1.99/month for unlimited file uploads and all premium features.
+                <strong className="text-white">Paid Subscription:</strong> Guardian Angel Plus costs $7.99/month or $59.99/year for unlimited file uploads and all premium features.
               </div>
             </li>
             <li className="flex gap-3">
@@ -138,7 +138,7 @@ const Terms: React.FC = () => {
             Last Updated: February 2025
           </p>
           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
-            If you have any questions about these terms, please contact us at support@grdnangl.com
+            If you have any questions about these terms, please contact us at support@ga.neoncell.ca
           </p>
         </section>
       </div>

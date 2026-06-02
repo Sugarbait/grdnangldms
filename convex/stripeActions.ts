@@ -45,6 +45,7 @@ export const createCheckoutSession = action({
     userId: v.string(),
     successUrl: v.string(),
     cancelUrl: v.string(),
+    interval: v.optional(v.union(v.literal("month"), v.literal("year"))),
     couponCode: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ url: string | null }> => {
@@ -107,9 +108,15 @@ export const createCheckoutSession = action({
         stripeCustomerId = storedCustomerId!;
       }
 
-      const priceId = process.env.STRIPE_PRICE_ID;
+      const interval = args.interval || "month";
+      const priceId =
+        interval === "year"
+          ? process.env.STRIPE_PRICE_ID_YEARLY
+          : process.env.STRIPE_PRICE_ID_MONTHLY || process.env.STRIPE_PRICE_ID;
       if (!priceId) {
-        throw new Error("STRIPE_PRICE_ID not configured");
+        throw new Error(
+          `Stripe price ID not configured for ${interval} plan. Set STRIPE_PRICE_ID_${interval === "year" ? "YEARLY" : "MONTHLY"}.`
+        );
       }
 
       // Create checkout session
@@ -127,6 +134,7 @@ export const createCheckoutSession = action({
         subscription_data: {
           metadata: {
             userId: args.userId,
+            billingInterval: interval,
             couponCode: args.couponCode || "",
           },
         },

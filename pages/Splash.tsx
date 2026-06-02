@@ -10,17 +10,13 @@ const Splash: React.FC = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-80 h-80 bg-[#F59E0B]/5 rounded-full blur-[140px] pointer-events-none"></div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-5 py-4">
-        <img
-          src="/images/New-GrdnAngl-Logo.png"
-          alt="Guardian Angel DMS"
-          className="h-8 w-auto object-contain max-w-[200px]"
-        />
-        <Link
-          to="/login"
-          className="shrink-0 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-2 ml-3"
-        >
-          Sign In
+      <header className="relative z-10 flex items-center justify-center px-5 pt-8 pb-4">
+        <Link to="/" aria-label="Guardian Angel DMS home" className="flex items-center transition-opacity hover:opacity-80">
+          <img
+            src="/images/New-GrdnAngl-Logo.png"
+            alt="Guardian Angel DMS"
+            className="h-10 w-auto object-contain max-w-[260px]"
+          />
         </Link>
       </header>
 
@@ -99,9 +95,6 @@ const Splash: React.FC = () => {
         <p className="text-[10px] font-black uppercase tracking-widest text-gray-700">
           © {new Date().getFullYear()} Guardian Angel DMS
         </p>
-        <a href="https://digitalac.app/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 hover:text-[#1754cf] transition-colors">
-          Get more apps at digitalac.app
-        </a>
       </footer>
     </div>
   );

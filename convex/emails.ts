@@ -208,7 +208,7 @@ export const sendNotificationEmails = action({
 
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
-      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
       <p style="margin: 0; font-size: 18px; font-weight: 600;">Digital Legacy Notification</p>
     </div>
 
@@ -396,7 +396,7 @@ export const sendTestEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Email Test</p>
   </div>
   <div class="content">
@@ -525,7 +525,7 @@ export const sendReminderEmail = action({
 
     <!-- Header with Logo -->
     <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
-      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
       <p style="margin: 0; font-size: 18px; font-weight: 600;">Check-in Reminder</p>
     </div>
 
@@ -733,6 +733,7 @@ export const checkAndSendReminder = action({
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: linear-gradient(135deg, #1754cf 0%, #667eea 100%); padding: 40px; text-align: center; border-radius: 12px 12px 0 0;">
+              <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 16px; display: block;">
               <h1 style="color: white; margin: 0; font-size: 32px;">⏰ Check-in Reminder</h1>
               <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Guardian Angel DMS</p>
             </div>
@@ -752,7 +753,7 @@ export const checkAndSendReminder = action({
                 </p>
               </div>
 
-              <a href="${process.env.VITE_APP_URL || 'https://grdnangl.digitalac.app'}" style="display: inline-block; background: #1754cf; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">
+              <a href="${process.env.VITE_APP_URL || 'https://ga.neoncell.ca'}" style="display: inline-block; background: #1754cf; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">
                 Go to Dashboard
               </a>
             </div>
@@ -815,7 +816,7 @@ export const sendCheckInAlertEmail = action({
     const results: { email: string; success: boolean; error?: string }[] = [];
 
     for (const recipient of args.recipients) {
-      const checkInLink = `${process.env.VITE_APP_URL || 'https://grdnangl.digitalac.app'}/#/recipient-checkin?token=${encodeURIComponent(recipient.checkInAuthToken)}&userId=${encodeURIComponent(args.userId)}&recipientId=${encodeURIComponent(recipient._id)}`;
+      const checkInLink = `${process.env.VITE_APP_URL || 'https://ga.neoncell.ca'}/#/recipient-checkin?token=${encodeURIComponent(recipient.checkInAuthToken)}&userId=${encodeURIComponent(args.userId)}&recipientId=${encodeURIComponent(recipient._id)}`;
 
       try {
         await transporter.sendMail({
@@ -828,7 +829,7 @@ export const sendCheckInAlertEmail = action({
 
                 <!-- Header with Logo -->
                 <div style="background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%); color: white; padding: 40px 30px; text-align: center;">
-                  <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+                  <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
                   <p style="margin: 0; font-size: 18px; font-weight: 600;">Action Needed</p>
                 </div>
 
@@ -917,7 +918,7 @@ export const sendPasswordResetEmail = action({
       socketTimeout: 30000, // 30 second socket timeout
     });
 
-    const resetLink = `${process.env.VITE_APP_URL || "https://grdnangl.digitalac.app"}/#/reset-password?token=${encodeURIComponent(args.resetToken)}&email=${encodeURIComponent(args.email)}`;
+    const resetLink = `${process.env.VITE_APP_URL || "https://ga.neoncell.ca"}/#/reset-password?token=${encodeURIComponent(args.resetToken)}&email=${encodeURIComponent(args.email)}`;
 
     const emailHtml = `
 <!DOCTYPE html>
@@ -941,7 +942,7 @@ export const sendPasswordResetEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Reset Your Password</p>
   </div>
   <div class="content">
@@ -1030,7 +1031,7 @@ export const sendVerificationEmail = action({
       socketTimeout: 30000, // 30 second socket timeout
     });
 
-    const verificationLink = `${process.env.VITE_APP_URL || "https://grdnangl.digitalac.app"}/#/verify-email?token=${encodeURIComponent(args.verificationToken)}&email=${encodeURIComponent(args.email)}`;
+    const verificationLink = `${process.env.VITE_APP_URL || "https://ga.neoncell.ca"}/#/verify-email?token=${encodeURIComponent(args.verificationToken)}&email=${encodeURIComponent(args.email)}`;
 
     const emailHtml = `
 <!DOCTYPE html>
@@ -1053,7 +1054,7 @@ export const sendVerificationEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Verify Your Email Address</p>
   </div>
   <div class="content">
@@ -1148,7 +1149,7 @@ export const sendTrialExpiringEmail = action({
 
     <!-- Header with Logo -->
     <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
-      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
       <p style="margin: 0; font-size: 18px; font-weight: 600;">Trial Expiring Soon</p>
     </div>
 
@@ -1172,12 +1173,12 @@ export const sendTrialExpiringEmail = action({
       <ul style="margin: 0; padding-left: 20px; color: #333; text-align: left;">
         <li style="margin-bottom: 6px;">Your free trial will end and you'll no longer be able to upload new files</li>
         <li style="margin-bottom: 6px;">You can still view your existing files with a free trial</li>
-        <li>To continue using Guardian Angel DMS, consider upgrading to a paid subscription for only $1.99/month</li>
+        <li>To continue using Guardian Angel DMS, consider upgrading to a paid subscription for only $7.99/month (or $59.99/year)</li>
       </ul>
 
       <p style="font-size: 12px; color: #6b7280; margin-top: 20px;">With a paid subscription, you'll enjoy unlimited file uploads, full features, and complete peace of mind.</p>
 
-      <a href="https://grdnangl.digitalac.app/#/pricing" style="display: inline-block; background: #1754cf; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px;">
+      <a href="https://ga.neoncell.ca/#/pricing" style="display: inline-block; background: #1754cf; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px;">
         Upgrade Now
       </a>
     </div>
@@ -1198,7 +1199,7 @@ export const sendTrialExpiringEmail = action({
         to: args.userEmail,
         subject: `Guardian Angel DMS - Your Free Trial Expires in ${expiresInMinutes} Minute${expiresInMinutes !== 1 ? 's' : ''}`,
         html: emailHtml,
-        text: `Hi ${args.userName},\n\nYour free 24-hour trial of Guardian Angel DMS is expiring soon!\n\nTrial ends at: ${expiresTime}\n\nWhat happens next:\n- Your free trial will end and you'll no longer be able to upload new files\n- You can still view your existing files\n- To continue, consider upgrading to a paid subscription for only $1.99/month\n\nWith a paid subscription, you'll enjoy unlimited file uploads, full features, and complete peace of mind.\n\nUpgrade Now: https://grdnangl.digitalac.app/#/pricing\n\n- Guardian Angel DMS`,
+        text: `Hi ${args.userName},\n\nYour free 24-hour trial of Guardian Angel DMS is expiring soon!\n\nTrial ends at: ${expiresTime}\n\nWhat happens next:\n- Your free trial will end and you'll no longer be able to upload new files\n- You can still view your existing files\n- To continue, consider upgrading to a paid subscription for only $7.99/month (or $59.99/year)\n\nWith a paid subscription, you'll enjoy unlimited file uploads, full features, and complete peace of mind.\n\nUpgrade Now: https://ga.neoncell.ca/#/pricing\n\n- Guardian Angel DMS`,
       });
 
       console.log(`[sendTrialExpiringEmail] Email sent successfully to ${args.userEmail}`);
@@ -1249,7 +1250,7 @@ export const sendTrialExpiredEmail = action({
 
     <!-- Header with Logo -->
     <div style="background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); color: white; padding: 40px 30px; text-align: center;">
-      <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
+      <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" style="max-width: 200px; margin: 0 auto 20px; display: block;">
       <p style="margin: 0; font-size: 18px; font-weight: 600;">Trial Period Ended</p>
     </div>
 
@@ -1279,7 +1280,7 @@ export const sendTrialExpiredEmail = action({
       </ul>
 
       <p style="font-weight: bold; margin: 20px 0 10px 0; text-align: left;"><strong>To upload new files:</strong></p>
-      <p style="color: #333; margin: 0; text-align: left;">Upgrade to Guardian Angel DMS Plus for just <strong>$1.99/month</strong> and unlock:</p>
+      <p style="color: #333; margin: 0; text-align: left;">Upgrade to Guardian Angel DMS Plus for just <strong>$7.99/month</strong> (or <strong>$59.99/year</strong>) and unlock:</p>
       <ul style="margin: 5px 0 0 0; padding-left: 20px; color: #333; text-align: left;">
         <li style="margin-bottom: 6px;">Unlimited file uploads</li>
         <li style="margin-bottom: 6px;">Full feature access</li>
@@ -1287,7 +1288,7 @@ export const sendTrialExpiredEmail = action({
         <li>Complete peace of mind</li>
       </ul>
 
-      <a href="https://grdnangl.digitalac.app/#/pricing" style="display: inline-block; background: #1754cf; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px;">
+      <a href="https://ga.neoncell.ca/#/pricing" style="display: inline-block; background: #1754cf; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 20px;">
         Upgrade to Premium
       </a>
     </div>
@@ -1308,7 +1309,7 @@ export const sendTrialExpiredEmail = action({
         to: args.userEmail,
         subject: `Guardian Angel DMS - Your Trial Has Ended`,
         html: emailHtml,
-        text: `Hi ${args.userName},\n\nYour 24-hour free trial of Guardian Angel DMS has ended.\n\nYou can still view your existing files and recipients. To upload new files and continue using all features, please upgrade to a paid subscription for just $1.99/month.\n\nBenefits of upgrading:\n- Unlimited file uploads\n- Full feature access\n- Premium support\n- Complete peace of mind\n\nUpgrade Now: https://grdnangl.digitalac.app/#/pricing\n\n- Guardian Angel DMS`,
+        text: `Hi ${args.userName},\n\nYour 24-hour free trial of Guardian Angel DMS has ended.\n\nYou can still view your existing files and recipients. To upload new files and continue using all features, please upgrade to a paid subscription for just $7.99/month (or $59.99/year).\n\nBenefits of upgrading:\n- Unlimited file uploads\n- Full feature access\n- Premium support\n- Complete peace of mind\n\nUpgrade Now: https://ga.neoncell.ca/#/pricing\n\n- Guardian Angel DMS`,
       });
 
       console.log(`[sendTrialExpiredEmail] Email sent successfully to ${args.userEmail}`);
@@ -1373,7 +1374,7 @@ export const sendWelcomeEmail = action({
 </head>
 <body>
   <div class="header">
-    <img src="https://grdnangl.digitalac.app/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
+    <img src="https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" class="logo">
     <p>Welcome to Your Digital Legacy Vault</p>
   </div>
   <div class="content">
@@ -1406,7 +1407,7 @@ export const sendWelcomeEmail = action({
     </div>
 
     <p style="text-align: center; margin: 30px 0;">
-      <a href="https://grdnangl.digitalac.app/#/dashboard" class="button">Go to Your Dashboard</a>
+      <a href="https://ga.neoncell.ca/#/dashboard" class="button">Go to Your Dashboard</a>
     </p>
 
     <p class="pro-tip">
@@ -1431,7 +1432,7 @@ export const sendWelcomeEmail = action({
         to: args.email,
         subject: "Welcome to Guardian Angel DMS 🎉",
         html: emailHtml,
-        text: `Hi ${args.name},\n\nWelcome to Guardian Angel DMS! We're excited to have you protecting your digital legacy.\n\nHere's what you can do now:\n\n✓ Set up your 24-hour check-in timer\n✓ Securely upload and encrypt your files (end-to-end encrypted with AES-256)\n✓ Add trusted recipients\n✓ Enable multi-factor authentication\n\nGet started: https://grdnangl.digitalac.app/#/dashboard\n\nHave questions? We're here to help!\n\n- Guardian Angel DMS`,
+        text: `Hi ${args.name},\n\nWelcome to Guardian Angel DMS! We're excited to have you protecting your digital legacy.\n\nHere's what you can do now:\n\n✓ Set up your 24-hour check-in timer\n✓ Securely upload and encrypt your files (end-to-end encrypted with AES-256)\n✓ Add trusted recipients\n✓ Enable multi-factor authentication\n\nGet started: https://ga.neoncell.ca/#/dashboard\n\nHave questions? We're here to help!\n\n- Guardian Angel DMS`,
       });
 
       console.log(`[sendWelcomeEmail] Email sent successfully to ${args.email}`);

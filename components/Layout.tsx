@@ -125,9 +125,6 @@ const Layout: React.FC<LayoutProps> = ({
             <p className="text-[9px] text-gray-700 uppercase tracking-widest">
               &copy; 2025 Guardian Angel DMS
             </p>
-            <a href="https://digitalac.app/" target="_blank" rel="noopener noreferrer" className="text-[9px] text-gray-600 hover:text-primary transition-colors">
-              Get more apps at digitalac.app
-            </a>
             <p className="text-[8px] text-gray-600 uppercase tracking-widest pt-2 border-t border-gray-800">
               v{APP_VERSION}
             </p>
@@ -153,9 +150,6 @@ const Layout: React.FC<LayoutProps> = ({
               <p className="text-[9px] text-gray-700 uppercase tracking-widest text-center">
                 &copy; 2025 Guardian Angel DMS. Built for your peace of mind.
               </p>
-              <a href="https://digitalac.app/" target="_blank" rel="noopener noreferrer" className="text-[9px] text-gray-600 hover:text-primary transition-colors">
-                Get more apps at digitalac.app
-              </a>
               <p className="text-[8px] text-gray-600 uppercase tracking-widest pt-2 border-t border-gray-800">
                 v{APP_VERSION}
               </p>

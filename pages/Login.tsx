@@ -449,11 +449,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="text-center space-y-3">
-            <img
-              src="/images/New-GrdnAngl-Logo.png"
-              alt="Guardian Angel DMS Logo"
-              className="w-80 h-auto mx-auto object-contain"
-            />
+            <Link to="/" aria-label="Guardian Angel DMS home" className="inline-block transition-opacity hover:opacity-80">
+              <img
+                src="/images/New-GrdnAngl-Logo.png"
+                alt="Guardian Angel DMS Logo"
+                className="w-80 h-auto mx-auto object-contain"
+              />
+            </Link>
             <p className="text-gray-400 text-[11px] font-medium tracking-wide">Secure Digital Legacy Management</p>
             {mode !== 'login' && (
               <div>
@@ -850,9 +852,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <Link to="/terms" className="hover:text-primary transition-colors">Terms of Use</Link>
           <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
         </div>
-        <a href="https://digitalac.app/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 hover:text-primary transition-colors">
-          Get more apps at digitalac.app
-        </a>
       </footer>
     </div>
   );

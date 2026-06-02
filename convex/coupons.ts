@@ -41,8 +41,8 @@ export const validateCoupon = query({
       code: coupon.code,
       description: coupon.description,
       discountPercentage: coupon.discountPercentage,
-      originalPrice: 1.99,
-      discountedPrice: (1.99 * (100 - coupon.discountPercentage)) / 100,
+      originalPrice: 7.99,
+      discountedPrice: (7.99 * (100 - coupon.discountPercentage)) / 100,
     };
   },
 });
@@ -106,8 +106,8 @@ export const applyCouponToSubscription = mutation({
     return {
       success: true,
       discountPercentage: coupon.discountPercentage,
-      originalPrice: 1.99,
-      discountedPrice: (1.99 * (100 - coupon.discountPercentage)) / 100,
+      originalPrice: 7.99,
+      discountedPrice: (7.99 * (100 - coupon.discountPercentage)) / 100,
     };
   },
 });

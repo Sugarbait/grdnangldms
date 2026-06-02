@@ -11,6 +11,14 @@ const Pricing: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('year');
+
+  const PLANS = {
+    month: { price: '$7.99', cadence: 'per month, billed monthly' },
+    year: { price: '$59.99', cadence: 'per year ($5.00/mo), billed annually' },
+  } as const;
+  const plan = PLANS[billingInterval];
+
   const createCheckoutSession = useAction(api.stripeActions.createCheckoutSession);
   const getBillingPortalUrl = useAction(api.stripeActions.getPortalUrl);
   const verifySubscription = useAction(api.stripeActions.verifySubscription);
@@ -51,6 +59,7 @@ const Pricing: React.FC = () => {
 
       const result = await createCheckoutSession({
         userId: userId,
+        interval: billingInterval,
         successUrl: `${window.location.origin}/#/pricing?success=true`,
         cancelUrl: `${window.location.origin}/#/pricing?cancel=true`,
       });
@@ -109,7 +118,28 @@ const Pricing: React.FC = () => {
           <p className="text-gray-400 mb-1 text-sm">No setup fees. No surprises. Cancel anytime.</p>
         </div>
 
-        {/* Premium Card - $1.99 or Already Subscribed */}
+        {/* Billing interval toggle */}
+        {!isSubscriber && (
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center bg-surface-dark border border-gray-700 rounded-full p-1">
+              <button
+                onClick={() => setBillingInterval('month')}
+                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-colors ${billingInterval === 'month' ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingInterval('year')}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-colors ${billingInterval === 'year' ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                Annual
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${billingInterval === 'year' ? 'bg-white/20 text-white' : 'bg-green-500/20 text-green-400'}`}>Save 37%</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Premium Card or Already Subscribed */}
         {isSubscriber ? (
           <div className="bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 rounded-2xl p-6 relative ring-2 ring-green-500 ring-opacity-50 mb-10">
             <div className="absolute top-6 right-4 bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">
@@ -121,8 +151,8 @@ const Pricing: React.FC = () => {
             <p className="text-green-200 text-xs mb-6">Thank you for your support</p>
 
             <div className="mb-6">
-              <div className="text-3xl font-black">$1.99</div>
-              <p className="text-green-100 text-xs mt-1">per month, billed monthly</p>
+              <div className="text-2xl font-black">Active</div>
+              <p className="text-green-100 text-xs mt-1">Manage your plan below</p>
             </div>
 
             <button
@@ -174,7 +204,7 @@ const Pricing: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
-                <span className="text-sm text-white">Auto-renewal each month</span>
+                <span className="text-sm text-white">Automatic renewal</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
@@ -193,8 +223,8 @@ const Pricing: React.FC = () => {
             <p className="text-blue-200 text-xs mb-6">Includes 24-hour free trial</p>
 
             <div className="mb-6">
-              <div className="text-3xl font-black">$1.99</div>
-              <p className="text-blue-100 text-xs mt-1">per month, billed monthly</p>
+              <div className="text-3xl font-black">{plan.price}</div>
+              <p className="text-blue-100 text-xs mt-1">{plan.cadence}</p>
             </div>
 
             <button
@@ -220,7 +250,7 @@ const Pricing: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
-                <span className="text-sm text-white">Auto-renewal each month</span>
+                <span className="text-sm text-white">Automatic renewal</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
@@ -250,7 +280,7 @@ const Pricing: React.FC = () => {
                 <tr className="border-b border-gray-700">
                   <td className="px-3 py-3 text-gray-300 text-xs">Duration</td>
                   <td className="px-3 py-3 text-center text-xs">24h</td>
-                  <td className="px-3 py-3 text-center text-xs">Monthly</td>
+                  <td className="px-3 py-3 text-center text-xs">Ongoing</td>
                 </tr>
                 <tr className="border-b border-gray-700">
                   <td className="px-3 py-3 text-gray-300 text-xs">Recipients</td>
@@ -307,7 +337,7 @@ const Pricing: React.FC = () => {
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
               <p className="text-gray-400 text-sm mt-3">
-                Yes! Once you upgrade to Guardian Angel Plus, your subscription will automatically renew every month on the same date. You'll never lose access due to a forgotten renewal. We'll charge your payment method on file each month.
+                Yes! Once you upgrade to Guardian Angel Plus, your subscription automatically renews at the end of each billing period — monthly or annually, depending on the plan you choose. You'll never lose access due to a forgotten renewal, and you can switch plans or cancel anytime.
               </p>
             </details>
 
@@ -347,7 +377,7 @@ const Pricing: React.FC = () => {
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
               <p className="text-gray-400 text-sm mt-3">
-                Since Guardian Angel DMS is a service (not a product) and you have immediate access to all features, we don't offer refunds. However, you can cancel anytime and won't be charged again. We want you to be happy with our service!
+                Yes — we offer a 7-day money-back guarantee. If you're not satisfied within the first 7 days of a new subscription, contact support for a full refund. After that, you can cancel anytime and you won't be charged again.
               </p>
             </details>
 
@@ -370,7 +400,7 @@ const Pricing: React.FC = () => {
             We're confident you'll love Guardian Angel DMS. If you're not happy with your subscription within the first 7 days, contact our support team for a full refund—no questions asked.
           </p>
           <p className="text-gray-500 text-xs">
-            Contact us at support@grdnangl.com or through the help section in your account.
+            Contact us at support@ga.neoncell.ca or through the help section in your account.
           </p>
         </div>
       </div>
