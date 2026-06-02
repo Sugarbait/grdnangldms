@@ -377,7 +377,7 @@ const Pricing: React.FC = () => {
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
               <p className="text-gray-400 text-sm mt-3">
-                Yes — we offer a 7-day money-back guarantee. If you're not satisfied within the first 7 days of a new subscription, contact support for a full refund. After that, you can cancel anytime and you won't be charged again.
+                Guardian Angel DMS is a service with immediate access to all features, so all sales are final and we don't offer refunds. You can cancel anytime, and you won't be charged again going forward.
               </p>
             </details>
 
@@ -395,10 +395,7 @@ const Pricing: React.FC = () => {
 
         {/* Additional Info */}
         <div className="bg-surface-dark border border-gray-700 rounded-2xl p-5">
-          <h4 className="font-bold mb-2 text-sm">Money-Back Guarantee</h4>
-          <p className="text-gray-400 text-xs mb-3">
-            We're confident you'll love Guardian Angel DMS. If you're not happy with your subscription within the first 7 days, contact our support team for a full refund—no questions asked.
-          </p>
+          <h4 className="font-bold mb-2 text-sm">Questions?</h4>
           <p className="text-gray-500 text-xs">
             Contact us at support@ga.neoncell.ca or through the help section in your account.
           </p>
