@@ -294,16 +294,16 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
       <div className="p-4 pb-64 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-screen">
         <header className="flex items-center justify-between">
           <div className="flex gap-2">
-            <button onClick={closeEdit} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-              <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+            <button onClick={closeEdit} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+              <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
             </button>
-            <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-              <span className="material-symbols-outlined text-xl text-primary">home</span>
+            <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+              <span className="material-symbols-outlined text-xl text-gray-300">home</span>
             </button>
           </div>
           <div className="text-center">
-            <h1 className="text-lg font-bold">Edit Item</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+            <h1 className="text-lg font-semibold tracking-tight">Edit Item</h1>
+            <p className="ga-eyebrow text-[9px] mt-0.5">Guardian Angel DMS</p>
           </div>
           <div className="w-10"></div>
         </header>
@@ -334,7 +334,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
         {editingFile.type === 'note' && editingFile.content && (
           <div className="bg-surface-dark p-6 rounded-[32px] border border-primary/20 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[10px] font-black text-primary uppercase tracking-widest">Message Content</h3>
+              <h3 className="ga-eyebrow text-[10px]">Message Content</h3>
               <label className="flex items-center gap-2 text-[10px] text-gray-400 cursor-pointer hover:text-primary transition-colors">
                 <input
                   type="checkbox"
@@ -356,7 +356,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
 
         {editingFile.type === 'audio' && editingFile.audioData && (
           <div className="bg-surface-dark p-6 rounded-[32px] border border-primary/20 shadow-xl">
-            <h3 className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Audio Recording</h3>
+            <h3 className="ga-eyebrow text-[10px] mb-4">Audio Recording</h3>
             <AudioPlayer src={editingFile.audioData} />
           </div>
         )}
@@ -369,7 +369,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
             </div>
           )}
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em]">Who should receive this?</h2>
+            <h2 className="ga-eyebrow text-xs">Who should receive this?</h2>
             <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full">
               {tempRecipientIds.length} Selected
             </span>
@@ -420,7 +420,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-[60] space-y-3">
+        <div className="fixed bottom-0 left-0 md:left-64 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-[60] space-y-3">
           {saveError && (
             <div className="md:max-w-2xl md:mx-auto p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-bold">
               {saveError}
@@ -430,14 +430,14 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
             <button
               onClick={handleDeleteFile}
               disabled={isSaving}
-              className="flex-1 h-16 bg-red-500/10 border border-red-500/20 text-red-500 font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 h-16 bg-red-500/10 border border-red-500/20 text-red-500 font-semibold rounded-2xl hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Delete
             </button>
             <button
               onClick={saveEdit}
               disabled={isSaving}
-              className="flex-[2] h-16 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-[2] h-16 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
               <span className="material-symbols-outlined">{isSaving ? 'hourglass_empty' : 'check'}</span>
@@ -449,18 +449,18 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
         {modal?.type === 'delete' && ReactDOM.createPortal(
           <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'delete' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
             <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'delete' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
-              <h3 className="text-xl font-black text-white mb-2">Delete Item</h3>
+              <h3 className="text-xl font-semibold tracking-tight text-white mb-2">Delete Item</h3>
               <p className="text-gray-400 text-sm mb-6">Are you sure you want to permanently delete "{editingFile.name}"? This cannot be undone.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => closeWithAnimation('delete', () => setModal(null))}
-                  className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+                  className="flex-1 h-12 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors"
+                  className="flex-1 h-12 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-colors"
                 >
                   Delete
                 </button>
@@ -477,24 +477,24 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
     <div className="p-4 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-full">
       <header className="flex items-center justify-between">
         <div className="flex gap-2">
-          <button onClick={() => navigate(-1)} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-            <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+          <button onClick={() => navigate(-1)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+            <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
           </button>
-          <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-            <span className="material-symbols-outlined text-xl text-primary">home</span>
+          <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+            <span className="material-symbols-outlined text-xl text-gray-300">home</span>
           </button>
         </div>
         <div className="text-center">
-          <h1 className="text-xl font-bold">My Items</h1>
-          <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+          <h1 className="text-lg font-semibold tracking-tight">My Items</h1>
+          <p className="ga-eyebrow text-[9px] mt-0.5">Guardian Angel DMS</p>
         </div>
         <div className="flex gap-2">
           {canAccessFeatures !== false && (
-            <button onClick={() => navigate('/upload')} className="size-10 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new item">
+            <button onClick={() => navigate('/upload')} className="size-10 rounded-xl bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new item">
               <span className="material-symbols-outlined">add</span>
             </button>
           )}
-          <button onClick={handlePurge} className={`size-10 rounded-full flex items-center justify-center transition-colors ${files.length > 0 ? 'text-red-500 hover:bg-red-500/10' : 'text-gray-700'}`}>
+          <button onClick={handlePurge} className={`size-10 rounded-xl flex items-center justify-center transition-colors ${files.length > 0 ? 'text-red-400 hover:bg-red-500/10' : 'text-gray-700'}`}>
             <span className="material-symbols-outlined">delete_sweep</span>
           </button>
         </div>
@@ -502,9 +502,9 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
 
       {files.length > 0 && canAccessFeatures !== false && (
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-            <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Synced & Secure</p>
+          <div className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-1.5 mx-auto">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+            <p className="text-emerald-300 text-[10px] font-semibold uppercase tracking-[0.08em]">Synced & Secure</p>
           </div>
         </div>
       )}
@@ -512,27 +512,27 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
       <div className="flex-1 flex flex-col space-y-4">
         {files.length === 0 ? (
           <div className="flex-1 flex flex-col items-center py-20 text-center animate-in fade-in zoom-in duration-500">
-            <div className="size-20 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center mb-6 shadow-2xl">
-              <span className="material-symbols-outlined text-4xl text-gray-700">lock_open</span>
+            <div className="size-20 rounded-3xl bg-surface-dark border border-white/10 flex items-center justify-center mb-6 shadow-2xl">
+              <span className="material-symbols-outlined text-4xl text-gray-600">lock_open</span>
             </div>
-            <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">No Items Yet</h3>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 mb-8 max-w-[200px] leading-relaxed">
+            <h3 className="text-xl font-semibold tracking-tight text-white">No items yet</h3>
+            <p className="text-gray-500 text-xs mt-2 mb-8 max-w-[220px] leading-relaxed">
               Add files, messages, or recordings to share.
             </p>
-            <button onClick={() => canAccessFeatures !== false ? navigate('/upload') : navigate('/pricing')} className="px-8 py-4 bg-primary rounded-2xl text-white font-bold uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-all">
+            <button onClick={() => canAccessFeatures !== false ? navigate('/upload') : navigate('/pricing')} className="px-7 py-3.5 bg-primary rounded-xl text-white text-sm font-semibold flex items-center gap-2.5 shadow-xl shadow-primary/20 active:scale-95 transition-all">
               <span className="material-symbols-outlined">{canAccessFeatures !== false ? 'upload_file' : 'lock'}</span>
               {canAccessFeatures !== false ? 'Add First Item' : 'Upgrade to Add Items'}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] px-1">{files.length} {files.length === 1 ? 'Item' : 'Items'}</h2>
+            <h2 className="ga-eyebrow text-[10px] px-1">{files.length} {files.length === 1 ? 'Item' : 'Items'}</h2>
             <div className="space-y-3">
               {files.map(file => (
                 <div
                   key={file._id}
                   onClick={() => openPreview(file)}
-                  className="group relative flex items-center justify-between gap-4 p-5 rounded-[28px] bg-surface-dark border border-gray-800 shadow-lg hover:border-primary/40 transition-all cursor-pointer active:scale-[0.98]"
+                  className="group relative flex items-center justify-between gap-4 p-5 rounded-2xl bg-surface-dark border border-gray-800 shadow-lg hover:border-primary/40 transition-all cursor-pointer active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div
@@ -696,18 +696,18 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
       {modal?.type === 'purge' && ReactDOM.createPortal(
         <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'purge' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
           <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'purge' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
-            <h3 className="text-xl font-black text-white mb-2">Delete All Items</h3>
+            <h3 className="text-xl font-semibold tracking-tight text-white mb-2">Delete All Items</h3>
             <p className="text-gray-400 text-sm mb-6">Are you sure you want to delete all {files.length} items? This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => closeWithAnimation('purge', () => setModal(null))}
-                className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+                className="flex-1 h-12 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmPurge}
-                className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors"
+                className="flex-1 h-12 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-colors"
               >
                 Delete All
               </button>
@@ -721,18 +721,18 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
       {modal?.type === 'listDelete' && ReactDOM.createPortal(
         <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm ${closingModal === 'listDelete' ? 'animate-out fade-out duration-[180ms]' : 'animate-in fade-in duration-200'}`}>
           <div className={`bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl ${closingModal === 'listDelete' ? 'animate-out zoom-out-95 slide-out-to-bottom-2 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-4 duration-300'}`}>
-            <h3 className="text-xl font-black text-white mb-2">Delete Item</h3>
+            <h3 className="text-xl font-semibold tracking-tight text-white mb-2">Delete Item</h3>
             <p className="text-gray-400 text-sm mb-6">Are you sure you want to delete "{modal.fileName}"? This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => closeWithAnimation('listDelete', () => setModal(null))}
-                className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+                className="flex-1 h-12 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => closeWithAnimation('listDelete', () => confirmDeleteFromList())}
-                className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors"
+                className="flex-1 h-12 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-colors"
               >
                 Delete
               </button>

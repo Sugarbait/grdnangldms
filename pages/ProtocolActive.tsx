@@ -120,19 +120,19 @@ const ProtocolActive: React.FC<ProtocolActiveProps> = ({ recipients, files, onCa
   }, [files.length, recipients]);
 
   return (
-    <div className="min-h-screen bg-black flex flex-col p-6 font-display relative overflow-hidden">
-      {/* CRT Scanline Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-[100] opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]"></div>
-      
-      <header className="relative z-10 flex flex-col items-center gap-4 py-8 border-b border-red-900/50">
-        <div className="size-20 rounded-full bg-red-600/10 border-2 border-red-600 flex items-center justify-center animate-pulse shadow-[0_0_30px_#dc2626]">
-          <span className="material-symbols-outlined text-red-500 text-5xl font-black">emergency_home</span>
+    <div className="min-h-screen bg-[#0c0508] flex flex-col p-6 font-display relative overflow-hidden">
+      {/* Ambient red glow */}
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(220,38,38,0.12),transparent_38rem)]"></div>
+
+      <header className="relative z-10 flex flex-col items-center gap-4 py-8 border-b border-red-500/15">
+        <div className="size-20 rounded-3xl bg-red-500/10 border border-red-500/40 flex items-center justify-center animate-pulse shadow-[0_0_40px_rgba(220,38,38,0.35)]">
+          <span className="material-symbols-outlined text-red-400 text-5xl">emergency_home</span>
         </div>
         <div className="text-center">
-          <h1 className="text-red-500 text-3xl font-black uppercase italic tracking-tighter animate-[glitch_2s_infinite]">EMERGENCY MODE</h1>
-          <p className="text-red-900 text-[10px] font-black uppercase tracking-[0.4em] mt-1">Notification Protocol Active</p>
+          <h1 className="text-red-400 text-3xl font-semibold tracking-tight">Emergency Mode</h1>
+          <p className="text-red-500/60 text-[10px] font-semibold uppercase tracking-[0.15em] mt-1.5">Notification Protocol Active</p>
           {isTestMode && (
-            <p className="text-yellow-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2 px-3 py-1 bg-yellow-500/10 rounded-full inline-block">TEST MODE</p>
+            <p className="text-yellow-400 text-[10px] font-semibold uppercase tracking-[0.15em] mt-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full inline-block">Test Mode</p>
           )}
         </div>
       </header>
@@ -140,17 +140,17 @@ const ProtocolActive: React.FC<ProtocolActiveProps> = ({ recipients, files, onCa
       <main className="flex-1 relative z-10 py-6 overflow-hidden flex flex-col gap-6">
         <div className="space-y-4">
           <div className="flex justify-between items-end">
-            <span className="text-[10px] text-red-500/50 font-black uppercase tracking-widest">Global Transmission</span>
-            <span className="text-red-500 font-black tabular-nums">{Math.round(progress)}%</span>
+            <span className="text-[10px] text-red-400/60 font-semibold uppercase tracking-[0.1em]">Global Transmission</span>
+            <span className="text-red-400 font-semibold tabular-nums">{Math.round(progress)}%</span>
           </div>
-          <div className="h-3 w-full bg-red-950/40 rounded-full overflow-hidden border border-red-900/30">
-            <div className="h-full bg-red-600 transition-all duration-700 shadow-[0_0_15px_#dc2626]" style={{ width: `${progress}%` }}></div>
+          <div className="h-2.5 w-full bg-red-950/40 rounded-full overflow-hidden border border-red-500/15">
+            <div className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full transition-all duration-700 shadow-[0_0_15px_rgba(220,38,38,0.5)]" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
 
         <div className="space-y-3">
           {recipients.map(r => (
-            <div key={r.id} className="flex items-center justify-between bg-red-950/20 border border-red-900/30 p-4 rounded-2xl transition-all">
+            <div key={r.id} className="flex items-center justify-between bg-red-950/20 border border-red-500/15 p-4 rounded-2xl transition-all">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   {r.avatarUrl ? (
@@ -163,19 +163,19 @@ const ProtocolActive: React.FC<ProtocolActiveProps> = ({ recipients, files, onCa
                   {statusMap[r.id] === 'TRANSMITTING' && <div className="absolute inset-0 border-2 border-red-500 rounded-full animate-ping"></div>}
                 </div>
                 <div>
-                  <p className="text-sm text-white font-black uppercase tracking-tight">{r.name}</p>
-                  <p className="text-[9px] text-red-800 font-bold uppercase tracking-widest">{r.relationship}</p>
+                  <p className="text-sm text-white font-semibold tracking-tight">{r.name}</p>
+                  <p className="text-[9px] text-red-400/50 font-semibold uppercase tracking-[0.1em] mt-0.5">{r.relationship}</p>
                 </div>
               </div>
-              <div className={`px-3 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest ${statusMap[r.id] === 'DELIVERED' ? 'text-green-500 border-green-900/50 bg-green-950/20' : 'text-yellow-500 border-yellow-900/50 bg-yellow-950/20 animate-pulse'}`}>
+              <div className={`px-3 py-1 rounded-full border text-[9px] font-semibold uppercase tracking-[0.08em] ${statusMap[r.id] === 'DELIVERED' ? 'text-emerald-400 border-emerald-500/25 bg-emerald-950/30' : 'text-yellow-400 border-yellow-500/25 bg-yellow-950/30 animate-pulse'}`}>
                 {statusMap[r.id] || 'QUEUED'}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="flex-1 bg-black/80 border border-red-900/50 rounded-2xl p-6 overflow-y-auto font-mono text-[11px] leading-relaxed no-scrollbar relative">
-          <div className="absolute top-4 right-4 text-red-900 font-black uppercase tracking-[0.2em] text-[9px]">Log Stream v2.5.0</div>
+        <div className="flex-1 bg-black/60 border border-red-500/15 rounded-2xl p-6 overflow-y-auto font-mono text-[11px] leading-relaxed no-scrollbar relative">
+          <div className="absolute top-4 right-4 text-red-500/40 font-semibold uppercase tracking-[0.1em] text-[9px]">Log Stream v2.5.0</div>
           <div className="space-y-3">
             {logs.map((log, i) => (
               <p key={i} className={`${log.includes('DELIVERED') || log.includes('SUCCESS') ? 'text-green-500' : log.includes('[CRITICAL]') ? 'text-red-600 font-black' : 'text-red-400'} animate-in fade-in slide-in-from-left-2`}>
@@ -191,9 +191,9 @@ const ProtocolActive: React.FC<ProtocolActiveProps> = ({ recipients, files, onCa
       <footer className="relative z-10 pt-4">
         <button
           onClick={onCancel}
-          className="w-full py-5 bg-white text-black font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+          className="w-full py-4 bg-white text-black font-semibold rounded-2xl hover:bg-gray-200 transition-all active:scale-[0.98] shadow-[0_0_30px_rgba(255,255,255,0.15)]"
         >
-          {isTestMode ? "EXIT TEST MODE" : "I'M BACK (ABORT PROTOCOL)"}
+          {isTestMode ? "Exit Test Mode" : "I'm Back — Abort Protocol"}
         </button>
       </footer>
 

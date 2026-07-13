@@ -81,10 +81,10 @@ const Pricing: React.FC = () => {
       {/* Header */}
       <div className="px-6 pt-6 pb-12">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate('/')} className="p-2 bg-surface-dark rounded-full">
-            <span className="material-symbols-outlined">arrow_back</span>
+          <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 transition-colors">
+            <span className="material-symbols-outlined text-gray-300">arrow_back</span>
           </button>
-          <h1 className="text-2xl font-black uppercase italic tracking-tighter">Pricing</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Pricing</h1>
         </div>
 
         {/* Success/Cancel Messages */}
@@ -112,8 +112,8 @@ const Pricing: React.FC = () => {
 
         {/* Hero Section */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-black mb-2 leading-tight">
-            Simple, Transparent Pricing
+          <h2 className="text-2xl font-semibold tracking-tight mb-2 leading-tight">
+            Simple, transparent pricing
           </h2>
           <p className="text-gray-400 mb-1 text-sm">No setup fees. No surprises. Cancel anytime.</p>
         </div>
@@ -121,16 +121,16 @@ const Pricing: React.FC = () => {
         {/* Billing interval toggle */}
         {!isSubscriber && (
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center bg-surface-dark border border-gray-700 rounded-full p-1">
+            <div className="inline-flex items-center bg-surface-dark border border-white/10 rounded-full p-1">
               <button
                 onClick={() => setBillingInterval('month')}
-                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-colors ${billingInterval === 'month' ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`px-5 py-2 rounded-full text-xs font-semibold transition-colors ${billingInterval === 'month' ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'text-gray-400 hover:text-white'}`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingInterval('year')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-colors ${billingInterval === 'year' ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold transition-colors ${billingInterval === 'year' ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'text-gray-400 hover:text-white'}`}
               >
                 Annual
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${billingInterval === 'year' ? 'bg-white/20 text-white' : 'bg-green-500/20 text-green-400'}`}>Save 37%</span>
@@ -141,18 +141,18 @@ const Pricing: React.FC = () => {
 
         {/* Premium Card or Already Subscribed */}
         {isSubscriber ? (
-          <div className="bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 rounded-2xl p-6 relative ring-2 ring-green-500 ring-opacity-50 mb-10">
-            <div className="absolute top-6 right-4 bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">
-              ACTIVE
+          <div className="ga-plan-card ga-plan-card-active rounded-[24px] p-6 relative mb-10">
+            <div className="absolute top-6 right-4 bg-emerald-400/15 text-emerald-300 border border-emerald-400/30 text-[10px] font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded-full">
+              Active
             </div>
 
-            <h3 className="text-xl font-black mb-2 pr-24">Guardian Angel Plus</h3>
-            <p className="text-green-100 text-sm mb-1">You're subscribed</p>
-            <p className="text-green-200 text-xs mb-6">Thank you for your support</p>
+            <h3 className="text-xl font-semibold tracking-tight mb-2 pr-24">Guardian Angel Plus</h3>
+            <p className="text-emerald-200 text-sm mb-1">You're subscribed</p>
+            <p className="text-gray-400 text-xs mb-6">Thank you for your support</p>
 
             <div className="mb-6">
-              <div className="text-2xl font-black">Active</div>
-              <p className="text-green-100 text-xs mt-1">Manage your plan below</p>
+              <div className="text-2xl font-semibold tracking-tight">Active</div>
+              <p className="text-gray-400 text-xs mt-1">Manage your plan below</p>
             </div>
 
             <button
@@ -174,7 +174,7 @@ const Pricing: React.FC = () => {
                 }
               }}
               disabled={isOpeningPortal}
-              className="w-full bg-white hover:bg-gray-100 disabled:bg-gray-300 text-green-700 font-bold py-3 rounded-lg transition-colors mb-6 flex items-center justify-center gap-2"
+              className="w-full bg-white hover:bg-gray-100 disabled:bg-gray-300 text-emerald-800 font-semibold py-3 rounded-xl transition-colors mb-6 flex items-center justify-center gap-2"
             >
               {isOpeningPortal ? (
                 <>
@@ -189,7 +189,7 @@ const Pricing: React.FC = () => {
               )}
             </button>
 
-            <div className="space-y-3 border-t border-green-400 border-opacity-30 pt-6">
+            <div className="space-y-3 border-t border-white/10 pt-6">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Unlimited file uploads</span>
@@ -213,29 +213,29 @@ const Pricing: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-primary via-blue-600 to-blue-700 rounded-2xl p-6 relative ring-2 ring-primary ring-opacity-50 mb-10">
-            <div className="absolute top-6 right-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-              RECOMMENDED
+          <div className="ga-plan-card rounded-[24px] p-6 relative mb-10">
+            <div className="absolute top-6 right-4 bg-primary/15 text-primary border border-primary/30 text-[10px] font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded-full">
+              Recommended
             </div>
 
-            <h3 className="text-xl font-black mb-2 pr-24">Guardian Angel Plus</h3>
-            <p className="text-blue-100 text-sm mb-1">The complete solution</p>
-            <p className="text-blue-200 text-xs mb-6">Includes 24-hour free trial</p>
+            <h3 className="text-xl font-semibold tracking-tight mb-2 pr-24">Guardian Angel Plus</h3>
+            <p className="text-gray-300 text-sm mb-1">The complete solution</p>
+            <p className="text-gray-500 text-xs mb-6">Includes 24-hour free trial</p>
 
             <div className="mb-6">
-              <div className="text-3xl font-black">{plan.price}</div>
-              <p className="text-blue-100 text-xs mt-1">{plan.cadence}</p>
+              <div className="text-3xl font-semibold tracking-tight">{plan.price}</div>
+              <p className="text-gray-400 text-xs mt-1">{plan.cadence}</p>
             </div>
 
             <button
               onClick={handleUpgrade}
               disabled={loading}
-              className="w-full bg-white hover:bg-gray-100 disabled:bg-gray-300 text-blue-700 font-bold py-3 rounded-lg transition-colors mb-6"
+              className="w-full bg-primary hover:bg-blue-600 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors mb-6 shadow-lg shadow-primary/25"
             >
               {loading ? 'Processing...' : 'Upgrade Now'}
             </button>
 
-            <div className="space-y-3 border-t border-blue-400 border-opacity-30 pt-6">
+            <div className="space-y-3 border-t border-white/10 pt-6">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
                 <span className="text-sm text-white">Unlimited file uploads</span>
@@ -319,10 +319,10 @@ const Pricing: React.FC = () => {
 
         {/* FAQ Section */}
         <div className="mb-10">
-          <h3 className="text-lg font-black mb-4">Frequently Asked Questions</h3>
+          <h3 className="text-lg font-semibold tracking-tight mb-4">Frequently asked questions</h3>
           <div className="space-y-4">
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>How does the trial work?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
@@ -331,8 +331,8 @@ const Pricing: React.FC = () => {
               </p>
             </details>
 
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>Is billing automatic?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
@@ -341,8 +341,8 @@ const Pricing: React.FC = () => {
               </p>
             </details>
 
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>Can I cancel anytime?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
@@ -351,8 +351,8 @@ const Pricing: React.FC = () => {
               </p>
             </details>
 
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>What happens to my files if I cancel?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
@@ -361,8 +361,8 @@ const Pricing: React.FC = () => {
               </p>
             </details>
 
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>What payment methods do you accept?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
@@ -371,8 +371,8 @@ const Pricing: React.FC = () => {
               </p>
             </details>
 
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>Do you offer refunds?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
@@ -381,8 +381,8 @@ const Pricing: React.FC = () => {
               </p>
             </details>
 
-            <details className="bg-surface-dark border border-gray-700 rounded-lg p-4 cursor-pointer group">
-              <summary className="flex items-center justify-between font-bold text-gray-300">
+            <details className="bg-surface-dark border border-white/10 rounded-xl p-4 cursor-pointer group">
+              <summary className="flex items-center justify-between font-semibold text-sm text-gray-200">
                 <span>Is my payment information secure?</span>
                 <span className="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
               </summary>

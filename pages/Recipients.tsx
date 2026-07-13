@@ -110,7 +110,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
       {url ? (
         <img src={url} alt={name} className="h-full w-full object-cover" />
       ) : (
-        <span className="text-primary font-black text-sm uppercase tracking-tighter">{getInitials(name)}</span>
+        <span className="text-primary font-semibold text-sm uppercase tracking-tight">{getInitials(name)}</span>
       )}
     </div>
   );
@@ -120,16 +120,16 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
       <div className="p-4 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-screen">
         <header className="flex items-center justify-between">
           <div className="flex gap-2">
-            <button onClick={handleCloseEdit} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-              <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+            <button onClick={handleCloseEdit} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+              <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
             </button>
-            <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-              <span className="material-symbols-outlined text-xl text-primary">home</span>
+            <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+              <span className="material-symbols-outlined text-xl text-gray-300">home</span>
             </button>
           </div>
           <div className="text-center">
-            <h1 className="text-lg font-bold">Edit Recipient</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+            <h1 className="text-lg font-semibold tracking-tight">Edit Recipient</h1>
+            <p className="ga-eyebrow text-[9px] mt-0.5">Guardian Angel DMS</p>
           </div>
           <div className="w-10"></div>
         </header>
@@ -169,7 +169,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
             </div>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-black text-white">{formData.name || 'New Recipient'}</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-white">{formData.name || 'New Recipient'}</h2>
           </div>
         </div>
 
@@ -227,7 +227,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-1">
               <span className="material-symbols-outlined text-primary text-lg">lock</span>
-              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+              <h3 className="ga-eyebrow text-[10px]">
                 Files ({getRecipientFiles(editingRecipient._id).length})
               </h3>
             </div>
@@ -243,7 +243,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-bold truncate">{file.name}</p>
+                    <p className="text-white text-sm font-medium truncate">{file.name}</p>
                     <p className="text-gray-500 text-[9px] font-medium">{file.size}</p>
                   </div>
                   <div className="flex-shrink-0">
@@ -311,8 +311,8 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
             If enabled, they'll receive an email when your timer gets low with an option to confirm you're alive.
           </p>
           {editingRecipient?.canTriggerCheckIn && (
-            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <p className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-1">Enabled</p>
+            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+              <p className="text-green-400 text-[10px] font-semibold uppercase tracking-[0.08em] mb-1">Enabled</p>
               <p className="text-green-400/80 text-[11px] leading-relaxed">
                 They can reset your timer by clicking the link in their email.
               </p>
@@ -329,15 +329,15 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-14 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/25 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{isSaving ? 'Saving...' : 'Update Profile'}</span>
-            <span className="material-symbols-outlined">{isSaving ? 'hourglass_empty' : 'save'}</span>
+            <span className="material-symbols-outlined text-[20px]">{isSaving ? 'hourglass_empty' : 'save'}</span>
           </button>
 
           <button
             onClick={handleDeleteClick}
-            className="w-full h-14 bg-red-500/10 border border-red-500/20 text-red-500 font-bold uppercase tracking-widest rounded-2xl transition-all active:scale-[0.98]"
+            className="w-full h-12 bg-red-500/10 border border-red-500/20 text-red-400 font-semibold text-sm rounded-2xl hover:bg-red-500/15 transition-all active:scale-[0.98]"
           >
             Remove Recipient
           </button>
@@ -346,19 +346,19 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
         {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
-              <h3 className="text-xl font-black text-white mb-2">Remove Recipient</h3>
+            <div className="bg-surface-dark border border-white/10 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
+              <h3 className="text-xl font-semibold tracking-tight text-white mb-2">Remove Recipient</h3>
               <p className="text-gray-400 text-sm mb-6">Are you sure you want to remove {editingRecipient?.name}? They will no longer receive your saved items.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+                  className="flex-1 h-11 bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors"
+                  className="flex-1 h-11 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-colors"
                 >
                   Remove
                 </button>
@@ -374,30 +374,30 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
     <div className="p-4 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-full">
       <header className="flex items-center justify-between">
         <div className="flex gap-2">
-          <button onClick={() => navigate(-1)} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-            <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+          <button onClick={() => navigate(-1)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+            <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
           </button>
-          <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-            <span className="material-symbols-outlined text-xl text-primary">home</span>
+          <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+            <span className="material-symbols-outlined text-xl text-gray-300">home</span>
           </button>
         </div>
         <div className="text-center">
-          <h1 className="text-xl font-bold">Recipients</h1>
-          <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+          <h1 className="text-lg font-semibold tracking-tight">Recipients</h1>
+          <p className="ga-eyebrow text-[9px] mt-0.5">Guardian Angel DMS</p>
         </div>
         {canAccessFeatures !== false ? (
-          <button onClick={() => navigate('/add-recipient')} className="size-10 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new recipient">
+          <button onClick={() => navigate('/add-recipient')} className="size-10 rounded-xl bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors" title="Add new recipient">
             <span className="material-symbols-outlined">person_add</span>
           </button>
         ) : (
-          <button onClick={() => navigate('/pricing')} className="size-10 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors" title="Upgrade to add recipients">
+          <button onClick={() => navigate('/pricing')} className="size-10 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-colors" title="Upgrade to add recipients">
             <span className="material-symbols-outlined">lock</span>
           </button>
         )}
       </header>
 
       <div className="px-1 text-center">
-        <p className="text-gray-400 text-[11px] font-medium leading-relaxed max-w-[280px] mx-auto">
+        <p className="text-gray-400 text-xs leading-relaxed max-w-[300px] mx-auto">
           People who will receive your saved items if you don't check in.
         </p>
       </div>
@@ -405,14 +405,14 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
       <div className="flex-1 space-y-4">
         {recipients.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
-            <div className="size-20 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center mb-6 shadow-2xl">
-              <span className="material-symbols-outlined text-4xl text-gray-700">group_off</span>
+            <div className="size-20 rounded-3xl bg-surface-dark border border-white/10 flex items-center justify-center mb-6 shadow-2xl">
+              <span className="material-symbols-outlined text-4xl text-gray-600">group_off</span>
             </div>
-            <h3 className="text-lg font-black text-white uppercase italic tracking-tighter">No Recipients Yet</h3>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 mb-8 max-w-[200px] leading-relaxed">
+            <h3 className="text-lg font-semibold tracking-tight text-white">No recipients yet</h3>
+            <p className="text-gray-500 text-xs mt-2 mb-8 max-w-[220px] leading-relaxed">
               Add someone you trust to receive your items.
             </p>
-            <button onClick={() => canAccessFeatures !== false ? navigate('/add-recipient') : navigate('/pricing')} className="px-8 py-4 bg-primary rounded-2xl text-white font-bold uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-primary/20 active:scale-95 transition-all">
+            <button onClick={() => canAccessFeatures !== false ? navigate('/add-recipient') : navigate('/pricing')} className="px-7 py-3.5 bg-primary rounded-xl text-white text-sm font-semibold flex items-center gap-2.5 shadow-xl shadow-primary/20 active:scale-95 transition-all">
               <span className="material-symbols-outlined">{canAccessFeatures !== false ? 'person_add' : 'lock'}</span>
               {canAccessFeatures !== false ? 'Add Recipient' : 'Upgrade to Add'}
             </button>
@@ -423,7 +423,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
               <div 
                 key={recipient._id} 
                 onClick={() => handleEditClick(recipient)}
-                className="group relative flex gap-4 bg-surface-dark p-4 rounded-[28px] shadow-lg border border-gray-800 hover:border-primary/40 transition-all cursor-pointer active:scale-[0.98]"
+                className="ga-stat-card group relative flex gap-4 bg-surface-dark p-4 rounded-2xl shadow-lg border border-gray-800 hover:border-primary/40 transition-all cursor-pointer active:scale-[0.99]"
               >
                 <div className="shrink-0">
                   <Avatar
@@ -435,8 +435,8 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
                 <div className="flex flex-1 flex-col justify-center min-w-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-white text-base font-bold truncate group-hover:text-primary transition-colors">{recipient.name}</p>
-                      <p className="text-gray-500 text-[9px] font-black uppercase tracking-widest mt-0.5">{recipient.relationship}</p>
+                      <p className="text-white text-base font-semibold tracking-tight truncate group-hover:text-primary transition-colors">{recipient.name}</p>
+                      <p className="text-gray-500 text-[10px] font-medium uppercase tracking-[0.08em] mt-0.5">{recipient.relationship}</p>
                     </div>
                   </div>
                 </div>
@@ -449,7 +449,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
             {/* Recipient Cap Section */}
             <div className="mt-6 pt-4 border-t border-gray-800">
               {recipients.length >= RECIPIENT_CAP ? (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <span className="material-symbols-outlined text-amber-500 text-lg flex-shrink-0 mt-0.5">info</span>
                     <div className="flex-1">
@@ -461,7 +461,7 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
               ) : (
                 <button
                   onClick={() => canAccessFeatures !== false ? navigate('/add-recipient') : navigate('/pricing')}
-                  className={`w-full h-11 border transition-colors rounded-lg font-bold uppercase tracking-wider text-[10px] flex items-center justify-center gap-2 ${
+                  className={`w-full h-11 border transition-colors rounded-xl font-semibold text-xs flex items-center justify-center gap-2 ${
                     canAccessFeatures !== false
                       ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
                       : 'bg-gray-800 border-gray-700 text-gray-500'

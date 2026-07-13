@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './app.css';
 
 // Intercept Microsoft OAuth redirect before HashRouter processes the hash.
 // Microsoft returns: http://localhost:3000/#id_token=xxx&token_type=bearer...

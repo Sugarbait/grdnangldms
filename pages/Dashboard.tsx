@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile } from '../App';
 
@@ -335,9 +336,9 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
   }, [showCelebration]);
 
   return (
-    <div className="flex flex-col gap-6 px-5 py-8 animate-in fade-in duration-700 relative min-h-screen overflow-hidden">
-      {showCelebration && (
-        <div className={`fixed inset-0 z-[100] pointer-events-none transition-all duration-500 ease-out ${celebrationClosing ? 'celebration-overlay-exit' : 'celebration-overlay-enter'}`}>
+    <div className="ga-dashboard flex flex-col gap-6 px-1 sm:px-3 py-6 md:py-10 animate-in fade-in duration-700 relative min-h-screen overflow-hidden">
+      {showCelebration && createPortal(
+        <div className={`fixed inset-0 w-screen h-[100dvh] z-[100] pointer-events-none overflow-hidden transition-all duration-500 ease-out ${celebrationClosing ? 'celebration-overlay-exit' : 'celebration-overlay-enter'}`}>
           {/* Back canvas — fireworks, sparkles, and ~half of confetti behind the card */}
           <canvas ref={canvasBackRef} className="absolute inset-0 w-full h-full" />
           {/* Card in the middle */}
@@ -346,35 +347,35 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
               <div className="inline-flex size-20 sm:size-24 rounded-full bg-gradient-to-br from-green-400/30 to-emerald-500/20 items-center justify-center mb-5 ring-4 ring-white/30 shadow-[0_0_40px_rgba(16,185,129,0.5)]">
                 <span className="material-symbols-outlined text-white text-5xl sm:text-6xl drop-shadow-[0_0_30px_#10b981]">verified</span>
               </div>
-              <h2 className="text-4xl sm:text-6xl font-black text-white uppercase italic tracking-tighter mb-3 drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">I AM ALIVE!</h2>
+              <h2 className="text-4xl sm:text-6xl font-semibold text-white tracking-tight mb-3 drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">I AM ALIVE!</h2>
               <div className="flex items-center justify-center gap-2 mb-3">
                 <div className="h-0.5 w-8 bg-gradient-to-r from-transparent to-white/60 rounded-full"></div>
                 <span className="material-symbols-outlined text-green-400 text-xl">check_circle</span>
                 <div className="h-0.5 w-8 bg-gradient-to-l from-transparent to-white/60 rounded-full"></div>
               </div>
               <p className="text-white/70 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] sm:tracking-[0.5em]">You're all set</p>
-              <p className="text-green-400/90 text-[11px] sm:text-sm font-black uppercase tracking-[0.2em] mt-2 animate-pulse">Timer reset successfully</p>
+              <p className="text-green-400/90 text-[11px] sm:text-sm font-semibold uppercase tracking-[0.08em] mt-2 animate-pulse">Timer reset successfully</p>
             </div>
           </div>
           {/* Front canvas — confetti and particles that fall over the card */}
           <canvas ref={canvasFrontRef} className="absolute inset-0 w-full h-full" />
-        </div>
+        </div>,
+        document.body
       )}
 
-      <header className="relative flex items-center justify-center">
-        <div className="flex flex-col items-center gap-1 md:hidden">
+      <header className="relative flex items-center justify-between min-h-12">
+        <div className="flex items-center gap-3 md:hidden">
           <button onClick={() => navigate('/')} aria-label="Guardian Angel DMS home" className="transition-opacity hover:opacity-80">
             <img
               src="/images/New-GrdnAngl-Logo.png"
-              alt="Guardian Angel DMS Logo"
-              className="w-48 h-auto object-contain"
+              alt="Guardian Angel DMS"
+              className="w-44 h-auto object-contain"
             />
           </button>
-          <p className="text-[9px] text-primary font-black uppercase tracking-widest">Your Digital Legacy</p>
         </div>
         <button
           onClick={() => navigate('/settings')}
-          className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-surface-dark border border-gray-800 hover:border-gray-600 transition-all active:scale-95 shadow-lg overflow-hidden"
+          className="md:hidden rounded-xl bg-surface-dark border border-white/10 hover:border-white/20 transition-all active:scale-95 shadow-lg overflow-hidden"
         >
           <div className="size-8 rounded-full bg-surface-darker flex items-center justify-center overflow-hidden border border-gray-700">
             {currentUser.avatarUrl ? (
@@ -386,12 +387,22 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         </button>
       </header>
 
-      <div className="flex flex-col items-center gap-4">
-        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{currentUser.name}</p>
+      <div className="flex items-end justify-between gap-4 mt-2">
+        <div>
+          <p className="ga-eyebrow mb-1">Protection status</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">Welcome back, {currentUser.name.split(' ')[0]}</h1>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-1.5 text-[11px] font-semibold text-emerald-300">
+          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Protocol monitoring
+        </div>
       </div>
 
-      <div className="relative group pt-2">
+      <section className="ga-timer-panel relative group pt-2">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-all duration-1000"></div>
+        <div className="relative z-10 text-center mb-5">
+          <p className="ga-eyebrow">Time until your protocol activates</p>
+        </div>
         <div className="flex gap-2 justify-center relative z-10">
           {[
             { label: 'Days', val: formatNum(days), accent: false },
@@ -401,41 +412,41 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
           ].map((unit, i) => (
             <React.Fragment key={unit.label}>
               <div className="flex flex-col items-center gap-2">
-                <div className={`flex h-20 w-16 sm:h-24 sm:w-20 items-center justify-center rounded-[20px] sm:rounded-[24px] bg-surface-dark/80 backdrop-blur-md border border-gray-800 shadow-2xl shadow-black/40 transition-transform duration-500 hover:scale-105 ${unit.accent ? 'ring-1 ring-accent-amber/30' : ''}`}>
-                  <p className={`text-3xl sm:text-5xl font-black tracking-tighter ${unit.accent ? 'text-accent-amber drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'text-white'}`}>
+                <div className={`ga-timer-unit flex h-20 w-16 sm:h-24 sm:w-24 items-center justify-center rounded-2xl bg-surface-dark/80 backdrop-blur-md border border-gray-800 transition-transform duration-500 hover:scale-[1.03] ${unit.accent ? 'ring-1 ring-accent-amber/20' : ''}`}>
+                  <p className={`text-3xl sm:text-5xl font-semibold tracking-tight tabular-nums ${unit.accent ? 'text-accent-amber' : 'text-white'}`}>
                     {unit.val}
                   </p>
                 </div>
-                <p className={`text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] ${unit.accent ? 'text-accent-amber' : 'text-gray-500'}`}>
+                <p className={`text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.12em] ${unit.accent ? 'text-accent-amber' : 'text-gray-500'}`}>
                   {unit.label}
                 </p>
               </div>
               {i < 3 && (
                 <div className="flex h-20 sm:h-24 items-center pb-4 sm:pb-5">
-                  <span className="text-xl sm:text-2xl text-gray-700 font-black animate-pulse">:</span>
+                  <span className="text-xl sm:text-2xl text-gray-700 font-semibold">:</span>
                 </div>
               )}
             </React.Fragment>
           ))}
         </div>
-      </div>
+      </section>
 
       <div className="px-1 py-4 space-y-3">
         <button
           onClick={canAccessFeatures ? handleCheckInClick : () => navigate('/pricing')}
-          className={`relative w-full group overflow-hidden h-32 sm:h-36 rounded-[32px] sm:rounded-[40px] shadow-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.97] border ${canAccessFeatures
+          className={`ga-checkin-button relative w-full group overflow-hidden h-28 sm:h-32 rounded-[24px] shadow-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.98] border ${canAccessFeatures
             ? 'bg-primary shadow-primary/40 hover:bg-blue-600 border-white/20'
             : 'bg-surface-dark border-gray-700 hover:border-primary/50 cursor-pointer'
             }`}
         >
           {canAccessFeatures && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>}
           <div className="text-center relative z-10">
-            <h2 className="text-3xl sm:text-4xl font-black text-white uppercase italic tracking-[0.05em] drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)] leading-none mb-2">
-              {isExpired ? 'SUBSCRIBE TO CHECK IN' : 'I AM ALIVE!'}
+            <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight leading-none mb-2">
+              {isExpired ? 'Subscribe to check in' : "I'M SAFE"}
             </h2>
             <div className="flex flex-col items-center">
               <div className="h-0.5 w-10 sm:w-12 bg-white/40 mb-2 rounded-full"></div>
-              <p className="text-[10px] sm:text-[11px] text-white/80 font-black uppercase tracking-[0.5em]">{isExpired ? '$7.99/mo for full access' : 'Press to verify'}</p>
+              <p className="text-[11px] sm:text-xs text-white/75 font-medium">{isExpired ? '$7.99/month for full access' : 'Confirm your safety and reset the timer'}</p>
             </div>
           </div>
           {canAccessFeatures && <div className="absolute inset-0 rounded-[32px] sm:rounded-[40px] pulse-ring pointer-events-none"></div>}
@@ -446,16 +457,16 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
       <div className="px-1">
         <button
           onClick={() => canAccessFeatures ? navigate('/upload') : navigate('/pricing')}
-          className={`w-full group relative flex items-center justify-between p-4 sm:p-5 bg-surface-dark border border-gray-800 rounded-[24px] sm:rounded-[28px] transition-all shadow-lg active:scale-[0.98] ${canAccessFeatures ? 'hover:border-primary/40' : 'opacity-50'
+          className={`ga-action-card w-full group relative flex items-center justify-between p-4 sm:p-5 bg-surface-dark border border-gray-800 rounded-[20px] transition-all shadow-lg active:scale-[0.98] ${canAccessFeatures ? 'hover:border-primary/40' : 'opacity-50'
             }`}
         >
           <div className="flex items-center gap-4">
             <div className="size-10 sm:size-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors">
-              <span className="material-symbols-outlined text-primary group-hover:text-white transition-colors text-xl sm:text-2xl">upload_file</span>
+              <span className="ga-upload-icon material-symbols-outlined text-primary group-hover:text-white transition-colors text-xl sm:text-2xl">upload_file</span>
             </div>
             <div className="text-left">
-              <p className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">Add New Item</p>
-              <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Upload files or write messages</p>
+              <p className="text-sm font-semibold text-white">Add an item</p>
+              <p className="text-[11px] text-gray-500 font-medium mt-0.5">Upload a file or write a private message</p>
             </div>
           </div>
           <span className="material-symbols-outlined text-gray-600 group-hover:text-primary transition-colors">chevron_right</span>
@@ -463,26 +474,26 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 pb-12">
-        <div onClick={() => navigate('/vault')} className="bg-surface-dark/40 backdrop-blur-sm p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] border border-gray-800/60 flex flex-col items-center justify-center gap-1 sm:gap-2 cursor-pointer hover:bg-surface-dark transition-all duration-300 group shadow-lg">
+        <div onClick={() => navigate('/vault')} className="ga-stat-card bg-surface-dark/40 backdrop-blur-sm p-6 sm:p-7 rounded-[22px] border border-gray-800/60 flex flex-col items-start justify-center gap-1 sm:gap-2 cursor-pointer hover:bg-surface-dark transition-all duration-300 group shadow-lg">
           <div className="size-10 sm:size-12 rounded-xl sm:rounded-2xl bg-surface-dark flex items-center justify-center border border-gray-800 mb-1 sm:mb-2 group-hover:border-primary/40 transition-colors">
             <span className="material-symbols-outlined text-blue-400 group-hover:scale-110 transition-transform text-xl sm:text-2xl">lock</span>
           </div>
-          <p className="text-5xl sm:text-7xl font-black text-white tracking-tighter leading-none mb-1">{fileCount}</p>
-          <p className="text-[10px] sm:text-[11px] font-black text-gray-500 uppercase tracking-widest text-center">Saved Items</p>
+          <p className="text-4xl sm:text-5xl font-semibold text-white tracking-tight leading-none mb-1">{fileCount}</p>
+          <p className="text-[11px] font-medium text-gray-500">Items in your vault</p>
         </div>
-        <div onClick={() => navigate('/recipients')} className="bg-surface-dark/40 backdrop-blur-sm p-6 sm:p-8 rounded-[28px] sm:rounded-[32px] border border-gray-800/60 flex flex-col items-center justify-center gap-1 sm:gap-2 cursor-pointer hover:bg-surface-dark transition-all duration-300 group shadow-lg">
+        <div onClick={() => navigate('/recipients')} className="ga-stat-card bg-surface-dark/40 backdrop-blur-sm p-6 sm:p-7 rounded-[22px] border border-gray-800/60 flex flex-col items-start justify-center gap-1 sm:gap-2 cursor-pointer hover:bg-surface-dark transition-all duration-300 group shadow-lg">
           <div className="size-10 sm:size-12 rounded-xl sm:rounded-2xl bg-surface-dark flex items-center justify-center border border-gray-800 mb-1 sm:mb-2 group-hover:border-primary/40 transition-colors">
             <span className="material-symbols-outlined text-blue-400 group-hover:scale-110 transition-transform text-xl sm:text-2xl">group</span>
           </div>
-          <p className="text-5xl sm:text-7xl font-black text-white tracking-tighter leading-none mb-1">{recipientCount}</p>
-          <p className="text-[10px] sm:text-[11px] font-black text-gray-500 uppercase tracking-widest text-center">Recipients</p>
+          <p className="text-4xl sm:text-5xl font-semibold text-white tracking-tight leading-none mb-1">{recipientCount}</p>
+          <p className="text-[11px] font-medium text-gray-500">Trusted recipients</p>
         </div>
       </div>
 
       <style>{`
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .pulse-ring { box-shadow: 0 0 0 0 rgba(23, 84, 207, 0.4); animation: pulse-ring-anim 2s infinite; }
-        @keyframes pulse-ring-anim { 0% { box-shadow: 0 0 0 0 rgba(23, 84, 207, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(23, 84, 207, 0); } 100% { box-shadow: 0 0 0 0 rgba(23, 84, 207, 0); } }
+        .pulse-ring { box-shadow: 0 0 0 0 rgba(113, 129, 255, 0.3); animation: pulse-ring-anim 2.6s infinite; }
+        @keyframes pulse-ring-anim { 0% { box-shadow: 0 0 0 0 rgba(113, 129, 255, 0.3); } 70% { box-shadow: 0 0 0 20px rgba(113, 129, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(113, 129, 255, 0); } }
         .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 

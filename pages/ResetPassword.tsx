@@ -72,12 +72,12 @@ const ResetPassword: React.FC = () => {
           <div className="size-20 rounded-3xl bg-red-500/10 flex items-center justify-center border border-red-500/20 mx-auto mb-6">
             <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Invalid Reset Link</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Invalid Reset Link</h1>
           <p className="text-gray-400 mb-6">{error || "The reset link is invalid or missing required parameters."}</p>
 
           <button
             onClick={() => navigate('/login')}
-            className="w-full h-12 bg-primary text-white font-black rounded-xl hover:bg-blue-600 transition-colors uppercase tracking-wider text-[10px]"
+            className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors text-sm"
           >
             Back to Login
           </button>
@@ -93,7 +93,7 @@ const ResetPassword: React.FC = () => {
           <div className="size-20 rounded-3xl bg-green-500/10 flex items-center justify-center border border-green-500/20 mx-auto mb-6">
             <span className="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Password Reset!</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Password Reset!</h1>
           <p className="text-gray-400 mb-6">
             Your password has been successfully reset. Redirecting to login...
           </p>
@@ -109,7 +109,7 @@ const ResetPassword: React.FC = () => {
         <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 mx-auto mb-6">
           <span className="material-symbols-outlined text-primary text-5xl">lock_reset</span>
         </div>
-        <h1 className="text-2xl font-black text-white mb-2 text-center">Reset Password</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-white mb-2 text-center">Reset Password</h1>
         <p className="text-gray-400 text-center mb-6">Enter your new password below.</p>
 
         {error && (
@@ -121,7 +121,7 @@ const ResetPassword: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* New Password Field */}
           <div className="relative">
-            <label htmlFor="password" className="block text-xs font-black text-gray-300 mb-2 uppercase tracking-wider">
+            <label htmlFor="password" className="block text-xs font-semibold text-gray-400 mb-2">
               New Password
             </label>
             <div className="relative flex items-center">
@@ -149,7 +149,7 @@ const ResetPassword: React.FC = () => {
 
           {/* Confirm Password Field */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-xs font-black text-gray-300 mb-2 uppercase tracking-wider">
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold text-gray-400 mb-2">
               Confirm Password
             </label>
             <input
@@ -167,7 +167,7 @@ const ResetPassword: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-primary text-white font-black rounded-xl hover:bg-blue-600 transition-colors uppercase tracking-wider text-[10px] mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors text-sm mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Resetting Password...' : 'Reset Password'}
           </button>
@@ -175,7 +175,7 @@ const ResetPassword: React.FC = () => {
 
         <button
           onClick={() => navigate('/login')}
-          className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] mt-3"
+          className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm mt-3"
         >
           Back to Login
         </button>

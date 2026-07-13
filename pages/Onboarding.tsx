@@ -26,7 +26,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
             <span className="material-symbols-outlined text-red-500 text-6xl">error</span>
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tighter uppercase italic mb-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">
               Authentication Required
             </h1>
             <p className="text-gray-400 text-sm">You must be logged in to access onboarding.</p>
@@ -36,7 +36,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
               onLogout?.();
               navigate('/login');
             }}
-            className="w-full h-12 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all"
+            className="w-full h-12 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/20 text-sm hover:bg-blue-600 transition-all"
           >
             Return to Login
           </button>
@@ -108,11 +108,11 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
   const currentStep = steps[step];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background-dark relative overflow-hidden font-display">
+    <div className="ga-auth-shell min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background-dark relative overflow-hidden font-display">
       <div className="absolute top-[-10%] left-[-10%] w-80 h-80 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-80 h-80 bg-accent-amber/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="w-full max-w-2xl space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <div className="ga-auth-card w-full max-w-2xl space-y-7 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
         {/* Error Display */}
         {error && (
           <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[11px] font-bold uppercase text-center animate-shake leading-relaxed shadow-lg">
@@ -140,11 +140,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
           {/* Icon */}
           <div className="flex justify-center">
             {step === 0 ? (
-              <img
-                src="/images/New-GrdnAngl-Logo.png"
-                alt="Guardian Angel DMS"
-                className="h-auto w-56 object-contain"
-              />
+              <span className="ga-brand-mark !size-20 !rounded-3xl" aria-hidden="true"><span className="material-symbols-outlined !text-4xl">shield_lock</span></span>
             ) : (
               <div className="inline-flex items-center justify-center size-24 rounded-3xl bg-primary/10 border border-primary/20 shadow-2xl shadow-primary/20 relative overflow-hidden">
                 <span className="material-symbols-outlined text-primary text-6xl">{currentStep.icon}</span>
@@ -155,16 +151,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
 
           {/* Title and Subtitle */}
           <div>
-            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic mb-2">
+            <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight mb-2">
               {currentStep.title}
             </h1>
-            <p className="text-primary text-[11px] font-black uppercase tracking-widest">
+            <p className="text-indigo-300 text-[11px] font-semibold tracking-wide">
               {currentStep.subtitle}
             </p>
           </div>
 
           {/* Description */}
-          <div className="bg-surface-dark rounded-3xl p-8 border border-gray-800 shadow-xl">
+          <div className="bg-surface-dark/70 rounded-2xl p-6 sm:p-8 border border-white/[0.07]">
             <p className="text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
               {currentStep.description}
             </p>
@@ -176,7 +172,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
           <button
             onClick={() => setStep(Math.max(0, step - 1))}
             disabled={step === 0}
-            className="flex-1 h-16 bg-surface-dark text-white font-black rounded-2xl border border-gray-800 uppercase tracking-[0.2em] text-xs hover:border-gray-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex-1 h-14 bg-surface-dark text-white font-semibold rounded-xl border border-white/10 text-sm hover:border-gray-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Back
           </button>
@@ -222,7 +218,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
                 }
               }}
               disabled={isLoading || !userId}
-              className="flex-1 h-16 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50"
+              className="flex-1 h-14 bg-primary text-white font-semibold rounded-xl shadow-xl shadow-primary/20 text-sm hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {isLoading ? 'Processing...' : currentStep.action}
             </button>
@@ -268,7 +264,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
                   }
                 }}
                 disabled={isLoading || !userId}
-                className="flex-1 h-16 bg-surface-dark text-white font-black rounded-2xl border border-gray-800 uppercase tracking-[0.2em] text-xs hover:border-gray-600 transition-all disabled:opacity-50"
+                className="flex-1 h-14 bg-surface-dark text-white font-semibold rounded-xl border border-white/10 text-sm hover:border-gray-600 transition-all disabled:opacity-50"
               >
                 {isLoading ? 'Processing...' : 'Skip Tutorial'}
               </button>
@@ -281,7 +277,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ userId, onLogout, currentUser }
                   }
                 }}
                 disabled={isLoading}
-                className="flex-1 h-16 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50"
+                className="flex-1 h-14 bg-primary text-white font-semibold rounded-xl shadow-xl shadow-primary/20 text-sm hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-50"
               >
                 {currentStep.action}
               </button>

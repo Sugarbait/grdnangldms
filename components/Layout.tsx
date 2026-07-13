@@ -37,10 +37,10 @@ const Layout: React.FC<LayoutProps> = ({
   };
 
   const navItems = [
-    { id: 'dashboard', path: '/', label: 'Dashboard', icon: 'dashboard' },
+    { id: 'dashboard', path: '/', label: 'Overview', icon: 'space_dashboard' },
     { id: 'vault', path: '/vault', label: 'Vault', icon: 'lock' },
     { id: 'recipients', path: '/recipients', label: 'Recipients', icon: 'group' },
-    { id: 'subscription', path: '/pricing', label: 'Subscription', icon: 'card_giftcard' },
+    { id: 'subscription', path: '/pricing', label: 'Plan', icon: 'credit_card' },
     { id: 'settings', path: '/settings', label: 'Settings', icon: 'settings' },
   ];
 
@@ -50,23 +50,27 @@ const Layout: React.FC<LayoutProps> = ({
   const showMobileNav = !['/upload', '/add-recipient'].includes(location.pathname);
 
   return (
-    <div className="flex h-screen bg-background-dark overflow-hidden">
+    <div className="ga-shell flex h-screen bg-background-dark overflow-hidden">
 
       {/* ── Desktop Sidebar (md and above) ── */}
       {showNav && (
-        <nav className="hidden md:flex flex-col fixed left-0 top-0 h-full w-56 bg-surface-dark border-r border-gray-800 z-50">
+        <nav className="ga-sidebar hidden md:flex flex-col fixed left-0 top-0 h-full w-64 bg-surface-dark border-r border-gray-800 z-50 p-3">
           {/* Logo */}
-          <button onClick={() => navigate('/')} className="px-5 py-5 border-b border-gray-800 hover:opacity-80 transition-opacity">
-            <img src="/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" className="w-full h-auto object-contain" />
+          <button onClick={() => navigate('/')} className="flex items-center justify-start px-3 py-4 hover:opacity-85 transition-opacity">
+            <img
+              src="/images/New-GrdnAngl-Logo.png"
+              alt="Guardian Angel DMS"
+              className="w-full max-w-[215px] h-auto object-contain"
+            />
           </button>
 
           {/* Profile */}
           {currentUser && (
             <button
               onClick={() => navigate('/settings')}
-              className="flex items-center gap-3 px-5 py-4 border-b border-gray-800 hover:bg-gray-800/40 transition-colors w-full text-left"
+              className="ga-profile-card flex items-center gap-3 px-3 py-3 mt-2 hover:bg-white/[0.035] transition-colors w-full text-left"
             >
-              <div className="size-8 rounded-full bg-surface-darker flex items-center justify-center overflow-hidden border border-gray-700 shrink-0">
+              <div className="size-9 rounded-xl bg-surface-darker flex items-center justify-center overflow-hidden border border-white/10 shrink-0">
                 {currentUser.avatarUrl ? (
                   <img src={currentUser.avatarUrl} className="h-full w-full object-cover" alt="" />
                 ) : (
@@ -75,25 +79,26 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{currentUser.name}</p>
-                <p className="text-[10px] text-gray-500 truncate">{currentUser.email}</p>
+                <p className="text-[10px] text-gray-500 truncate mt-0.5">{currentUser.email}</p>
               </div>
             </button>
           )}
 
           {/* Nav items */}
-          <div className="flex-1 py-3 overflow-y-auto">
+          <div className="flex-1 py-5 px-2 overflow-visible space-y-1">
+            <p className="px-1 pb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-600">Workspace</p>
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
-                className={`relative w-full flex items-center gap-3 px-5 py-3 text-sm font-medium transition-colors text-left ${
+                className={`ga-nav-item relative w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all text-left ${
                   isActive(item.path)
-                    ? 'text-primary bg-primary/10 border-r-2 border-primary'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                    ? 'ga-nav-item-active text-primary bg-primary/10'
+                    : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <span
-                  className="material-symbols-outlined text-xl"
+                  className="ga-nav-icon material-symbols-outlined text-lg"
                   style={{ fontVariationSettings: isActive(item.path) ? "'FILL' 1" : "'FILL' 0" }}
                 >
                   {item.icon}
@@ -108,7 +113,7 @@ const Layout: React.FC<LayoutProps> = ({
 
           {/* Session Timer - Desktop only */}
           {getSessionTimeRemaining && onSessionTimeout && (
-            <div className="px-5 py-3 border-t border-gray-800">
+            <div className="px-3 py-3 border-t border-white/[0.06]">
               <SessionTimer
                 getTimeRemaining={getSessionTimeRemaining}
                 onLogout={onSessionTimeout}
@@ -117,15 +122,15 @@ const Layout: React.FC<LayoutProps> = ({
           )}
 
           {/* Sidebar footer */}
-          <div className="px-5 py-5 border-t border-gray-900 flex flex-col gap-2">
-            <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-600">
+          <div className="px-3 py-4 border-t border-white/[0.06] flex flex-col gap-2">
+            <div className="flex gap-4 text-[10px] font-semibold text-gray-600">
               <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
               <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             </div>
-            <p className="text-[9px] text-gray-700 uppercase tracking-widest">
-              &copy; 2025 Guardian Angel DMS
+            <p className="text-[9px] text-gray-700">
+              &copy; 2026 Guardian Angel DMS
             </p>
-            <p className="text-[8px] text-gray-600 uppercase tracking-widest pt-2 border-t border-gray-800">
+            <p className="text-[8px] text-gray-600 pt-2 border-t border-white/[0.05]">
               v{APP_VERSION}
             </p>
           </div>
@@ -133,22 +138,22 @@ const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* ── Main Content ── */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden md:ml-56">
-        <div className={`flex-1 overflow-y-auto ${showMobileNav ? 'pb-32' : 'pb-0'} md:pb-0 no-scrollbar flex flex-col`}>
+      <main className="flex-1 flex flex-col h-full overflow-hidden md:ml-64">
+        <div className={`ga-content-scroll flex-1 overflow-y-auto ${showMobileNav ? 'pb-32' : 'pb-0'} md:pb-0 no-scrollbar flex flex-col`}>
           {/* Content wrapper — constrained width on desktop so it doesn't stretch */}
-          <div className="w-full md:max-w-2xl md:mx-auto px-4 md:px-6">
+          <div className="ga-content w-full md:max-w-3xl md:mx-auto px-4 md:px-8">
             {children}
           </div>
 
           {/* Footer — mobile only; desktop has it in the sidebar */}
-          <footer className="py-10 px-6 mt-auto border-t border-gray-900 bg-surface-darker/50 md:hidden">
+          <footer className="py-10 px-6 mt-auto border-t border-white/[0.05] bg-surface-darker/30 md:hidden">
             <div className="flex flex-col items-center gap-4">
-              <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+              <div className="flex gap-6 text-[10px] font-semibold text-gray-500">
                 <Link to="/terms" className="hover:text-primary transition-colors">Terms of Use</Link>
                 <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Rules</Link>
               </div>
               <p className="text-[9px] text-gray-700 uppercase tracking-widest text-center">
-                &copy; 2025 Guardian Angel DMS. Built for your peace of mind.
+                &copy; 2026 Guardian Angel DMS. Built for your peace of mind.
               </p>
               <p className="text-[8px] text-gray-600 uppercase tracking-widest pt-2 border-t border-gray-800">
                 v{APP_VERSION}
@@ -160,7 +165,7 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* ── Mobile Bottom Nav (below md) ── */}
       {showMobileNav && (
-        <nav className="md:hidden fixed bottom-0 z-50 w-full bg-surface-dark border-t border-gray-800 pb-safe">
+        <nav className="ga-mobile-nav md:hidden fixed bottom-0 z-50 w-full bg-surface-dark border-t border-gray-800 pb-safe">
           {/* Session Timer in mobile nav */}
           {getSessionTimeRemaining && onSessionTimeout && (
             <div className="px-4 py-2 border-t border-gray-800 bg-surface-dark/50">
@@ -172,12 +177,12 @@ const Layout: React.FC<LayoutProps> = ({
           )}
           
           {/* Nav items */}
-          <div className="flex justify-around items-center px-2 h-16 pt-2">
+          <div className="flex justify-around items-center p-1.5 h-16">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
-                className={`relative flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
+                className={`relative flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors ${
                   isActive(item.path) ? 'text-primary' : 'text-gray-400'
                 }`}
               >
@@ -187,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({
                 >
                   {item.icon}
                 </span>
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <span className="text-[9px] font-medium">{item.label}</span>
                 {!canAccessFeatures && item.id === 'subscription' && (
                   <div className="absolute top-1 right-1/4 size-2 bg-red-500 rounded-full animate-pulse"></div>
                 )}

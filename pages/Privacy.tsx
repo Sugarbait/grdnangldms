@@ -8,10 +8,9 @@ const Privacy: React.FC = () => {
   return (
     <div className="min-h-screen bg-background-dark text-white p-6 max-w-2xl mx-auto font-display animate-in fade-in duration-500">
       <header className="flex items-center gap-4 mb-8">
-        <button onClick={() => navigate(-1)} className="p-2 bg-surface-dark rounded-full">
-          <span className="material-symbols-outlined">arrow_back</span>
+        <button onClick={() => navigate(-1)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 transition-colors">          <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h1 className="text-2xl font-black uppercase italic tracking-tighter">Privacy Policy</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Privacy Policy</h1>
       </header>
 
       <div className="space-y-8 pb-20 text-sm md:text-base">

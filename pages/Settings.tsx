@@ -297,14 +297,14 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
     <div className="p-4 flex flex-col gap-8 animate-in slide-in-from-right duration-300">
       <header className="sticky top-0 z-50 flex items-center bg-background-dark py-2 justify-between">
         <div className="flex gap-2">
-          <button onClick={() => navigate(-1)} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-            <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+          <button onClick={() => navigate(-1)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+            <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
           </button>
-          <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-            <span className="material-symbols-outlined text-xl text-primary">home</span>
+          <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+            <span className="material-symbols-outlined text-xl text-gray-300">home</span>
           </button>
         </div>
-        <h2 className="text-lg font-bold">Settings</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Settings</h2>
         <button onClick={handleLogoutClick} className="text-[10px] font-black text-red-500 uppercase tracking-widest px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full">Sign Out</button>
       </header>
 
@@ -324,8 +324,8 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-black text-lg truncate tracking-tight">{currentUser.name}</h3>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest truncate">{currentUser.email}</p>
+            <h3 className="text-white font-semibold text-lg truncate tracking-tight">{currentUser.name}</h3>
+            <p className="text-gray-500 text-[11px] truncate mt-0.5">{currentUser.email}</p>
           </div>
           <button
             onClick={() => setIsEditingProfile(!isEditingProfile)}
@@ -436,7 +436,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </div>
             <button 
               onClick={saveProfile}
-              className="w-full h-12 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all"
+              className="w-full h-12 bg-primary text-white text-sm font-semibold rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all"
             >
               Save Changes
             </button>
@@ -451,7 +451,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-3xl">credit_card</span>
-              <h3 className="text-lg font-bold">Manage Subscription</h3>
+              <h3 className="text-lg font-semibold tracking-tight">Manage Subscription</h3>
             </div>
             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
               userTier === 'subscriber' ? 'text-primary bg-primary/10' :
@@ -561,7 +561,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         <section className="bg-red-950/20 border border-red-500/20 p-6 rounded-[28px] shadow-lg">
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-red-500 text-3xl">credit_card</span>
-            <h3 className="text-lg font-bold">Subscription</h3>
+            <h3 className="text-lg font-semibold tracking-tight">Subscription</h3>
           </div>
           <p className="text-gray-400 text-[11px] leading-relaxed mb-6">
             Upgrade to Guardian Angel Plus to unlock unlimited uploads, continuous timer protection, and more.
@@ -579,19 +579,19 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Check-in Window */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold">Check-in Window</h3>
+          <h3 className="text-lg font-semibold tracking-tight">Check-in Window</h3>
           {timer?.durationSeconds && (timer.durationSeconds !== toSeconds(customValue, customUnit)) && (
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest px-2 py-1 bg-primary/10 rounded-full">
+            <span className="ga-eyebrow text-[10px] px-2 py-1 bg-primary/10 rounded-full">
               Unsaved Changes
             </span>
           )}
         </div>
         <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
           <div className="text-center py-4">
-            <div className="text-4xl font-black tracking-tighter mb-1 uppercase italic">
+            <div className="text-4xl font-semibold tracking-tight mb-1">
               {customValue} {customUnit.charAt(0).toUpperCase() + customUnit.slice(1)}
             </div>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Until Check-in Required</p>
+            <p className="ga-eyebrow text-[10px]">Until Check-in Required</p>
           </div>
 
           {/* Custom time input */}
@@ -715,7 +715,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 }
               }}
               disabled={isSaving || customValue <= 0}
-              className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/40 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
+              className="w-full h-14 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/25 text-sm hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
             >
               {isSaving ? 'Saving...' : 'Save Settings'}
             </button>
@@ -726,7 +726,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Pre-Expiry Reminders (Multiple) */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold">Pre-Expiry Reminders</h3>
+          <h3 className="text-lg font-semibold tracking-tight">Pre-Expiry Reminders</h3>
           <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">Multiple times supported</p>
         </div>
         <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
@@ -866,7 +866,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 }
               }}
               disabled={isSavingReminder}
-              className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/40 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
+              className="w-full h-14 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/25 text-sm hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
             >
               {isSavingReminder ? 'Saving...' : 'Save Reminders'}
             </button>
@@ -877,7 +877,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Check-in Helper Alert Threshold */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold">Check-in Helper Alert</h3>
+          <h3 className="text-lg font-semibold tracking-tight">Check-in Helper Alert</h3>
           <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">When to Notify</p>
         </div>
         <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
@@ -1011,7 +1011,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 }
               }}
               disabled={isSavingCheckInAlert}
-              className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-lg shadow-primary/40 uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
+              className="w-full h-14 bg-primary text-white font-semibold rounded-2xl shadow-lg shadow-primary/25 text-sm hover:bg-blue-600 transition-all disabled:opacity-50 mt-4"
             >
               {isSavingCheckInAlert ? 'Saving...' : 'Save Alert Threshold'}
             </button>
@@ -1028,7 +1028,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Check-in Helpers</h3>
+          <h3 className="text-2xl font-semibold tracking-tight text-white">Check-in Helpers</h3>
           <p className="text-[10px] text-primary font-black uppercase tracking-[0.4em]">Emergency Assistance</p>
         </div>
 
@@ -1038,7 +1038,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
 
         <button
           onClick={() => navigate('/recipients')}
-          className="w-full h-16 bg-primary text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/30 hover:bg-blue-600 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+          className="w-full h-16 bg-primary text-white text-[11px] font-semibold rounded-2xl shadow-xl shadow-primary/30 hover:bg-blue-600 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
         >
           <span>Manage Check-in Helpers</span>
           <span className="material-symbols-outlined">person_add</span>
@@ -1054,7 +1054,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Stop Timer</h3>
+          <h3 className="text-2xl font-semibold tracking-tight text-white">Stop Timer</h3>
           <p className="text-[10px] text-red-500 font-black uppercase tracking-[0.4em]">Pause Countdown</p>
         </div>
 
@@ -1069,7 +1069,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             // Auto-hide confirmation after 4 seconds
             setTimeout(() => setTimerStopped(false), 4000);
           }}
-          className="w-full h-16 bg-red-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-red-500/30 hover:bg-red-600 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+          className="w-full h-16 bg-red-500 text-white text-[11px] font-semibold rounded-2xl shadow-xl shadow-red-500/30 hover:bg-red-600 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
         >
           <span>Stop Timer</span>
           <span className="material-symbols-outlined">stop_circle</span>
@@ -1145,7 +1145,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary text-3xl">verified_user</span>
-            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Multi-Factor Auth</h3>
+            <h3 className="text-2xl font-semibold tracking-tight text-white">Multi-Factor Auth</h3>
           </div>
         </div>
 
@@ -1352,12 +1352,12 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {modal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
-            <h3 className="text-xl font-black text-white mb-2">{modal.title}</h3>
+            <h3 className="text-xl font-semibold tracking-tight text-white mb-2">{modal.title}</h3>
             <p className="text-gray-400 text-sm mb-6">{modal.message}</p>
             {modal.type === 'info' || modal.type === 'error' ? (
               <button
                 onClick={confirmModal}
-                className={`w-full h-12 ${modal.type === 'error' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors`}
+                className={`w-full h-12 ${modal.type === 'error' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white text-sm font-semibold rounded-xl transition-colors`}
               >
                 OK
               </button>
@@ -1365,13 +1365,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               <div className="flex gap-3">
                 <button
                   onClick={() => setModal(null)}
-                  className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+                  className="flex-1 h-12 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmModal}
-                  className="flex-1 h-12 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors"
+                  className="flex-1 h-12 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors"
                 >
                   Delete Forever
                 </button>
@@ -1380,13 +1380,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               <div className="flex gap-3">
                 <button
                   onClick={() => setModal(null)}
-                  className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors"
+                  className="flex-1 h-12 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmModal}
-                  className="flex-1 h-12 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-600 transition-colors"
+                  className="flex-1 h-12 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors"
                 >
                   Confirm
                 </button>
@@ -1401,7 +1401,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-black text-white">
+              <h3 className="text-xl font-semibold tracking-tight text-white">
                 {helpModalType === 'setup' && 'How to Set Up Your Legacy Plan'}
                 {helpModalType === 'timer' && 'Understanding the Check-in Timer'}
                 {helpModalType === 'encryption' && 'Encryption & Security'}
@@ -1514,7 +1514,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface-dark border border-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-black text-white">Help & Support</h3>
+              <h3 className="text-xl font-semibold tracking-tight text-white">Help & Support</h3>
               <button
                 onClick={() => setShowSupportModal(false)}
                 className="text-gray-400 hover:text-gray-200 transition-colors"
@@ -1577,7 +1577,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-surface-dark border border-red-500/30 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-black text-white">Disable 2FA?</h3>
+              <h3 className="text-xl font-semibold tracking-tight text-white">Disable 2FA?</h3>
               <button
                 onClick={() => setShowMFADisableModal(false)}
                 className="text-gray-400 hover:text-gray-200 transition-colors"
@@ -1600,14 +1600,14 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               <button
                 onClick={() => setShowMFADisableModal(false)}
                 disabled={isDisablingMFA}
-                className="flex-1 h-12 bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex-1 h-12 bg-gray-800 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDisableMFA}
                 disabled={isDisablingMFA}
-                className="flex-1 h-12 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="flex-1 h-12 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 {isDisablingMFA ? 'Disabling...' : 'Disable 2FA'}
               </button>

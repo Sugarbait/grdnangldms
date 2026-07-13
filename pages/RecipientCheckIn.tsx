@@ -60,13 +60,13 @@ const RecipientCheckIn: React.FC = () => {
           <div className="size-20 rounded-3xl bg-red-500/10 flex items-center justify-center border border-red-500/20 mx-auto mb-6">
             <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Invalid Link</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Invalid Link</h1>
           <p className="text-gray-400 mb-6">
             This check-in link is invalid or incomplete. Please check your email for a valid link.
           </p>
           <button
             onClick={() => navigate('/')}
-            className="w-full h-12 bg-primary text-white font-black rounded-xl hover:bg-blue-600 transition-colors uppercase tracking-wider text-[10px]"
+            className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors text-sm"
           >
             Go to Home
           </button>
@@ -82,7 +82,7 @@ const RecipientCheckIn: React.FC = () => {
           <div className="size-20 rounded-3xl bg-green-500/10 flex items-center justify-center border border-green-500/20 mx-auto mb-6">
             <span className="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Check-in Confirmed!</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Check-in Confirmed!</h1>
           <p className="text-gray-400 mb-6">
             Their timer has been reset successfully. Redirecting you now...
           </p>
@@ -100,16 +100,16 @@ const RecipientCheckIn: React.FC = () => {
           <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 mx-auto mb-6">
             <span className="material-symbols-outlined text-primary text-5xl">verified_user</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Confirm Check-in</h1>
-          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Confirm Check-in</h1>
+          <p className="ga-eyebrow text-[10px]">Guardian Angel DMS</p>
         </div>
 
         {/* User Info */}
         {user && (
           <div className="mb-8 p-4 bg-background-dark rounded-xl border border-gray-800 text-center">
             <p className="text-gray-400 text-sm mb-3">You're confirming for:</p>
-            <p className="text-xl font-black text-white">{user.name}</p>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-1">
+            <p className="text-xl font-semibold tracking-tight text-white">{user.name}</p>
+            <p className="text-gray-500 text-[11px] mt-1">
               {user.email}
             </p>
           </div>
@@ -134,7 +134,7 @@ const RecipientCheckIn: React.FC = () => {
           <button
             onClick={handleConfirmCheckIn}
             disabled={loading}
-            className="w-full h-14 bg-green-500 text-white font-black rounded-xl hover:bg-green-600 transition-colors uppercase tracking-wider text-[10px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-14 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -153,7 +153,7 @@ const RecipientCheckIn: React.FC = () => {
 
           <button
             onClick={() => navigate('/')}
-            className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px]"
+            className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm"
           >
             Cancel
           </button>

@@ -179,13 +179,13 @@ const MFASetup: React.FC = () => {
             <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 mx-auto mb-6">
               <span className="material-symbols-outlined text-primary text-5xl">verified_user</span>
             </div>
-            <h1 className="text-2xl font-black text-white mb-2">Set Up 2FA</h1>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Set Up 2FA</h1>
+            <p className="ga-eyebrow text-[10px]">Guardian Angel DMS</p>
           </div>
 
           {/* QR Code Section */}
           <div className="mb-8 p-4 bg-background-dark rounded-xl border border-gray-800 flex flex-col items-center min-h-64">
-            <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-4">Scan with Authenticator App</p>
+            <p className="ga-eyebrow text-xs mb-4">Scan with Authenticator App</p>
             {qrCodeUrl ? (
               <>
                 <img
@@ -212,7 +212,7 @@ const MFASetup: React.FC = () => {
 
           {/* Authentication Code Section */}
           <div className="mb-8 p-4 bg-background-dark rounded-xl border border-gray-800">
-            <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3">Or Enter Code Manually</p>
+            <p className="ga-eyebrow text-xs mb-3">Or Enter Code Manually</p>
             <div className="flex gap-2 items-center">
               <p className="text-gray-300 font-mono text-lg break-all flex-1">{totpSecret}</p>
               <button
@@ -239,7 +239,7 @@ const MFASetup: React.FC = () => {
 
           {/* Code Input */}
           <div className="mb-6">
-            <label className="block text-gray-400 text-sm font-black uppercase tracking-wider mb-2">
+            <label className="block text-gray-400 text-xs font-semibold mb-2">
               Enter 6-digit code
             </label>
             <input
@@ -265,7 +265,7 @@ const MFASetup: React.FC = () => {
           <button
             onClick={handleVerifyCode}
             disabled={loading || totpCode.length !== 6}
-            className="w-full h-12 bg-primary text-white font-black rounded-xl hover:bg-blue-600 transition-colors uppercase tracking-wider text-[10px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -287,7 +287,7 @@ const MFASetup: React.FC = () => {
               console.log("[MFASetup] Cancelling MFA setup, returning to login");
               navigate('/login');
             }}
-            className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] mt-3 flex items-center justify-center gap-2"
+            className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm mt-3 flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined">arrow_back</span>
             <span>Skip MFA Setup</span>
@@ -306,8 +306,8 @@ const MFASetup: React.FC = () => {
             <div className="size-20 rounded-3xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 mx-auto mb-6">
               <span className="material-symbols-outlined text-amber-500 text-5xl">key</span>
             </div>
-            <h1 className="text-2xl font-black text-white mb-2">Save Backup Codes</h1>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Guardian Angel DMS</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Save Backup Codes</h1>
+            <p className="ga-eyebrow text-[10px]">Guardian Angel DMS</p>
           </div>
 
           {/* Warning */}
@@ -339,7 +339,7 @@ const MFASetup: React.FC = () => {
           <div className="space-y-3 mb-6">
             <button
               onClick={copyBackupCodes}
-              className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+              className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined">content_copy</span>
               <span>{copiedBackup ? 'Copied!' : 'Copy All'}</span>
@@ -347,7 +347,7 @@ const MFASetup: React.FC = () => {
 
             <button
               onClick={downloadBackupCodes}
-              className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+              className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined">download</span>
               <span>Download</span>
@@ -369,7 +369,7 @@ const MFASetup: React.FC = () => {
           {/* Proceed Button */}
           <button
             onClick={handleProceedToDashboard}
-            className="w-full h-12 bg-primary text-white font-black rounded-xl hover:bg-blue-600 transition-colors uppercase tracking-wider text-[10px] flex items-center justify-center gap-2"
+            className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-2"
           >
             <span>Proceed to Dashboard</span>
             <span className="material-symbols-outlined">home</span>
@@ -380,7 +380,7 @@ const MFASetup: React.FC = () => {
               console.log("[MFASetup] Going back to MFA setup");
               setMode('setup');
             }}
-            className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] mt-3 flex items-center justify-center gap-2"
+            className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm mt-3 flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined">arrow_back</span>
             <span>Back</span>

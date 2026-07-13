@@ -114,7 +114,7 @@ const VerifyEmail: React.FC = () => {
           <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 mx-auto mb-6 animate-pulse">
             <span className="material-symbols-outlined text-primary text-5xl">mail</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Verifying Email</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Verifying Email</h1>
           <p className="text-gray-400 mb-6">Please wait while we confirm your email address...</p>
           <div className="w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full animate-pulse"></div>
         </div>
@@ -129,7 +129,7 @@ const VerifyEmail: React.FC = () => {
           <div className="size-20 rounded-3xl bg-green-500/10 flex items-center justify-center border border-green-500/20 mx-auto mb-6">
             <span className="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
           </div>
-          <h1 className="text-2xl font-black text-white mb-2">Email Verified!</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Email Verified!</h1>
           <p className="text-gray-400 mb-6">
             Great! Your email address has been verified. Setting up multi-factor authentication...
           </p>
@@ -145,7 +145,7 @@ const VerifyEmail: React.FC = () => {
         <div className="size-20 rounded-3xl bg-red-500/10 flex items-center justify-center border border-red-500/20 mx-auto mb-6">
           <span className="material-symbols-outlined text-red-500 text-5xl">error</span>
         </div>
-        <h1 className="text-2xl font-black text-white mb-2">Verification Failed</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Verification Failed</h1>
         <p className="text-gray-400 mb-6">{error || "The verification link is invalid or has expired."}</p>
 
         {!token || !email ? (
@@ -160,7 +160,7 @@ const VerifyEmail: React.FC = () => {
             <button
               onClick={handleResendEmail}
               disabled={resending}
-              className="w-full h-12 bg-primary text-white font-black rounded-xl hover:bg-blue-600 transition-colors uppercase tracking-wider text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-12 bg-primary text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {resending ? 'Sending...' : 'Resend Verification Email'}
             </button>
@@ -169,7 +169,7 @@ const VerifyEmail: React.FC = () => {
 
         <button
           onClick={() => navigate('/login')}
-          className="w-full h-12 bg-gray-800 text-gray-300 font-black rounded-xl hover:bg-gray-700 transition-colors uppercase tracking-wider text-[10px] mt-3"
+          className="w-full h-12 bg-white/5 border border-white/10 text-gray-300 font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm mt-3"
         >
           Back to Login
         </button>

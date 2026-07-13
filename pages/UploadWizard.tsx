@@ -563,16 +563,16 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
       <div className="p-4 pb-32 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-screen">
         <header className="flex items-center justify-between">
           <div className="flex gap-2">
-            <button onClick={() => navigate(-1)} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-              <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+            <button onClick={() => navigate(-1)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+              <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
             </button>
-            <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-              <span className="material-symbols-outlined text-xl text-primary">home</span>
+            <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+              <span className="material-symbols-outlined text-xl text-gray-300">home</span>
             </button>
           </div>
           <div className="text-center">
-            <h1 className="text-lg font-bold">Add Items</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Step 1 of 3</p>
+            <h1 className="text-lg font-semibold tracking-tight">Add Items</h1>
+            <p className="ga-eyebrow text-[9px] mt-0.5">Step 1 of 3</p>
           </div>
           <div className="w-10"></div>
         </header>
@@ -584,7 +584,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
         )}
 
         <div className="space-y-4">
-          <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] px-1">Select Content Types</h2>
+          <h2 className="ga-eyebrow text-xs px-1">Select Content Types</h2>
           <div className="grid grid-cols-2 gap-3">
             {['pdf', 'note', 'image', 'audio'].map(type => (
               <button
@@ -767,7 +767,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
 
         {selectedFiles.length > 0 && (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom duration-300">
-            <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] px-1">Added Items ({selectedFiles.length})</h2>
+            <h2 className="ga-eyebrow text-xs px-1">Added Items ({selectedFiles.length})</h2>
             {selectedFiles.map(file => (
               <div key={file.id} className="p-3 sm:p-4 bg-surface-dark rounded-2xl border border-gray-800 space-y-2">
                 <div className="flex items-center gap-3">
@@ -795,11 +795,11 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
           </div>
         )}
 
-        <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
+        <div className="fixed bottom-0 left-0 md:left-64 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
           <button
             onClick={() => setStep(2)}
             disabled={!canProceed}
-            className={`md:max-w-2xl md:mx-auto w-full h-16 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all ${
+            className={`md:max-w-2xl md:mx-auto w-full h-16 rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all ${
               canProceed
                 ? 'bg-primary text-white shadow-xl shadow-primary/30 active:scale-[0.98]'
                 : 'bg-gray-800 text-gray-600 cursor-not-allowed'
@@ -819,16 +819,16 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
       <div className="p-4 pb-32 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-screen">
         <header className="flex items-center justify-between">
           <div className="flex gap-2">
-            <button onClick={() => setStep(1)} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-              <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+            <button onClick={() => setStep(1)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+              <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
             </button>
-            <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-              <span className="material-symbols-outlined text-xl text-primary">home</span>
+            <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+              <span className="material-symbols-outlined text-xl text-gray-300">home</span>
             </button>
           </div>
           <div className="text-center">
-            <h1 className="text-lg font-bold">Select Recipients</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Step 2 of 3</p>
+            <h1 className="text-lg font-semibold tracking-tight">Select Recipients</h1>
+            <p className="ga-eyebrow text-[9px] mt-0.5">Step 2 of 3</p>
           </div>
           <div className="w-10"></div>
         </header>
@@ -888,10 +888,10 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
           )}
         </div>
 
-        <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
+        <div className="fixed bottom-0 left-0 md:left-64 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
           <button
             onClick={() => setStep(3)}
-            className="md:max-w-2xl md:mx-auto w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/30 active:scale-[0.98]"
+            className="md:max-w-2xl md:mx-auto w-full h-16 bg-primary text-white rounded-2xl font-semibold flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/30 active:scale-[0.98]"
           >
             <span>{selectedRecipientIds.length > 0 ? 'Continue' : 'Continue (Skip Recipients)'}</span>
             <span className="material-symbols-outlined">arrow_forward</span>
@@ -906,16 +906,16 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
     <div className="p-4 pb-32 flex flex-col gap-6 animate-in slide-in-from-right duration-300 min-h-screen">
       <header className="flex items-center justify-between">
         <div className="flex gap-2">
-          <button onClick={() => setStep(2)} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go back">
-            <span className="material-symbols-outlined text-xl text-primary">arrow_back</span>
+          <button onClick={() => setStep(2)} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go back">
+            <span className="material-symbols-outlined text-xl text-gray-300">arrow_back</span>
           </button>
-          <button onClick={() => navigate('/')} className="size-10 rounded-full bg-surface-dark border border-gray-800 flex items-center justify-center hover:bg-surface-darker transition-colors" title="Go home">
-            <span className="material-symbols-outlined text-xl text-primary">home</span>
+          <button onClick={() => navigate('/')} className="size-10 rounded-xl bg-surface-dark border border-white/10 flex items-center justify-center hover:border-white/25 hover:bg-surface-darker transition-colors" title="Go home">
+            <span className="material-symbols-outlined text-xl text-gray-300">home</span>
           </button>
         </div>
         <div className="text-center">
-          <h1 className="text-lg font-bold">Review & Save</h1>
-          <p className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">Step 3 of 3</p>
+          <h1 className="text-lg font-semibold tracking-tight">Review & Save</h1>
+          <p className="ga-eyebrow text-[9px] mt-0.5">Step 3 of 3</p>
         </div>
         <div className="w-10"></div>
       </header>
@@ -927,7 +927,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
       )}
 
       <div className="bg-surface-dark p-5 rounded-[24px] border border-gray-800 space-y-4">
-        <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em]">Items to Save ({selectedFiles.length})</h2>
+        <h2 className="ga-eyebrow text-xs">Items to Save ({selectedFiles.length})</h2>
         <div className="space-y-2">
           {selectedFiles.map(file => (
             <div key={file.id} className="flex items-center gap-3 p-3 bg-surface-darker rounded-xl">
@@ -942,7 +942,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
       </div>
 
       <div className="bg-surface-dark p-5 rounded-[24px] border border-gray-800 space-y-4">
-        <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em]">Recipients ({selectedRecipientIds.length})</h2>
+        <h2 className="ga-eyebrow text-xs">Recipients ({selectedRecipientIds.length})</h2>
         <div className="flex flex-wrap gap-2">
           {selectedRecipientIds.map(id => {
             const recipient = recipients.find(r => r._id === id);
@@ -969,11 +969,11 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 md:left-56 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
+      <div className="fixed bottom-0 left-0 md:left-64 right-0 p-4 bg-background-dark/95 border-t border-gray-800 z-50">
         <button
           onClick={finalize}
           disabled={isSaving}
-          className="md:max-w-2xl md:mx-auto w-full h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="md:max-w-2xl md:mx-auto w-full h-16 bg-primary text-white rounded-2xl font-semibold flex items-center justify-center gap-3 shadow-xl shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? (
             <>

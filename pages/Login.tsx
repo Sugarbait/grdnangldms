@@ -442,27 +442,32 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background-dark relative overflow-hidden font-display">
+    <div className="ga-auth-shell min-h-screen flex flex-col bg-background-dark relative overflow-hidden font-display">
       <div className="absolute top-[-10%] left-[-10%] w-80 h-80 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-80 h-80 bg-accent-amber/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <div className="text-center space-y-3">
-            <Link to="/" aria-label="Guardian Angel DMS home" className="inline-block transition-opacity hover:opacity-80">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 py-10">
+        <div className="ga-auth-card w-full max-w-md space-y-7 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="text-center space-y-4">
+            <Link to="/" aria-label="Guardian Angel DMS home" className="inline-flex items-center justify-center transition-opacity hover:opacity-85">
               <img
                 src="/images/New-GrdnAngl-Logo.png"
-                alt="Guardian Angel DMS Logo"
-                className="w-80 h-auto mx-auto object-contain"
+                alt="Guardian Angel DMS"
+                className="w-64 sm:w-72 h-auto max-w-full object-contain"
               />
             </Link>
-            <p className="text-gray-400 text-[11px] font-medium tracking-wide">Secure Digital Legacy Management</p>
+            {mode === 'login' && (
+              <div className="pt-2">
+                <h1 className="text-2xl font-semibold text-white tracking-tight">Welcome back</h1>
+                <p className="text-gray-500 text-sm mt-1">Sign in to manage your protection plan.</p>
+              </div>
+            )}
             {mode !== 'login' && (
               <div>
-                <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic">
+                <h1 className="text-2xl font-semibold text-white tracking-tight">
                   {mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Reset Password' : mode === 'reset' ? 'Set New Password' : mode === 'totp' ? 'Verify Code' : mode === 'reset-sent' ? 'Check Your Email' : ''}
                 </h1>
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] mt-1">Your Digital Legacy</p>
+                <p className="text-gray-500 text-sm mt-1">Your secure digital legacy, protected.</p>
               </div>
             )}
           </div>
@@ -472,12 +477,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-4 animate-in fade-in zoom-in duration-300">
               <div className="bg-surface-dark/50 border border-primary/20 rounded-2xl p-6 space-y-3">
                 <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">{statusText}</span>
+                  <span className="ga-eyebrow text-[10px]">{statusText}</span>
                   <span className="text-[10px] font-black text-white">{progress}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-gray-900 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-primary transition-all duration-300 shadow-[0_0_10px_#1754cf]"
+                    className="h-full bg-primary transition-all duration-300 shadow-[0_0_10px_rgba(113,129,255,0.55)]"
                     style={{ width: `${progress}%` }}
                   ></div>
                 </div>
@@ -529,7 +534,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="submit"
                 disabled={isLoading || (totpCode.length !== 6 && totpCode.length !== 8)}
-                className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-16 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Verifying...' : 'Verify Code'}
               </button>
@@ -555,7 +560,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <div className="flex justify-center mb-2">
                   <span className="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
                 </div>
-                <h2 className="text-2xl font-black text-white tracking-tight">Email Sent!</h2>
+                <h2 className="text-2xl font-semibold tracking-tight text-white">Email Sent!</h2>
                 <p className="text-gray-300 text-[12px] leading-relaxed">
                   We've sent a password reset link to:
                 </p>
@@ -604,7 +609,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     setEmail('');
                     setError(null);
                   }}
-                  className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98]"
+                  className="w-full h-16 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98]"
                 >
                   Back to Sign In
                 </button>
@@ -692,7 +697,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="submit"
                 disabled={isLoading || !email || !resetToken || !newPassword || !confirmNewPassword}
-                className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-16 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Resetting...' : 'Reset Password'}
               </button>
@@ -798,7 +803,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
               <button
                 type="submit"
-                className="w-full h-16 bg-primary text-white font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] mt-4"
+                className="w-full h-16 bg-primary text-white font-semibold rounded-2xl shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all active:scale-[0.98] mt-4"
               >
                 {mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Send Reset Email' : 'Sign In'}
               </button>
@@ -894,7 +899,7 @@ const GoogleLoginButton: React.FC<OAuthButtonProps> = ({ onSuccess, onError, isL
       type="button"
       onClick={handleClick}
       disabled={isLoading}
-      className="w-full h-14 bg-gray-800 text-white font-bold rounded-2xl hover:bg-gray-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+          className="w-full h-14 bg-white/[0.045] border border-white/[0.08] text-white font-semibold rounded-xl hover:bg-white/[0.075] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
       title="Sign in with Google"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -928,7 +933,7 @@ const MicrosoftLoginButton: React.FC<{ onSignIn: () => void; isLoading: boolean 
       type="button"
       onClick={handleClick}
       disabled={isLoading}
-      className="w-full h-14 bg-gray-800 text-white font-bold rounded-2xl hover:bg-gray-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+      className="w-full h-14 bg-white/[0.045] border border-white/[0.08] text-white font-semibold rounded-xl hover:bg-white/[0.075] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
       title="Sign in with Microsoft"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

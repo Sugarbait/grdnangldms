@@ -7,13 +7,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
-    <meta name="theme-color" content="#0f1115">
+    <meta name="theme-color" content="#0a0d14">
     <title>Guardian Angel DMS</title>
     <link rel="icon" href="/images/favicon-48.png" sizes="48x48" type="image/png">
     <link rel="icon" href="/images/favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet">
@@ -23,16 +23,16 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#1754cf",
-                        "accent-amber": "#F59E0B",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#0f1115",
-                        "surface-dark": "#1a1d24",
-                        "surface-darker": "#14161b",
-                        "card-dark": "#1a2332",
+                        "primary": "#7181ff",
+                        "accent-amber": "#54d6a0",
+                        "background-light": "#f6f7fb",
+                        "background-dark": "#0a0d14",
+                        "surface-dark": "#141925",
+                        "surface-darker": "#0f131c",
+                        "card-dark": "#171d2a",
                     },
                     fontFamily: {
-                        "display": ["Manrope", "sans-serif"]
+                        "display": ["DM Sans", "sans-serif"]
                     }
                 },
             },
@@ -51,7 +51,7 @@
             padding: 0;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background-color: #0f1115;
+            background-color: #0a0d14;
             color: white;
             min-height: 100vh;
             min-height: -webkit-fill-available;
@@ -87,22 +87,22 @@
 
         /* ── Pulse ring animation ─────────────────────────────────────────── */
         .pulse-ring {
-            box-shadow: 0 0 0 0 rgba(23, 84, 207, 0.7);
+            box-shadow: 0 0 0 0 rgba(113, 129, 255, 0.55);
             animation: pulse-blue 2s infinite;
         }
 
         @keyframes pulse-blue {
             0% {
                 transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(23, 84, 207, 0.7);
+                box-shadow: 0 0 0 0 rgba(113, 129, 255, 0.55);
             }
             70% {
                 transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(23, 84, 207, 0);
+                box-shadow: 0 0 0 10px rgba(113, 129, 255, 0);
             }
             100% {
                 transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(23, 84, 207, 0);
+                box-shadow: 0 0 0 0 rgba(113, 129, 255, 0);
             }
         }
 
