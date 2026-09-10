@@ -131,6 +131,10 @@ export const createCheckoutSession = action({
         mode: "subscription",
         success_url: args.successUrl,
         cancel_url: args.cancelUrl,
+        // Let customers apply Stripe promotion codes at checkout. This is the native
+        // Stripe discount mechanism; the app's own coupons table (coupons.ts) is separate
+        // and is NOT applied here.
+        allow_promotion_codes: true,
         subscription_data: {
           metadata: {
             userId: args.userId,

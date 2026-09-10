@@ -51,6 +51,10 @@ export const getExpiredTimers = internalQuery({
     const now = Date.now();
 
     return allTimers.filter((timer) => {
+      // Only active timers can expire — a stopped timer's lastReset is zeroed out,
+      // which would otherwise make it look infinitely overdue and fire emails anyway.
+      if (timer.status !== "active") return false;
+
       // Skip if emails already sent
       if (timer.emailsSentAt) return false;
 

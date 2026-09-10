@@ -85,7 +85,7 @@ const Layout: React.FC<LayoutProps> = ({
           )}
 
           {/* Nav items */}
-          <div className="flex-1 py-5 px-2 overflow-visible space-y-1">
+          <div data-tour-id="nav-list" className="flex-1 py-5 px-2 overflow-visible space-y-1">
             <p className="px-1 pb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-600">Workspace</p>
             {navItems.map((item) => (
               <button
@@ -124,8 +124,8 @@ const Layout: React.FC<LayoutProps> = ({
           {/* Sidebar footer */}
           <div className="px-3 py-4 border-t border-white/[0.06] flex flex-col gap-2">
             <div className="flex gap-4 text-[10px] font-semibold text-gray-600">
-              <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
-              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+              <a href="/terms.html" className="hover:text-primary transition-colors">Terms</a>
+              <a href="/privacy.html" className="hover:text-primary transition-colors">Privacy</a>
             </div>
             <p className="text-[9px] text-gray-700">
               &copy; 2026 Guardian Angel DMS
@@ -149,8 +149,8 @@ const Layout: React.FC<LayoutProps> = ({
           <footer className="py-10 px-6 mt-auto border-t border-white/[0.05] bg-surface-darker/30 md:hidden">
             <div className="flex flex-col items-center gap-4">
               <div className="flex gap-6 text-[10px] font-semibold text-gray-500">
-                <Link to="/terms" className="hover:text-primary transition-colors">Terms of Use</Link>
-                <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Rules</Link>
+                <a href="/terms.html" className="hover:text-primary transition-colors">Terms of Use</a>
+                <a href="/privacy.html" className="hover:text-primary transition-colors">Privacy Rules</a>
               </div>
               <p className="text-[9px] text-gray-700 uppercase tracking-widest text-center">
                 &copy; 2026 Guardian Angel DMS. Built for your peace of mind.
@@ -177,7 +177,7 @@ const Layout: React.FC<LayoutProps> = ({
           )}
           
           {/* Nav items */}
-          <div className="flex justify-around items-center p-1.5 h-16">
+          <div data-tour-id="nav-list" className="flex justify-around items-center p-1.5 h-16">
             {navItems.map((item) => (
               <button
                 key={item.id}

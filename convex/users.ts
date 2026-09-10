@@ -213,6 +213,19 @@ export const update = mutation({
 });
 
 /**
+ * Records the user's IANA timezone so emails can render times in their local zone
+ */
+export const setTimezone = mutation({
+  args: { userId: v.id("users"), timezone: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) return;
+    if (user.timezone === args.timezone) return;
+    await ctx.db.patch(args.userId, { timezone: args.timezone });
+  },
+});
+
+/**
  * Reset user account (clear files, recipients, reset timer)
  */
 export const fullReset = mutation({
@@ -549,6 +562,8 @@ export const createOAuthUser = internalMutation({
       oauthEmail: args.oauthEmail,
       oauthName: args.oauthName,
       oauthAvatarUrl: args.oauthAvatarUrl,
+      // The UI renders `avatarUrl`, so mirror the OAuth photo into it on create.
+      avatarUrl: args.oauthAvatarUrl || undefined,
       lastCheckIn: args.lastCheckIn,
       emailVerified: args.emailVerified,
       masterEncryptionKey: args.masterEncryptionKey,

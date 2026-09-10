@@ -1,10 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useAction, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 import { UserProfile } from '../App';
+import { useTour } from '../components/OnboardingTour';
 
 interface SettingsProps {
   onResetAll?: () => void;
@@ -50,6 +52,8 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const tour = useTour();
 
   // Timer duration state
   const [customValue, setCustomValue] = useState(48);
@@ -445,8 +449,26 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       </section>
 
 
-      {/* Manage Subscription */}
-      {(userTier === 'subscriber' || userTier === 'trial' || userTier === 'expired') && subscriptionData?.stripeCustomerId && !subscriptionData.stripeCustomerId.startsWith('temp_') && (
+      {/* Coupon-upgraded plan — no Stripe billing to manage, so no billing portal */}
+      {subscriptionData?.upgradedViaCoupon && (
+        <section className="bg-primary/5 border border-primary/20 p-6 rounded-[28px] shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary text-3xl">redeem</span>
+              <h3 className="text-lg font-semibold tracking-tight">Your Plan</h3>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full text-primary bg-primary/10">
+              Active
+            </span>
+          </div>
+          <p className="text-gray-400 text-[11px] leading-relaxed">
+            Your Guardian Angel Plus access was activated with a coupon, so there's no Stripe billing to manage — nothing will be charged. Enjoy full access!
+          </p>
+        </section>
+      )}
+
+      {/* Manage Subscription (real Stripe subscribers only — coupon upgrades excluded) */}
+      {subscriptionData?.hasStripeSubscription && !subscriptionData?.upgradedViaCoupon && (
         <section className="bg-primary/5 border border-primary/20 p-6 rounded-[28px] shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -556,8 +578,8 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         </section>
       )}
 
-      {/* Upgrade prompt for guests or users without Stripe customer */}
-      {(userTier === 'guest' || userTier === 'expired') && (!subscriptionData?.stripeCustomerId || subscriptionData.stripeCustomerId.startsWith('temp_')) && (
+      {/* Upgrade prompt for guests/expired users with nothing to manage in Stripe */}
+      {(userTier === 'guest' || userTier === 'expired') && !subscriptionData?.hasStripeSubscription && (
         <section className="bg-red-950/20 border border-red-500/20 p-6 rounded-[28px] shadow-lg">
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-red-500 text-3xl">credit_card</span>
@@ -586,7 +608,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </span>
           )}
         </div>
-        <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
+        <div data-tour-id="settings-checkin-window" className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
           <div className="text-center py-4">
             <div className="text-4xl font-semibold tracking-tight mb-1">
               {customValue} {customUnit.charAt(0).toUpperCase() + customUnit.slice(1)}
@@ -729,7 +751,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
           <h3 className="text-lg font-semibold tracking-tight">Pre-Expiry Reminders</h3>
           <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">Multiple times supported</p>
         </div>
-        <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
+        <div data-tour-id="settings-reminders" className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
           <p className="text-gray-400 text-[11px] leading-relaxed mb-6">
             Get reminder emails before your check-in window expires. You can set multiple reminders at different times (e.g., 5 minutes AND 25 minutes before).
           </p>
@@ -1075,9 +1097,9 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
           <span className="material-symbols-outlined">stop_circle</span>
         </button>
 
-        {timerStopped && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0 sm:top-6 sm:right-6 sm:inset-auto animate-in slide-in-from-top-4 fade-in duration-300">
-            <div className="bg-green-500/20 border border-green-500/40 backdrop-blur-sm rounded-2xl p-5 shadow-2xl shadow-green-500/20 max-w-sm w-full sm:w-auto">
+        {timerStopped && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 sm:px-0 sm:top-6 sm:right-6 sm:inset-auto sm:items-start pointer-events-none">
+            <div className="bg-green-500/20 border border-green-500/40 backdrop-blur-sm rounded-2xl p-5 shadow-2xl shadow-green-500/20 max-w-sm w-full sm:w-auto pointer-events-auto animate-in fade-in zoom-in-95 sm:slide-in-from-top-4 duration-300">
               <div className="flex items-center gap-3">
                 <div className="size-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-green-400 text-xl">check_circle</span>
@@ -1088,7 +1110,8 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </section>
 
@@ -1123,6 +1146,22 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             )}
           </div>
         </div>
+      </section>
+
+      {/* Product Tour */}
+      <section className="bg-surface-dark border border-gray-800 p-6 rounded-[28px] shadow-lg flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight mb-1">Product Tour</h3>
+          <p className="text-gray-500 text-[11px] leading-relaxed">See how check-ins, reminders, and recipients work together.</p>
+        </div>
+        <button
+          data-tour-id="settings-restart-tour"
+          onClick={() => tour.start()}
+          className="shrink-0 h-11 px-5 bg-primary/10 border border-primary/20 text-primary rounded-xl font-semibold text-sm hover:bg-primary/20 transition-colors flex items-center gap-2"
+        >
+          <span className="material-symbols-outlined text-lg">play_circle</span>
+          Restart Tour
+        </button>
       </section>
 
       {/* Data & Privacy */}

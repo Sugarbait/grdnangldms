@@ -31,6 +31,7 @@ export const checkExpiredTimers = internalAction({
           userName: user.name,
           userEmail: user.email,
           expiresAt: subscription.trialEndsAt,
+          timezone: user.timezone,
         });
 
         if (result.success) {

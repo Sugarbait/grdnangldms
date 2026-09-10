@@ -5,6 +5,9 @@ import { useAction, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 
+// Breadcrumb marking that we redirected to Stripe, so a return without payment can be detected.
+const CHECKOUT_STARTED_KEY = 'guardian_checkout_started';
+
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -12,6 +15,7 @@ const Pricing: React.FC = () => {
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('year');
+  const [showCanceledNotice, setShowCanceledNotice] = useState(false);
 
   const PLANS = {
     month: { price: '$7.99', cadence: 'per month, billed monthly' },
@@ -26,6 +30,51 @@ const Pricing: React.FC = () => {
   const userId = localStorage.getItem('guardian_user_id') as Id<"users"> | null;
   const subscriptionData = useQuery(api.subscriptions.getSubscriptionStatus, userId ? { userId } : "skip");
   const isSubscriber = subscriptionData?.tier === 'subscriber';
+
+  // Which billing intervals are actually configured server-side. An interval whose
+  // Stripe price ID is missing would make checkout throw, so we only offer configured ones.
+  const availablePlans = useQuery(api.subscriptions.getAvailablePlans, {});
+  const monthAvailable = availablePlans?.month ?? true;
+  const yearAvailable = availablePlans?.year ?? false;
+
+  // If the currently selected interval isn't purchasable, fall back to one that is.
+  useEffect(() => {
+    if (!availablePlans) return;
+    if (billingInterval === 'year' && !yearAvailable && monthAvailable) {
+      setBillingInterval('month');
+    } else if (billingInterval === 'month' && !monthAvailable && yearAvailable) {
+      setBillingInterval('year');
+    }
+  }, [availablePlans, billingInterval, monthAvailable, yearAvailable]);
+
+  const selectedIntervalAvailable =
+    billingInterval === 'year' ? yearAvailable : monthAvailable;
+  const noPlansAvailable = !monthAvailable && !yearAvailable;
+
+  // Detect a return from Stripe without payment. Two ways back: Stripe's own back
+  // link (hits cancelUrl) or the browser back button (lands on the pre-redirect URL
+  // with no params), so we check the URL and the sessionStorage breadcrumb.
+  useEffect(() => {
+    const checkForCanceledCheckout = () => {
+      if (sessionStorage.getItem(CHECKOUT_STARTED_KEY) !== 'true') return;
+
+      // Paid: let the success banner own the message and drop the breadcrumb.
+      if (window.location.href.includes('success=true')) {
+        sessionStorage.removeItem(CHECKOUT_STARTED_KEY);
+        return;
+      }
+
+      sessionStorage.removeItem(CHECKOUT_STARTED_KEY);
+      setShowCanceledNotice(true);
+    };
+
+    checkForCanceledCheckout();
+
+    // Back from a cross-origin redirect is often a bfcache restore, which remounts
+    // nothing and re-runs no effects — pageshow is the only signal we get.
+    window.addEventListener('pageshow', checkForCanceledCheckout);
+    return () => window.removeEventListener('pageshow', checkForCanceledCheckout);
+  }, []);
 
   // Verify subscription with Stripe after successful checkout
   const hasVerified = useRef(false);
@@ -48,6 +97,10 @@ const Pricing: React.FC = () => {
   }, [userId, isSubscriber]);
 
   const handleUpgrade = async () => {
+    if (!selectedIntervalAvailable) {
+      setError('This plan is not available right now. Please try again later or contact support.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -65,6 +118,9 @@ const Pricing: React.FC = () => {
       });
 
       if (result.url) {
+        // Remember that we left for Stripe so we can reassure the user if they come
+        // back unpaid via the browser's back button, which never hits our cancel_url.
+        sessionStorage.setItem(CHECKOUT_STARTED_KEY, 'true');
         window.location.href = result.url;
       } else {
         setError('Failed to create checkout session. Please try again.');
@@ -96,11 +152,22 @@ const Pricing: React.FC = () => {
           </div>
         )}
 
-        {window.location.search.includes('cancel=true') && (
-          <div className="mb-6 bg-amber-500 bg-opacity-20 border border-amber-500 rounded-lg p-4">
-            <p className="text-amber-300 text-sm font-semibold">
-              Payment was canceled. You can try again anytime.
-            </p>
+        {showCanceledNotice && (
+          <div className="mb-6 bg-surface-dark border border-white/10 rounded-lg p-4 flex items-start gap-3">
+            <span className="material-symbols-outlined text-green-400 text-xl leading-none mt-0.5">verified_user</span>
+            <div className="flex-1">
+              <p className="text-white text-sm font-semibold">You have not been charged.</p>
+              <p className="text-gray-400 text-sm mt-1">
+                You left checkout before completing payment, so no payment was taken and your card was not saved. Your account is unchanged — upgrade whenever you're ready.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCanceledNotice(false)}
+              aria-label="Dismiss"
+              className="size-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">close</span>
+            </button>
           </div>
         )}
 
@@ -118,8 +185,8 @@ const Pricing: React.FC = () => {
           <p className="text-gray-400 mb-1 text-sm">No setup fees. No surprises. Cancel anytime.</p>
         </div>
 
-        {/* Billing interval toggle */}
-        {!isSubscriber && (
+        {/* Billing interval toggle — only shown when both intervals are purchasable */}
+        {!isSubscriber && monthAvailable && yearAvailable && (
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center bg-surface-dark border border-white/10 rounded-full p-1">
               <button
@@ -152,42 +219,51 @@ const Pricing: React.FC = () => {
 
             <div className="mb-6">
               <div className="text-2xl font-semibold tracking-tight">Active</div>
-              <p className="text-gray-400 text-xs mt-1">Manage your plan below</p>
+              <p className="text-gray-400 text-xs mt-1">
+                {subscriptionData?.upgradedViaCoupon ? 'Complimentary access via coupon' : 'Manage your plan below'}
+              </p>
             </div>
 
-            <button
-              onClick={async () => {
-                if (!subscriptionData?.stripeCustomerId || subscriptionData.stripeCustomerId.startsWith('temp_')) return;
-                setIsOpeningPortal(true);
-                try {
-                  const result = await getBillingPortalUrl({
-                    userId: userId as string,
-                    returnUrl: window.location.href,
-                  });
-                  if (result?.url) {
-                    window.location.href = result.url;
+            {subscriptionData?.upgradedViaCoupon ? (
+              <div className="w-full bg-white/5 border border-white/10 text-emerald-100 text-sm py-3 px-4 rounded-xl mb-6 flex items-center gap-3">
+                <span className="material-symbols-outlined text-lg flex-shrink-0">redeem</span>
+                <span>Activated with a coupon — no billing to manage, and you won't be charged.</span>
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  if (!subscriptionData?.stripeCustomerId || subscriptionData.stripeCustomerId.startsWith('temp_')) return;
+                  setIsOpeningPortal(true);
+                  try {
+                    const result = await getBillingPortalUrl({
+                      userId: userId as string,
+                      returnUrl: window.location.href,
+                    });
+                    if (result?.url) {
+                      window.location.href = result.url;
+                    }
+                  } catch (err: any) {
+                    setError(err.message || 'Could not open billing portal.');
+                  } finally {
+                    setIsOpeningPortal(false);
                   }
-                } catch (err: any) {
-                  setError(err.message || 'Could not open billing portal.');
-                } finally {
-                  setIsOpeningPortal(false);
-                }
-              }}
-              disabled={isOpeningPortal}
-              className="w-full bg-white hover:bg-gray-100 disabled:bg-gray-300 text-emerald-800 font-semibold py-3 rounded-xl transition-colors mb-6 flex items-center justify-center gap-2"
-            >
-              {isOpeningPortal ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
-                  Opening Portal...
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-lg">open_in_new</span>
-                  Manage Subscription
-                </>
-              )}
-            </button>
+                }}
+                disabled={isOpeningPortal}
+                className="w-full bg-white hover:bg-gray-100 disabled:bg-gray-300 text-emerald-800 font-semibold py-3 rounded-xl transition-colors mb-6 flex items-center justify-center gap-2"
+              >
+                {isOpeningPortal ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                    Opening Portal...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-lg">open_in_new</span>
+                    Manage Subscription
+                  </>
+                )}
+              </button>
+            )}
 
             <div className="space-y-3 border-t border-white/10 pt-6">
               <div className="flex items-center gap-3">
@@ -229,11 +305,16 @@ const Pricing: React.FC = () => {
 
             <button
               onClick={handleUpgrade}
-              disabled={loading}
-              className="w-full bg-primary hover:bg-blue-600 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors mb-6 shadow-lg shadow-primary/25"
+              disabled={loading || !selectedIntervalAvailable}
+              className="w-full bg-primary hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors mb-6 shadow-lg shadow-primary/25"
             >
-              {loading ? 'Processing...' : 'Upgrade Now'}
+              {loading ? 'Processing...' : noPlansAvailable ? 'Temporarily Unavailable' : 'Upgrade Now'}
             </button>
+            {noPlansAvailable && (
+              <p className="text-amber-400/90 text-xs -mt-4 mb-6 text-center">
+                Checkout is temporarily unavailable. Please contact support.
+              </p>
+            )}
 
             <div className="space-y-3 border-t border-white/10 pt-6">
               <div className="flex items-center gap-3">

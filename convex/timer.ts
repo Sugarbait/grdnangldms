@@ -55,6 +55,13 @@ export const checkAndTrigger = mutation({
       return { triggered: true, alreadyTriggered: true, timerId: timer._id };
     }
 
+    // A stopped timer has lastReset zeroed out, which would otherwise look
+    // infinitely overdue below. Never let a stopped timer trigger.
+    if (timer.status === "stopped") {
+      console.log("[checkAndTrigger] Timer is stopped, ignoring trigger check");
+      return { triggered: false, stopped: true, timerId: timer._id };
+    }
+
     // If timer has expired (remaining <= 0) or is very close to expiring (within 2 seconds),
     // update status to triggered. This handles client-server timing discrepancies where
     // the client has determined the timer should trigger but server is still slightly ahead.

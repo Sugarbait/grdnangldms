@@ -46,6 +46,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     if (!hashQuery) return;
     const params = new URLSearchParams(hashQuery);
     const token = params.get('ms_token');
+    const accessToken = params.get('ms_at');
     if (!token) return;
 
     // Clean the URL
@@ -73,12 +74,36 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       (async () => {
         try {
           const msEmail = decoded.preferred_username || decoded.email;
+
+          // Microsoft id_tokens don't carry a photo, so fetch it from Graph
+          // using the access token and store it as a base64 data URL.
+          let msAvatar: string | undefined = undefined;
+          if (accessToken) {
+            try {
+              const photoRes = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
+                headers: { Authorization: `Bearer ${accessToken}` },
+              });
+              if (photoRes.ok) {
+                const blob = await photoRes.blob();
+                msAvatar = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+              }
+            } catch (photoErr) {
+              // Not all Microsoft accounts have a photo — proceed without one.
+              console.warn('[Microsoft OAuth] Could not fetch profile photo:', photoErr);
+            }
+          }
+
           const result = await createOrUpdateOAuthUserAction({
             provider: 'microsoft',
             providerId: decoded.oid || decoded.sub,
             email: msEmail,
             name: decoded.name,
-            avatarUrl: undefined,
+            avatarUrl: msAvatar,
           });
 
           sessionStorage.setItem('guardian_encryption_key_source', 'oauth');
@@ -198,8 +223,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const clientId = import.meta.env.VITE_OAUTH_MICROSOFT_CLIENT_ID || 'YOUR_MICROSOFT_CLIENT_ID';
       // Use origin + pathname only (no hash) — Microsoft will append #id_token=... to this
       const redirectUri = window.location.origin + window.location.pathname;
-      const responseType = 'id_token';
-      const scope = 'openid profile email';
+      // Request an access token in addition to the id_token so we can call
+      // Microsoft Graph for the profile photo (the id_token has no photo claim).
+      const responseType = 'id_token token';
+      const scope = 'openid profile email User.Read';
 
       // Generate a nonce for security
       const nonce = Math.random().toString(36).substring(7);
@@ -854,8 +881,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       <footer className="relative z-10 py-3 px-6 text-center flex flex-col items-center gap-2">
         <div className="flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-600">
-          <Link to="/terms" className="hover:text-primary transition-colors">Terms of Use</Link>
-          <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+          <a href="/terms.html" className="hover:text-primary transition-colors">Terms of Use</a>
+          <a href="/privacy.html" className="hover:text-primary transition-colors">Privacy Policy</a>
         </div>
       </footer>
     </div>

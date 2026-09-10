@@ -12,8 +12,11 @@ const hash = window.location.hash;
 if (hash && hash.includes('id_token=') && !hash.startsWith('#/')) {
   const params = new URLSearchParams(hash.substring(1)); // remove leading #
   const idToken = params.get('id_token');
+  const accessToken = params.get('access_token');
   if (idToken) {
-    window.history.replaceState(null, '', window.location.pathname + `#/login?ms_token=${encodeURIComponent(idToken)}`);
+    let target = `#/login?ms_token=${encodeURIComponent(idToken)}`;
+    if (accessToken) target += `&ms_at=${encodeURIComponent(accessToken)}`;
+    window.history.replaceState(null, '', window.location.pathname + target);
   }
 }
 

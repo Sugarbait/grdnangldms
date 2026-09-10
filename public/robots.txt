@@ -1,0 +1,11 @@
+# Guardian Angel DMS — https://ga.neoncell.ca
+User-agent: *
+Allow: /
+
+# Internal preview/reference page — not a real landing page
+Disallow: /app-preview.html
+
+# Nothing under the app itself is public; it all sits behind auth.
+Disallow: /images/app-screenshots/
+
+Sitemap: https://ga.neoncell.ca/sitemap.xml

@@ -1113,6 +1113,7 @@ export const sendTrialExpiringEmail = action({
     userName: v.string(),
     userEmail: v.string(),
     expiresAt: v.number(),
+    timezone: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     console.log("[sendTrialExpiringEmail] Starting for user:", args.userId);
@@ -1135,7 +1136,22 @@ export const sendTrialExpiringEmail = action({
     });
 
     const expiresInMinutes = Math.ceil((args.expiresAt - Date.now()) / 60000);
-    const expiresTime = new Date(args.expiresAt).toLocaleString();
+    // Render in the user's own timezone, falling back to UTC if we never captured one
+    // or the stored value isn't a zone this runtime knows.
+    const formatInZone = (timeZone: string) =>
+      new Date(args.expiresAt).toLocaleString("en-US", {
+        timeZone,
+        dateStyle: "medium",
+        timeStyle: "long",
+      });
+
+    let expiresTime: string;
+    try {
+      expiresTime = formatInZone(args.timezone || "UTC");
+    } catch (e) {
+      console.error(`[sendTrialExpiringEmail] Invalid timezone "${args.timezone}", falling back to UTC`);
+      expiresTime = formatInZone("UTC");
+    }
 
     const emailHtml = `
 <!DOCTYPE html>

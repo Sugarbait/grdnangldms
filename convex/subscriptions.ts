@@ -2,6 +2,18 @@ import { query, mutation, internalQuery, internalMutation } from "./_generated/s
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
+// Query: Report which billing intervals are actually purchasable, based on the
+// price IDs configured in the Convex environment. The frontend uses this to avoid
+// offering an interval whose Stripe price ID is missing (which would make checkout throw).
+export const getAvailablePlans = query({
+  args: {},
+  handler: async () => {
+    const month = !!(process.env.STRIPE_PRICE_ID_MONTHLY || process.env.STRIPE_PRICE_ID);
+    const year = !!process.env.STRIPE_PRICE_ID_YEARLY;
+    return { month, year };
+  },
+});
+
 // Internal Query: Get subscription by user ID
 export const getSubscription = internalQuery({
   args: { userId: v.union(v.id("users"), v.string()) },
@@ -183,6 +195,41 @@ export const updateSubscriptionFromWebhook = internalMutation({
   },
 });
 
+// Internal Mutation: Mark a subscription as upgraded via coupon.
+// Sets couponCode (which drives the "no billing portal" UI) and, since coupon grants
+// never go through Stripe, clears any stale stripeSubscriptionId so the account is not
+// mistaken for a Stripe-managed subscriber. Also ensures status is active.
+export const markCouponUpgrade = internalMutation({
+  args: {
+    userId: v.union(v.id("users"), v.string()),
+    couponCode: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId as any))
+      .first();
+
+    if (!subscription) {
+      throw new Error("Subscription not found");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(subscription._id, {
+      couponCode: args.couponCode.toUpperCase(),
+      status: "active",
+      stripeSubscriptionId: undefined,
+      updatedAt: now,
+    });
+    await ctx.db.patch(subscription.userId, {
+      subscriptionStatus: "active",
+    });
+
+    console.log(`[Subscriptions] Marked ${subscription._id} as coupon upgrade (${args.couponCode})`);
+    return subscription._id;
+  },
+});
+
 // Mutation: Transition trial to expired
 export const markTrialExpired = mutation({
   args: { userId: v.id("users") },
@@ -265,6 +312,8 @@ export const getSubscriptionStatus = query({
         isTrialActive: false,
         isPaidActive: false,
         tier: "guest" as const,
+        hasStripeSubscription: false,
+        upgradedViaCoupon: false,
       };
     }
 
@@ -294,6 +343,13 @@ export const getSubscriptionStatus = query({
       isPaidActive,
       tier,
       stripeCustomerId: subscription.stripeCustomerId,
+      // A customer ID is created as soon as checkout starts, so it does not mean the
+      // user ever paid. Only a subscription ID (set by the first payment webhook, and
+      // never cleared on cancel) proves a real Stripe subscription exists to manage.
+      hasStripeSubscription: !!subscription.stripeSubscriptionId,
+      // Accounts upgraded with a coupon code never went through Stripe checkout, so there
+      // is no Stripe-managed billing to expose (no billing portal, no payment method).
+      upgradedViaCoupon: !!subscription.couponCode,
     };
   },
 });

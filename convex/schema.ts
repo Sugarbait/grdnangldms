@@ -25,6 +25,7 @@ export default defineSchema({
     lastTOTPCodeTime: v.optional(v.number()), // Timestamp of last TOTP code use
     masterEncryptionKey: v.optional(v.string()),
     onboardingComplete: v.optional(v.boolean()),
+    timezone: v.optional(v.string()), // IANA timezone (e.g. "America/Toronto") captured from the browser; used to render times in emails
     authProvider: v.optional(v.string()),
     oauthProviderId: v.optional(v.string()),
     oauthEmail: v.optional(v.string()),

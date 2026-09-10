@@ -8,10 +8,146 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
     <meta name="theme-color" content="#0a0d14">
-    <title>Guardian Angel DMS</title>
+    <title>Guardian Angel DMS — Secure Digital Legacy Management</title>
+    <meta name="application-name" content="Guardian Angel DMS">
+    <meta name="description" content="Secure digital legacy management. Store files and messages, assign them to trusted recipients, and check in on your schedule — if your timer expires, we deliver them automatically.">
+    <link rel="canonical" href="https://ga.neoncell.ca/">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="author" content="NeonCell">
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Guardian Angel DMS">
+    <meta property="og:title" content="Guardian Angel DMS — Secure Digital Legacy Management">
+    <meta property="og:description" content="Store important files and messages, assign them to trusted recipients, and check in on a schedule you choose. If your check-in timer expires, Guardian Angel DMS delivers them automatically.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_CA">
+    <meta property="og:url" content="https://ga.neoncell.ca/">
+    <meta property="og:image" content="https://ga.neoncell.ca/images/og-card.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:alt" content="Guardian Angel DMS — Secure Digital Legacy Management">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Guardian Angel DMS — Secure Digital Legacy Management">
+    <meta name="twitter:description" content="Store important files and messages, assign them to trusted recipients, and check in on a schedule you choose. If your check-in timer expires, Guardian Angel DMS delivers them automatically.">
+    <meta name="twitter:image" content="https://ga.neoncell.ca/images/og-card.png">
+    <meta name="twitter:image:alt" content="Guardian Angel DMS — Secure Digital Legacy Management">
+
+    <!-- No google-site-verification tag is needed here: ga.neoncell.ca is already
+         covered by the DNS-verified Search Console Domain property "neoncell.ca"
+         (sc-domain:neoncell.ca), which spans every subdomain. -->
     <link rel="icon" href="/images/favicon-48.png" sizes="48x48" type="image/png">
     <link rel="icon" href="/images/favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180">
+    <!-- Structured data: helps Google understand what this product is,
+         what it costs, and answer common questions in search results. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://ga.neoncell.ca/#organization",
+          "name": "NeonCell",
+          "url": "https://neoncell.ca/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://ga.neoncell.ca/images/New-GrdnAngl-Logo.png",
+            "width": 961,
+            "height": 116
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://ga.neoncell.ca/#website",
+          "url": "https://ga.neoncell.ca/",
+          "name": "Guardian Angel DMS",
+          "description": "Secure digital legacy management with an inactivity-based check-in timer.",
+          "publisher": { "@id": "https://ga.neoncell.ca/#organization" },
+          "inLanguage": "en-CA"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://ga.neoncell.ca/#software",
+          "name": "Guardian Angel DMS",
+          "applicationCategory": "SecurityApplication",
+          "applicationSubCategory": "Digital Legacy Management",
+          "operatingSystem": "Web browser",
+          "url": "https://ga.neoncell.ca/",
+          "image": "https://ga.neoncell.ca/images/og-card.png",
+          "description": "Guardian Angel DMS is a secure digital legacy management service. Store important files and messages, assign them to trusted recipients, and check in on a schedule you choose. If your check-in timer expires, Guardian Angel DMS automatically delivers each recipient only the items you assigned to them.",
+          "publisher": { "@id": "https://ga.neoncell.ca/#organization" },
+          "featureList": [
+            "Dead man's switch check-in timer",
+            "AES-256 encrypted file and message vault",
+            "Per-recipient file assignment",
+            "Automatic email delivery on timer expiry",
+            "Multi-factor authentication"
+          ],
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Monthly",
+              "price": "7.99",
+              "priceCurrency": "CAD",
+              "category": "subscription",
+              "url": "https://ga.neoncell.ca/#/pricing",
+              "availability": "https://schema.org/InStock"
+            },
+            {
+              "@type": "Offer",
+              "name": "Annual",
+              "price": "59.99",
+              "priceCurrency": "CAD",
+              "category": "subscription",
+              "url": "https://ga.neoncell.ca/#/pricing",
+              "availability": "https://schema.org/InStock"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://ga.neoncell.ca/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is a digital dead man's switch?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "A dead man's switch is a countdown timer that resets every time you check in. If you stop checking in and the timer expires, it automatically runs a protocol you configured in advance. In Guardian Angel DMS, that protocol emails your stored files and messages to the recipients you assigned them to."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How are my files protected?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Your files and messages are encrypted with AES-256 before they are stored. Each recipient can only ever receive the specific items you assigned to them — never your full vault."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What happens if I miss a check-in by accident?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can set a reminder threshold so Guardian Angel DMS emails you before the timer expires. You can also stop or reset the timer at any time from your dashboard."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How much does Guardian Angel DMS cost?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Guardian Angel DMS is $7.99 per month billed monthly, or $59.99 per year billed annually, which works out to $5.00 per month."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
@@ -194,7 +330,51 @@
 </head>
 
 <body class="bg-background-dark font-display text-white">
-    <div id="root"></div>
+    <!--
+      Static fallback describing the app for clients that do not execute JavaScript
+      (crawlers, OAuth verification review). React's createRoot().render() clears these
+      children on first mount, so users never see this — it is not a duplicate UI.
+    -->
+    <div id="root">
+        <main style="max-width:720px;margin:0 auto;padding:48px 24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#e5e7eb;line-height:1.6">
+            <img src="/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" width="220" style="max-width:100%;height:auto">
+            <h1 style="font-size:2rem;margin:24px 0 8px">Guardian Angel DMS</h1>
+            <p style="color:#9ca3af;margin:0 0 24px">Secure Digital Legacy Management</p>
+
+            <h2 style="font-size:1.25rem;margin:32px 0 8px">What Guardian Angel DMS does</h2>
+            <p>
+                Guardian Angel DMS is a secure digital legacy management service. It stores the
+                documents, photos, voice recordings, and written messages that matter most to you,
+                and delivers them to the people you choose if you are no longer able to do so
+                yourself.
+            </p>
+            <p>
+                You upload your files to an encrypted vault, assign each item to specific trusted
+                recipients, and check in on a schedule you set. Every check-in resets your countdown
+                timer. If the timer ever expires because you have stopped checking in, Guardian Angel
+                DMS automatically emails each recipient only the items you assigned to them — nothing
+                else, and no one else.
+            </p>
+
+            <h2 style="font-size:1.25rem;margin:32px 0 8px">How Guardian Angel DMS uses your Google account</h2>
+            <p>
+                Signing in with Google is optional and is used only to create and access your
+                Guardian Angel DMS account. We request your basic profile and email address so we can
+                identify your account and contact you about check-ins. We do not read, store, or
+                share any other Google data, and we never sell your information.
+            </p>
+
+            <h2 style="font-size:1.25rem;margin:32px 0 8px">Get started</h2>
+            <p>
+                <a href="/#/login?mode=signup" style="color:#818cf8">Create a free account</a> or
+                <a href="/#/login" style="color:#818cf8">sign in</a> to an existing one.
+            </p>
+            <p style="margin-top:32px;font-size:.875rem;color:#6b7280">
+                <a href="/terms.html" style="color:#6b7280">Terms of Use</a> ·
+                <a href="/privacy.html" style="color:#6b7280">Privacy Policy</a>
+            </p>
+        </main>
+    </div>
     <script type="module" src="/index.tsx"></script>
 </body>
 

@@ -398,7 +398,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         </div>
       </div>
 
-      <section className="ga-timer-panel relative group pt-2">
+      <section data-tour-id="dashboard-timer" className="ga-timer-panel relative group pt-2">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-all duration-1000"></div>
         <div className="relative z-10 text-center mb-5">
           <p className="ga-eyebrow">Time until your protocol activates</p>
@@ -433,6 +433,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
 
       <div className="px-1 py-4 space-y-3">
         <button
+          data-tour-id="dashboard-checkin-button"
           onClick={canAccessFeatures ? handleCheckInClick : () => navigate('/pricing')}
           className={`ga-checkin-button relative w-full group overflow-hidden h-28 sm:h-32 rounded-[24px] shadow-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.98] border ${canAccessFeatures
             ? 'bg-primary shadow-primary/40 hover:bg-blue-600 border-white/20'

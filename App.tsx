@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { api } from './convex/_generated/api';
 import { Id } from './convex/_generated/dataModel';
 import { useSessionTimeout } from './hooks/useSessionTimeout';
+import { TourProvider } from './components/OnboardingTour';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Vault from './pages/Vault';
@@ -19,8 +20,6 @@ import VerifyEmail from './pages/VerifyEmail';
 import MFASetup from './pages/MFASetup';
 import ResetPassword from './pages/ResetPassword';
 import Login from './pages/Login';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
 import Pricing from './pages/Pricing';
 import Onboarding from './pages/Onboarding';
 import Splash from './pages/Splash';
@@ -43,6 +42,14 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+// Sends the browser to a real (non-hash) URL served as a static file.
+const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return null;
+};
+
 export interface UserProfile {
   _id?: string;
   name: string;
@@ -52,6 +59,7 @@ export interface UserProfile {
   mfaEnabled?: boolean;
   mfaSetupRequired?: boolean;
   subscriptionStatus?: string;
+  timezone?: string;
 }
 
 const AppContent: React.FC = () => {
@@ -91,6 +99,17 @@ const AppContent: React.FC = () => {
   const checkAndTriggerTimer = useMutation(api.timer.checkAndTrigger);
   const checkAndSendReminder = useAction(api.emails.checkAndSendReminder);
   const stopTimer = useMutation(api.timer.stop);
+  const setTimezone = useMutation(api.users.setTimezone);
+
+  // Keep the user's IANA timezone current so emails render times in their local zone
+  useEffect(() => {
+    if (!userId || !currentUser) return;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz || currentUser.timezone === tz) return;
+    setTimezone({ userId, timezone: tz }).catch(err =>
+      console.error("Failed to save timezone:", err)
+    );
+  }, [userId, currentUser?.timezone]);
 
   // 15-minute session timeout (900,000 milliseconds)
   const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
@@ -234,7 +253,7 @@ const AppContent: React.FC = () => {
 
   // Client-side countdown: subtract elapsed milliseconds from server value
   useEffect(() => {
-    if (!isAuthenticated || isTriggered || lastServerSeconds === null || !canAccessFeatures) return;
+    if (!isAuthenticated || isTriggered || lastServerSeconds === null) return;
 
     let hasTriggered = false;
 
@@ -268,7 +287,7 @@ const AppContent: React.FC = () => {
     }, 100); // Update more frequently for smooth display
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, isTriggered, lastServerSeconds, serverRefreshTime, userId, checkAndTriggerTimer, canAccessFeatures]);
+  }, [isAuthenticated, isTriggered, lastServerSeconds, serverRefreshTime, userId, checkAndTriggerTimer]);
 
   // Check for reminder emails periodically (every 30 seconds)
   useEffect(() => {
@@ -340,8 +359,10 @@ const AppContent: React.FC = () => {
               <Login onLogin={handleLogin} />
           }
         />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
+        {/* Terms and Privacy are static pages so crawlers and OAuth review can read them
+            without running JS. These keep old /#/terms and /#/privacy links working. */}
+        <Route path="/terms" element={<ExternalRedirect to="/terms.html" />} />
+        <Route path="/privacy" element={<ExternalRedirect to="/privacy.html" />} />
         <Route path="/splash" element={<Splash />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -370,6 +391,7 @@ const AppContent: React.FC = () => {
             ) : !currentUser?.emailVerified ? (
               <Navigate to="/login" replace />
             ) : (
+              <TourProvider enabled={!!(currentUser as any)?.onboardingComplete}>
               <Layout
                 canAccessFeatures={canAccessFeatures}
                 isTrialUser={isTrialUser}
@@ -435,6 +457,7 @@ const AppContent: React.FC = () => {
                   <Route path="/add-recipient" element={<AddRecipient userId={userId!} recipientCount={recipients.length} canAccessFeatures={canAccessFeatures} />} />
                 </Routes>
               </Layout>
+              </TourProvider>
             )
           } 
         />
