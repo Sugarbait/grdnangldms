@@ -114,7 +114,6 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioMode, setAudioMode] = useState<'upload' | 'record'>('upload');
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Refs
@@ -338,32 +337,6 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
     }
   };
 
-  const LEGACY_MESSAGE_TEMPLATES = [
-    "To those I love: Please know how deeply grateful I am for every memory we shared. Take care of each other, be gentle with yourselves, and live your lives with courage, kindness, and joy.",
-    "If you are reading this, it means my switch has triggered. I wanted to leave you with clarity and peace of mind. Everything you need is preserved here. You have always been my greatest blessing.",
-    "Never forget how much you mean to me. Even though I am no longer here in person, my love and support will always walk beside you. Cherish each day and hold each other close.",
-    "Thank you for being part of my journey. I hope these words and files bring comfort in difficult times. Remember the laughter, forget the sorrow, and carry on with hope.",
-  ];
-
-  const handleDraftWithAI = async () => {
-    setIsGenerating(true);
-    try {
-      const chosenTemplate = LEGACY_MESSAGE_TEMPLATES[Math.floor(Math.random() * LEGACY_MESSAGE_TEMPLATES.length)];
-      const newFile: FileEntry = {
-        id: Math.random().toString(),
-        type: 'note',
-        name: 'My Message',
-        size: `${(new Blob([chosenTemplate]).size / 1024).toFixed(1)} KB`,
-        noteContent: chosenTemplate,
-      };
-      setSelectedFiles(prev => [...prev, newFile]);
-    } catch (err) {
-      setErrorMessage("Could not generate template message. Please write your message manually.");
-      setTimeout(() => setErrorMessage(null), 3000);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const addNote = (content: string) => {
     if (!content.trim()) return;
@@ -814,38 +787,20 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
                       placeholder="Write your message here..."
                       className="w-full h-32 bg-surface-darker border border-gray-800 rounded-xl p-4 text-white text-sm resize-none focus:border-primary/50 focus:outline-none transition-colors"
                     />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleDraftWithAI}
-                        disabled={isGenerating}
-                        className="flex-1 py-3 bg-amber-500/20 text-amber-500 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <span className="material-symbols-outlined text-sm">auto_awesome</span>
-                            Draft with AI
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          const textarea = document.getElementById('note-textarea') as HTMLTextAreaElement;
-                          if (textarea) {
-                            addNote(textarea.value);
-                            textarea.value = '';
-                          }
-                        }}
-                        className="flex-1 py-3 bg-primary text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">add</span>
-                        Add Message
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const textarea = document.getElementById('note-textarea') as HTMLTextAreaElement;
+                        if (textarea) {
+                          addNote(textarea.value);
+                          textarea.value = '';
+                        }
+                      }}
+                      className="w-full py-3 bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-blue-600 active:scale-[0.99] transition-all cursor-pointer shadow-lg shadow-primary/20"
+                    >
+                      <span className="material-symbols-outlined text-base">add</span>
+                      Add Message
+                    </button>
                   </div>
                 )}
               </div>
