@@ -1,7 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleGenAI } from "@google/genai";
 import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id, Doc } from '../convex/_generated/dataModel';
@@ -253,25 +252,27 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
     }
   };
 
+  const LEGACY_MESSAGE_TEMPLATES = [
+    "To those I love: Please know how deeply grateful I am for every memory we shared. Take care of each other, be gentle with yourselves, and live your lives with courage, kindness, and joy.",
+    "If you are reading this, it means my switch has triggered. I wanted to leave you with clarity and peace of mind. Everything you need is preserved here. You have always been my greatest blessing.",
+    "Never forget how much you mean to me. Even though I am no longer here in person, my love and support will always walk beside you. Cherish each day and hold each other close.",
+    "Thank you for being part of my journey. I hope these words and files bring comfort in difficult times. Remember the laughter, forget the sorrow, and carry on with hope.",
+  ];
+
   const handleDraftWithAI = async () => {
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Write a short, heart-felt final legacy message. Keep it under 60 words. No subject lines.`;
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt
-      });
+      const chosenTemplate = LEGACY_MESSAGE_TEMPLATES[Math.floor(Math.random() * LEGACY_MESSAGE_TEMPLATES.length)];
       const newFile: FileEntry = {
         id: Math.random().toString(),
         type: 'note',
         name: 'My Message',
-        size: `${(new Blob([response.text || '']).size / 1024).toFixed(1)} KB`,
-        noteContent: response.text || ''
+        size: `${(new Blob([chosenTemplate]).size / 1024).toFixed(1)} KB`,
+        noteContent: chosenTemplate,
       };
       setSelectedFiles(prev => [...prev, newFile]);
     } catch (err) {
-      setErrorMessage("AI is not available right now. Please write your message manually.");
+      setErrorMessage("Could not generate template message. Please write your message manually.");
       setTimeout(() => setErrorMessage(null), 3000);
     } finally {
       setIsGenerating(false);

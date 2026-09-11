@@ -77,6 +77,8 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
   // MFA state
   const [showMFAStatus, setShowMFAStatus] = useState(false);
   const [showMFADisableModal, setShowMFADisableModal] = useState(false);
+  const [mfaDisablePassword, setMfaDisablePassword] = useState('');
+  const [mfaDisableError, setMfaDisableError] = useState<string | null>(null);
   const [isDisablingMFA, setIsDisablingMFA] = useState(false);
   const disableMFAAction = useAction(api.auth.disableMFA);
 
@@ -274,10 +276,19 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
   };
 
   const handleDisableMFA = async () => {
+    if (!mfaDisablePassword.trim()) {
+      setMfaDisableError('Please enter your account password to confirm.');
+      return;
+    }
     setIsDisablingMFA(true);
+    setMfaDisableError(null);
     try {
-      await disableMFAAction({ userId: userId.toString() });
+      await disableMFAAction({
+        userId: userId.toString(),
+        password: mfaDisablePassword,
+      });
       setShowMFADisableModal(false);
+      setMfaDisablePassword('');
       setModal({
         type: 'info',
         title: '2FA Disabled',
@@ -286,11 +297,7 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       // Reload page to reflect changes
       setTimeout(() => window.location.reload(), 2000);
     } catch (error: any) {
-      setModal({
-        type: 'error',
-        title: 'Error',
-        message: error.message || 'Failed to disable 2FA. Please try again.'
-      });
+      setMfaDisableError(error.message || 'Failed to disable 2FA. Please verify your password.');
     } finally {
       setIsDisablingMFA(false);
     }
@@ -1633,6 +1640,25 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
               <p className="text-xs text-red-400">
                 <strong>⚠️ Security Note:</strong> Disabling 2FA reduces your account security. Re-enable it as soon as you've reconfigured your authenticator app.
               </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={mfaDisablePassword}
+                onChange={(e) => {
+                  setMfaDisablePassword(e.target.value);
+                  setMfaDisableError(null);
+                }}
+                placeholder="Enter your account password"
+                className="w-full h-11 px-4 bg-surface-darker border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-primary text-sm"
+              />
+              {mfaDisableError && (
+                <p className="text-xs text-red-400 mt-2">{mfaDisableError}</p>
+              )}
             </div>
 
             <div className="flex gap-3">

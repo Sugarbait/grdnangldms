@@ -25,10 +25,11 @@ export const updateRecipientInternal = internalMutation({
 export const list = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const recipients = await ctx.db
       .query("recipients")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
+    return recipients.map(({ checkInAuthToken, checkInAuthTokenExpiry, ...rest }) => rest);
   },
 });
 

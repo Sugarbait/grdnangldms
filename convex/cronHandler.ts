@@ -26,7 +26,7 @@ export const checkExpiredTimers = internalAction({
           subscriptionId: subscription._id,
         });
 
-        const result = await ctx.runAction(api.emails.sendTrialExpiringEmail, {
+        const result = await ctx.runAction(internal.emails.sendTrialExpiringEmail, {
           userId: subscription.userId,
           userName: user.name,
           userEmail: user.email,
@@ -70,7 +70,7 @@ export const checkExpiredTimers = internalAction({
         });
 
         // Send trial expired email
-        const result = await ctx.runAction(api.emails.sendTrialExpiredEmail, {
+        const result = await ctx.runAction(internal.emails.sendTrialExpiredEmail, {
           userId: subscription.userId,
           userName: user.name,
           userEmail: user.email,
@@ -103,7 +103,7 @@ export const checkExpiredTimers = internalAction({
           checkInAuthToken: r.checkInAuthToken,
         }));
 
-        const result = await ctx.runAction(api.emails.sendCheckInAlertEmail, {
+        const result = await ctx.runAction(internal.emails.sendCheckInAlertEmail, {
           timerId: group.timer._id,
           userId: group.timer.userId,
           recipients: recipientEmails,
@@ -129,7 +129,7 @@ export const checkExpiredTimers = internalAction({
       console.log(`Sending reminder for timer ${timer._id} (threshold: ${reminderThreshold}s) for user ${timer.userId}`);
 
       try {
-        const result = await ctx.runAction(api.emails.sendReminderEmail, {
+        const result = await ctx.runAction(internal.emails.sendReminderEmail, {
           timerId: timer._id,
           reminderThreshold,
         });
@@ -150,7 +150,7 @@ export const checkExpiredTimers = internalAction({
       console.log(`Processing expired timer ${timer._id} for user ${timer.userId}`);
 
       try {
-        const result = await ctx.runAction(api.emails.sendNotificationEmails, {
+        const result = await ctx.runAction(internal.emails.sendNotificationEmails, {
           timerId: timer._id,
         });
 

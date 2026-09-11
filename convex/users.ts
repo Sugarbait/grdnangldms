@@ -190,7 +190,21 @@ export const get = query({
       // Try to get user directly - Convex handles ID normalization
       const user = await ctx.db.get(args.userId as any);
       if (!user) return null;
-      return user;
+
+      // SECURITY: Strip password hashes, MFA secrets, backup codes, and master keys
+      const {
+        password,
+        totpSecret,
+        backupCodes,
+        masterEncryptionKey,
+        resetToken,
+        resetTokenExpiry,
+        verificationToken,
+        verificationTokenExpiry,
+        ...safeProfile
+      } = user as any;
+
+      return safeProfile;
     } catch (e) {
       // Log the error but don't log out on query errors
       console.error("Error fetching user:", e);
@@ -387,7 +401,7 @@ export const verifyEmailToken = action({
     // Send welcome email to newly verified user
     console.log("[verifyEmailToken] Sending welcome email to:", userEmail);
     try {
-      const emailResult: any = await ctx.runAction(api.emails.sendWelcomeEmail, {
+      const emailResult: any = await ctx.runAction(internal.emails.sendWelcomeEmail, {
         userId: userId as any,
         email: userEmail,
         name: userName,

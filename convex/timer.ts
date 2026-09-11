@@ -1,5 +1,5 @@
 
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const get = query({
@@ -98,7 +98,7 @@ export const reset = mutation({
   },
 });
 
-export const trigger = mutation({
+export const trigger = internalMutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     const timer = await ctx.db

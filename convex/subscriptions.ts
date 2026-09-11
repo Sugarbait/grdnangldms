@@ -354,8 +354,8 @@ export const getSubscriptionStatus = query({
   },
 });
 
-// Query: Find users with trials expiring in next 1 hour
-export const getUsersWithTrialExpiringInOneHour = query({
+// Internal Query: Find users with trials expiring in next 1 hour
+export const getUsersWithTrialExpiringInOneHour = internalQuery({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
@@ -375,8 +375,8 @@ export const getUsersWithTrialExpiringInOneHour = query({
   },
 });
 
-// Query: Find users with expired trials
-export const getUsersWithExpiredTrials = query({
+// Internal Query: Find users with expired trials
+export const getUsersWithExpiredTrials = internalQuery({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();

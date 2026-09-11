@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
 import nodemailer from "nodemailer";
@@ -13,8 +13,18 @@ function getUserInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function escapeHtml(str: string | undefined | null): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Main action to send notification emails with files
-export const sendNotificationEmails = action({
+export const sendNotificationEmails = internalAction({
   args: { timerId: v.id("timers") },
   handler: async (ctx, args) => {
     console.log("[sendNotificationEmails] Starting for timer:", args.timerId);
@@ -156,7 +166,7 @@ export const sendNotificationEmails = action({
           <h3 style="color: #374151; margin-top: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Images</h3>
           ${images.map((img) => `
             <div style="margin: 10px 0;">
-              <a href="${img.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${img.name}</a>
+              <a href="${img.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${escapeHtml(img.name)}</a>
             </div>
           `).join('')}
         </div>
@@ -167,7 +177,7 @@ export const sendNotificationEmails = action({
           <h3 style="color: #374151; margin-top: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Audio Files</h3>
           ${audios.map((audio) => `
             <div style="margin: 10px 0;">
-              <a href="${audio.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${audio.name}</a>
+              <a href="${audio.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${escapeHtml(audio.name)}</a>
             </div>
           `).join('')}
         </div>
@@ -178,7 +188,7 @@ export const sendNotificationEmails = action({
           <h3 style="color: #374151; margin-top: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Documents</h3>
           ${documents.map((doc) => `
             <div style="margin: 10px 0;">
-              <a href="${doc.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${doc.name}</a>
+              <a href="${doc.url}" style="display: inline-block; background-color: #1754cf; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Download ${escapeHtml(doc.name)}</a>
             </div>
           `).join('')}
         </div>
@@ -189,8 +199,8 @@ export const sendNotificationEmails = action({
           <h3 style="color: #374151; margin-top: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Messages</h3>
           ${messages.map((msg) => `
             <div style="margin: 10px 0; background: #f9fafb; border-left: 3px solid #1754cf; padding: 15px; border-radius: 4px;">
-              <p style="margin: 0 0 8px 0; font-weight: bold; color: #374151; font-size: 14px;">${msg.name}</p>
-              <p style="margin: 0; color: #4b5563; white-space: pre-wrap; word-wrap: break-word; font-size: 14px;">${msg.content}</p>
+              <p style="margin: 0 0 8px 0; font-weight: bold; color: #374151; font-size: 14px;">${escapeHtml(msg.name)}</p>
+              <p style="margin: 0; color: #4b5563; white-space: pre-wrap; word-wrap: break-word; font-size: 14px;">${escapeHtml(msg.content)}</p>
             </div>
           `).join('')}
         </div>
@@ -214,23 +224,23 @@ export const sendNotificationEmails = action({
 
     <!-- Content -->
     <div style="padding: 40px 30px;">
-      <p style="font-size: 16px; margin-bottom: 20px;">Dear ${recipient.name},</p>
+      <p style="font-size: 16px; margin-bottom: 20px;">Dear ${escapeHtml(recipient.name)},</p>
 
       <!-- User Info Box -->
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
           ${user.avatarUrl ? `
-            <img src="${user.avatarUrl}" alt="${user.name}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #1754cf; flex-shrink: 0;">
+            <img src="${escapeHtml(user.avatarUrl)}" alt="${escapeHtml(user.name)}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #1754cf; flex-shrink: 0;">
           ` : `
             <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #1754cf 0%, #0d3a8f 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; flex-shrink: 0;">${getUserInitials(user.name)}</div>
           `}
           <div>
-            <p style="margin: 0; font-size: 16px; font-weight: bold; color: #1f2937;">${user.name}</p>
+            <p style="margin: 0; font-size: 16px; font-weight: bold; color: #1f2937;">${escapeHtml(user.name)}</p>
             <p style="margin: 5px 0 0 0; font-size: 13px; color: #6b7280;">Has entrusted you with digital items</p>
           </div>
         </div>
         <p style="margin: 15px 0 0 0; font-size: 14px; color: #4b5563; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-          This message was sent because ${user.name} did not check in within their specified time period in the Guardian Angel DMS application.
+          This message was sent because ${escapeHtml(user.name)} did not check in within their specified time period in the Guardian Angel DMS application.
         </p>
       </div>
 
@@ -258,7 +268,7 @@ export const sendNotificationEmails = action({
 
       <!-- Footer text -->
       <p style="margin-top: 30px; font-size: 13px; color: #dc2626; font-weight: bold;">
-        This is an automated notification. Please treat this information with care and respect ${user.name}'s wishes.
+        This is an automated notification. Please treat this information with care and respect ${escapeHtml(user.name)}'s wishes.
       </p>
       <p style="font-size: 13px; color: #6b7280; margin-top: 15px;">
         If you believe you received this message in error, or if you need assistance accessing the items, open Guardian Angel DMS on your device and select "Help" from the main menu for support options and FAQs.
@@ -402,7 +412,7 @@ export const sendTestEmail = action({
   <div class="content">
     <div class="test-badge">TEST EMAIL</div>
 
-    <p>Hi ${user.name},</p>
+    <p>Hi ${escapeHtml(user.name)},</p>
 
     <div class="message-box">
       <p>This is a test email from Guardian Angel DMS to confirm that email notifications are working correctly.</p>
@@ -410,7 +420,7 @@ export const sendTestEmail = action({
     </div>
 
     <p><strong>Email Configuration Status:</strong> Working</p>
-    <p>Your recipients will be notified at: <strong>${user.email}</strong></p>
+    <p>Your recipients will be notified at: <strong>${escapeHtml(user.email)}</strong></p>
   </div>
   <div class="footer">
     <p>Guardian Angel DMS - Your Digital Legacy</p>
@@ -454,7 +464,7 @@ const formatTimeRemaining = (seconds: number): string => {
   }
 };
 
-export const sendReminderEmail = action({
+export const sendReminderEmail = internalAction({
   args: { timerId: v.id("timers"), reminderThreshold: v.optional(v.number()) },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     const data = await ctx.runQuery(internal.emailHelpers.getTriggeredUserData, {
@@ -533,7 +543,7 @@ export const sendReminderEmail = action({
     <div style="padding: 40px 30px;">
       <div style="background: #1754cf; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px;">REMINDER</div>
 
-      <p style="font-size: 16px; margin-bottom: 20px;">Hi ${user.name},</p>
+      <p style="font-size: 16px; margin-bottom: 20px;">Hi ${escapeHtml(user.name)},</p>
 
       <div style="background: #dbeafe; border: 2px solid #1754cf; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
         <h2 style="color: #0d3a8f; margin: 0 0 5px 0; font-size: 28px;">${timeRemainingText}</h2>
@@ -630,7 +640,7 @@ export const triggerEmergencyEmails = action({
 
     console.log("[triggerEmergencyEmails] Calling sendNotificationEmails...");
     try {
-      const result: EmailResult = await ctx.runAction(api.emails.sendNotificationEmails, {
+      const result: EmailResult = await ctx.runAction(internal.emails.sendNotificationEmails, {
         timerId: timer._id,
       });
       console.log("[triggerEmergencyEmails] sendNotificationEmails result:", result);
@@ -779,7 +789,7 @@ export const checkAndSendReminder = action({
   },
 });
 
-export const sendCheckInAlertEmail = action({
+export const sendCheckInAlertEmail = internalAction({
   args: {
     timerId: v.id("timers"), userId: v.id("users"), recipients: v.array(v.object({
       _id: v.string(),
@@ -836,11 +846,11 @@ export const sendCheckInAlertEmail = action({
                 <!-- Content -->
                 <div style="padding: 40px 30px;">
                   <h2 style="color: #DC2626; font-size: 24px; margin: 0 0 20px 0; text-align: center;">
-                    Help ${args.userName} Stay Connected
+                    Help ${escapeHtml(args.userName)} Stay Connected
                   </h2>
 
                   <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                    ${args.userName} has designated you as an emergency contact. Their check-in timer is about to expire.
+                    ${escapeHtml(args.userName)} has designated you as an emergency contact. Their check-in timer is about to expire.
                   </p>
 
                   <div style="background: white; border: 2px solid #DC2626; border-radius: 8px; padding: 20px; margin: 30px 0;">
@@ -896,7 +906,7 @@ export const sendCheckInAlertEmail = action({
   },
 });
 
-export const sendPasswordResetEmail = action({
+export const sendPasswordResetEmail = internalAction({
   args: { email: v.string(), resetToken: v.string() },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     console.log("[sendPasswordResetEmail] Sending password reset email to:", args.email);
@@ -1000,7 +1010,7 @@ export const sendPasswordResetEmail = action({
   },
 });
 
-export const sendVerificationEmail = action({
+export const sendVerificationEmail = internalAction({
   args: { userId: v.id("users"), email: v.string(), verificationToken: v.string() },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     console.log("[sendVerificationEmail] Sending verification email to:", args.email);
@@ -1058,7 +1068,7 @@ export const sendVerificationEmail = action({
     <p>Verify Your Email Address</p>
   </div>
   <div class="content">
-    <p>Hi ${user.name},</p>
+    <p>Hi ${escapeHtml(user.name)},</p>
 
     <div class="message-box">
       <p>Welcome to Guardian Angel DMS! We're excited to have you on board.</p>
@@ -1107,7 +1117,7 @@ export const sendVerificationEmail = action({
 });
 
 // Action: Send trial expiring soon email
-export const sendTrialExpiringEmail = action({
+export const sendTrialExpiringEmail = internalAction({
   args: {
     userId: v.id("users"),
     userName: v.string(),
@@ -1131,8 +1141,8 @@ export const sendTrialExpiringEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 30000,
-      socketTimeout: 30000,
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const expiresInMinutes = Math.ceil((args.expiresAt - Date.now()) / 60000);
@@ -1173,7 +1183,7 @@ export const sendTrialExpiringEmail = action({
     <div style="padding: 40px 30px; text-align: center;">
       <div style="background: #F59E0B; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px;">TRIAL EXPIRING</div>
 
-      <p style="font-size: 16px; margin-bottom: 20px; text-align: left;">Hi ${args.userName},</p>
+      <p style="font-size: 16px; margin-bottom: 20px; text-align: left;">Hi ${escapeHtml(args.userName)},</p>
 
       <div style="background: #fef3c7; border: 2px solid #F59E0B; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
         <h2 style="color: #92400e; margin: 0 0 5px 0; font-size: 28px;">~${expiresInMinutes} minute${expiresInMinutes !== 1 ? 's' : ''}</h2>
@@ -1228,7 +1238,7 @@ export const sendTrialExpiringEmail = action({
 });
 
 // Action: Send trial expired email
-export const sendTrialExpiredEmail = action({
+export const sendTrialExpiredEmail = internalAction({
   args: {
     userId: v.id("users"),
     userName: v.string(),
@@ -1250,8 +1260,8 @@ export const sendTrialExpiredEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 30000,
-      socketTimeout: 30000,
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const emailHtml = `
@@ -1274,7 +1284,7 @@ export const sendTrialExpiredEmail = action({
     <div style="padding: 40px 30px; text-align: center;">
       <div style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 20px;">TRIAL ENDED</div>
 
-      <p style="font-size: 16px; margin-bottom: 20px; text-align: left;">Hi ${args.userName},</p>
+      <p style="font-size: 16px; margin-bottom: 20px; text-align: left;">Hi ${escapeHtml(args.userName)},</p>
 
       <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
         <h2 style="color: #7f1d1d; margin: 0 0 5px 0; font-size: 28px;">Trial Expired</h2>
@@ -1340,7 +1350,7 @@ export const sendTrialExpiredEmail = action({
 /**
  * Send welcome email to new users (after email verification or OAuth signup)
  */
-export const sendWelcomeEmail = action({
+export const sendWelcomeEmail = internalAction({
   args: { userId: v.id("users"), email: v.string(), name: v.string() },
   handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     console.log("[sendWelcomeEmail] Sending welcome email to:", args.email);
@@ -1358,8 +1368,8 @@ export const sendWelcomeEmail = action({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 30000,
-      socketTimeout: 30000,
+      connectionTimeout: 30000, // 30 second timeout for slow connections
+      socketTimeout: 30000, // 30 second socket timeout
     });
 
     const emailHtml = `
@@ -1396,7 +1406,7 @@ export const sendWelcomeEmail = action({
   <div class="content">
     <div class="badge">🎉 Welcome to Guardian Angel DMS</div>
 
-    <p style="font-weight: 500; font-size: 16px;">Hi ${args.name},</p>
+    <p style="font-weight: 500; font-size: 16px;">Hi ${escapeHtml(args.name)},</p>
 
     <p style="font-size: 16px; margin: 20px 0; line-height: 1.7;">Welcome to Guardian Angel DMS! We're thrilled to have you join our community of people protecting their digital legacies.</p>
 

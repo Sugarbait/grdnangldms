@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Recipient, SecureFile } from '../types';
-import { GoogleGenAI } from "@google/genai";
 import { useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
@@ -86,30 +85,14 @@ const ProtocolActive: React.FC<ProtocolActiveProps> = ({ recipients, files, onCa
       setStage('sending');
       addLog("[SOCKET] Opening high-priority secure channels...");
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      try {
-        const prompt = `Generate 5 urgent but professional emergency notifications for: ${recipients.map(r => r.name).join(', ')}.
-        Inform them the secure switch was triggered and they have vault access. Max 10 words per line.`;
-        const result = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-        const aiLogs = (result.text || "").split('\n').filter(l => l.trim().length > 0);
-
-        for (let i = 0; i < recipients.length; i++) {
-          const r = recipients[i];
-          setStatusMap(prev => ({ ...prev, [r.id]: 'TRANSMITTING' }));
-          addLog(`[TX] Encrypting packet for ${r.name}...`);
-          await new Promise(res => setTimeout(res, 1200));
-          if (aiLogs[i]) addLog(`[LOG] ${aiLogs[i]}`);
-          setStatusMap(prev => ({ ...prev, [r.id]: 'DELIVERED' }));
-          setProgress(((i + 1) / recipients.length) * 100);
-        }
-      } catch (e) {
-        for (const r of recipients) {
-          setStatusMap(prev => ({ ...prev, [r.id]: 'TRANSMITTING' }));
-          addLog(`[TX] Manual backup transmission for ${r.name}...`);
-          await new Promise(res => setTimeout(res, 1000));
-          setStatusMap(prev => ({ ...prev, [r.id]: 'DELIVERED' }));
-          setProgress(((recipients.indexOf(r) + 1) / recipients.length) * 100);
-        }
+      for (let i = 0; i < recipients.length; i++) {
+        const r = recipients[i];
+        setStatusMap(prev => ({ ...prev, [r.id]: 'TRANSMITTING' }));
+        addLog(`[TX] Encrypting vault payload for ${r.name}...`);
+        await new Promise(res => setTimeout(res, 1000));
+        addLog(`[LOG] Emergency dispatch confirmed for ${r.name}`);
+        setStatusMap(prev => ({ ...prev, [r.id]: 'DELIVERED' }));
+        setProgress(((i + 1) / recipients.length) * 100);
       }
       setStage('finished');
       addLog("[SUCCESS] All packets delivered successfully.");

@@ -289,7 +289,7 @@ export const verifyTOTPCodeForLogin = action({
  */
 export const createAccount = action({
   args: { name: v.string(), email: v.string(), password: v.string() },
-  handler: async (ctx, args): Promise<{ userId: string; verificationToken: string; email: string }> => {
+  handler: async (ctx, args): Promise<{ userId: string; email: string }> => {
     // Normalize email to lowercase for consistency
     const normalizedEmail = args.email.toLowerCase().trim();
 
@@ -322,7 +322,7 @@ export const createAccount = action({
     // Send verification email
     console.log("[createAccount] Sending verification email to:", normalizedEmail);
     try {
-      const emailResult = await ctx.runAction(api.emails.sendVerificationEmail, {
+      const emailResult = await ctx.runAction(internal.emails.sendVerificationEmail, {
         userId: userId as any,
         email: normalizedEmail,
         verificationToken: verificationToken,
@@ -335,7 +335,7 @@ export const createAccount = action({
       console.error("[createAccount] Error sending verification email:", emailError);
     }
 
-    return { userId, verificationToken, email: args.email };
+    return { userId, email: args.email };
   },
 });
 
@@ -491,7 +491,7 @@ export const requestPasswordReset = action({
 
     // Send password reset email
     console.log("[requestPasswordReset] About to call sendPasswordResetEmail action");
-    const emailResult = await ctx.runAction(api.emails.sendPasswordResetEmail, {
+    const emailResult = await ctx.runAction(internal.emails.sendPasswordResetEmail, {
       email: trimmedEmail,
       resetToken: resetToken,
     });
@@ -570,7 +570,11 @@ export const resetPassword = action({
  * Used to reset MFA if user loses access to their authenticator
  */
 export const disableMFA = action({
-  args: { userId: v.string() },
+  args: {
+    userId: v.string(),
+    password: v.optional(v.string()),
+    totpCode: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     try {
       const user = (await ctx.runQuery(internal.users.getUserById, {
@@ -579,6 +583,26 @@ export const disableMFA = action({
 
       if (!user) {
         throw new ConvexError("User not found.");
+      }
+
+      if (!user.mfaEnabled) {
+        return { success: true };
+      }
+
+      // SECURITY: Require authentication before disabling MFA
+      let isAuthorized = false;
+      if (args.password && user.password) {
+        isAuthorized = await bcrypt.compare(args.password, user.password);
+        if (!isAuthorized) {
+          throw new ConvexError("Incorrect password. Cannot disable 2FA.");
+        }
+      } else if (args.totpCode && user.totpSecret) {
+        isAuthorized = verifyTOTP(user.totpSecret, args.totpCode);
+        if (!isAuthorized) {
+          throw new ConvexError("Invalid authentication code. Cannot disable 2FA.");
+        }
+      } else {
+        throw new ConvexError("Password or authentication code is required to disable 2FA.");
       }
 
       // Update user to disable MFA
@@ -596,7 +620,8 @@ export const disableMFA = action({
       console.log(`[disableMFA] MFA disabled for user: ${args.userId}`);
       return { success: true };
     } catch (error: any) {
-      console.error("[disableMFA] Error disabling MFA:", error.message);
+      console.error("[disableMFA] Error disabling MFA:", error.message || error);
+      if (error instanceof ConvexError) throw error;
       throw new ConvexError("Failed to disable MFA. Please contact support.");
     }
   },
@@ -616,79 +641,110 @@ export const deriveEncryptionKeyAction = action({
 
 /**
  * Create or update OAuth user account
- * Called when user authenticates via Google, Microsoft, or other OAuth provider
+ * Validates the OAuth bearer access token directly with the provider
  */
 export const createOrUpdateOAuthUser = action({
   args: {
     provider: v.string(), // "google" | "microsoft"
-    providerId: v.string(), // unique ID from OAuth provider
-    email: v.string(),
-    name: v.string(),
-    avatarUrl: v.optional(v.string()),
+    accessToken: v.string(), // Access token from provider
   },
-  handler: async (ctx, args): Promise<{ userId: string; isNewUser: boolean; mfaEnabled: boolean }> => {
-    const trimmedEmail = args.email.trim();
+  handler: async (ctx, args): Promise<{ userId: string; isNewUser: boolean; mfaEnabled: boolean; email: string }> => {
+    let verifiedEmail = "";
+    let verifiedProviderId = "";
+    let verifiedName = "";
+    let verifiedAvatarUrl = "";
 
-    // Try exact match first, then try lowercase for backward compatibility
-    let existingUserByEmail = await ctx.runQuery(internal.users.getUserByEmail, { email: trimmedEmail });
-    if (!existingUserByEmail) {
-      existingUserByEmail = await ctx.runQuery(internal.users.getUserByEmail, { email: trimmedEmail.toLowerCase() });
+    if (args.provider === "google") {
+      const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${args.accessToken}` },
+      });
+      if (!res.ok) {
+        throw new ConvexError("Google authentication failed. Invalid or expired token.");
+      }
+      const profile = await res.json();
+      if (!profile.email || !profile.sub) {
+        throw new ConvexError("Invalid Google profile response.");
+      }
+      verifiedEmail = profile.email.toLowerCase().trim();
+      verifiedProviderId = profile.sub;
+      verifiedName = profile.name || verifiedEmail.split("@")[0];
+      verifiedAvatarUrl = profile.picture || "";
+    } else if (args.provider === "microsoft") {
+      const res = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { Authorization: `Bearer ${args.accessToken}` },
+      });
+      if (!res.ok) {
+        throw new ConvexError("Microsoft authentication failed. Invalid or expired token.");
+      }
+      const profile = await res.json();
+      const email = profile.mail || profile.userPrincipalName;
+      if (!email || !profile.id) {
+        throw new ConvexError("Invalid Microsoft profile response.");
+      }
+      verifiedEmail = email.toLowerCase().trim();
+      verifiedProviderId = profile.id;
+      verifiedName = profile.displayName || verifiedEmail.split("@")[0];
+      try {
+        const photoRes = await fetch("https://graph.microsoft.com/v1.0/me/photo/$value", {
+          headers: { Authorization: `Bearer ${args.accessToken}` },
+        });
+        if (photoRes.ok) {
+          const blob = await photoRes.arrayBuffer();
+          verifiedAvatarUrl = `data:image/jpeg;base64,${Buffer.from(blob).toString("base64")}`;
+        }
+      } catch {
+        // photo optional
+      }
+    } else {
+      throw new ConvexError("Unsupported OAuth provider");
     }
 
+    // Lookup existing user by verified email
+    let existingUserByEmail = await ctx.runQuery(internal.users.getUserByEmail, { email: verifiedEmail });
+
     if (existingUserByEmail) {
-      // User already exists - update OAuth info if needed
-      const oauthProviderId = `${args.provider}_${args.providerId}`;
+      const oauthProviderId = `${args.provider}_${verifiedProviderId}`;
       await ctx.runMutation(internal.users.updateOAuthUser, {
         userId: existingUserByEmail._id,
         authProvider: args.provider,
         oauthProviderId: oauthProviderId,
-        oauthEmail: trimmedEmail,
-        oauthName: args.name,
-        oauthAvatarUrl: args.avatarUrl || existingUserByEmail.oauthAvatarUrl || "",
+        oauthEmail: verifiedEmail,
+        oauthName: verifiedName,
+        oauthAvatarUrl: verifiedAvatarUrl || existingUserByEmail.oauthAvatarUrl || "",
       });
 
       return {
         userId: existingUserByEmail._id.toString(),
         isNewUser: false,
         mfaEnabled: existingUserByEmail.mfaEnabled ?? false,
+        email: verifiedEmail,
       };
     }
 
-    // Create new OAuth user
-    const oauthProviderId = `${args.provider}${args.providerId}`;
-
-    // Generate random encryption key for OAuth user (no password-based derivation)
+    // Create new OAuth user with verified claims
+    const oauthProviderId = `${args.provider}_${verifiedProviderId}`;
     const masterEncryptionKey = generateEncryptionKey();
 
-    // Normalize new emails to lowercase for consistency
-    const normalizedEmail = trimmedEmail.toLowerCase();
-
     const userId = await ctx.runMutation(internal.users.createOAuthUser, {
-      name: args.name,
-      email: normalizedEmail,
+      name: verifiedName,
+      email: verifiedEmail,
       authProvider: args.provider,
       oauthProviderId: oauthProviderId,
-      oauthEmail: normalizedEmail,
-      oauthName: args.name,
-      oauthAvatarUrl: args.avatarUrl || "",
+      oauthEmail: verifiedEmail,
+      oauthName: verifiedName,
+      oauthAvatarUrl: verifiedAvatarUrl,
       masterEncryptionKey: masterEncryptionKey,
-      emailVerified: true, // OAuth providers verify email
+      emailVerified: true,
       lastCheckIn: Date.now(),
     });
 
-
-    // Send welcome email to new OAuth user
-    console.log("[createOrUpdateOAuthUser] Sending welcome email to:", normalizedEmail);
+    console.log("[createOrUpdateOAuthUser] Sending welcome email to:", verifiedEmail);
     try {
-      const emailResult = await ctx.runAction(api.emails.sendWelcomeEmail, {
+      await ctx.runAction(internal.emails.sendWelcomeEmail, {
         userId: userId as any,
-        email: normalizedEmail,
-        name: args.name,
+        email: verifiedEmail,
+        name: verifiedName,
       });
-      console.log("[createOrUpdateOAuthUser] Welcome email result:", emailResult);
-      if (!emailResult.success) {
-        console.error("[createOrUpdateOAuthUser] Failed to send welcome email:", emailResult.error);
-      }
     } catch (emailError: any) {
       console.error("[createOrUpdateOAuthUser] Error sending welcome email:", emailError);
     }
@@ -697,6 +753,7 @@ export const createOrUpdateOAuthUser = action({
       userId: userId.toString(),
       isNewUser: true,
       mfaEnabled: false,
+      email: verifiedEmail,
     };
   },
 });
@@ -740,7 +797,7 @@ export const resendVerificationEmail = action({
 
       // Resend verification email
       console.log("[resendVerificationEmail] Sending verification email to:", trimmedEmail);
-      const emailResult = await ctx.runAction(api.emails.sendVerificationEmail, {
+      const emailResult = await ctx.runAction(internal.emails.sendVerificationEmail, {
         userId: user._id,
         email: trimmedEmail,
         verificationToken: user.verificationToken,

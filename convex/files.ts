@@ -95,15 +95,23 @@ export const purge = mutation({
 });
 
 export const updateAudioStorageId = mutation({
-  args: { fileId: v.id("files"), audioStorageId: v.id("_storage") },
+  args: { userId: v.id("users"), fileId: v.id("files"), audioStorageId: v.id("_storage") },
   handler: async (ctx, args) => {
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== args.userId) {
+      throw new Error("File not found or access denied");
+    }
     await ctx.db.patch(args.fileId, { audioStorageId: args.audioStorageId });
   },
 });
 
 export const updateDocumentStorageId = mutation({
-  args: { fileId: v.id("files"), documentStorageId: v.id("_storage") },
+  args: { userId: v.id("users"), fileId: v.id("files"), documentStorageId: v.id("_storage") },
   handler: async (ctx, args) => {
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== args.userId) {
+      throw new Error("File not found or access denied");
+    }
     await ctx.db.patch(args.fileId, { documentStorageId: args.documentStorageId });
   },
 });

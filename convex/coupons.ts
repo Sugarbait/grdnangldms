@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 // Query: Validate coupon code
@@ -137,8 +137,8 @@ export const getActiveCoupons = query({
   },
 });
 
-// Query: Get coupon by code (for admin)
-export const getCouponByCode = query({
+// Internal Query: Get coupon by code (admin only)
+export const getCouponByCode = internalQuery({
   args: { code: v.string() },
   handler: async (ctx, args) => {
     const coupon = await ctx.db
@@ -169,8 +169,8 @@ export const getCouponByCode = query({
   },
 });
 
-// Mutation: Create new coupon (admin only - you can add authentication later)
-export const createCoupon = mutation({
+// Internal Mutation: Create new coupon (admin only)
+export const createCoupon = internalMutation({
   args: {
     code: v.string(),
     description: v.string(),
@@ -220,8 +220,8 @@ export const createCoupon = mutation({
   },
 });
 
-// Mutation: Update coupon (admin only)
-export const updateCoupon = mutation({
+// Internal Mutation: Update coupon (admin only)
+export const updateCoupon = internalMutation({
   args: {
     couponId: v.id("coupons"),
     isActive: v.optional(v.boolean()),
@@ -246,8 +246,8 @@ export const updateCoupon = mutation({
   },
 });
 
-// Query: Get coupon statistics (admin)
-export const getCouponStats = query({
+// Internal Query: Get coupon statistics (admin only)
+export const getCouponStats = internalQuery({
   args: {},
   handler: async (ctx) => {
     const coupons = await ctx.db.query("coupons").collect();

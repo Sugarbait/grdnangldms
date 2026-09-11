@@ -100,10 +100,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           const result = await createOrUpdateOAuthUserAction({
             provider: 'microsoft',
-            providerId: decoded.oid || decoded.sub,
-            email: msEmail,
-            name: decoded.name,
-            avatarUrl: msAvatar,
+            accessToken: accessToken || token,
           });
 
           sessionStorage.setItem('guardian_encryption_key_source', 'oauth');
@@ -156,22 +153,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError(null);
     setProgress(0);
-    setStatusText('Authenticating with Google...');
-
     try {
-      // Fetch user profile using the access token
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch Google user info');
-      const profile = await res.json();
-
       const result = await createOrUpdateOAuthUserAction({
         provider: 'google',
-        providerId: profile.sub, // Google's unique user ID
-        email: profile.email,
-        name: profile.name,
-        avatarUrl: profile.picture || undefined,
+        accessToken: tokenResponse.access_token,
       });
 
       // For OAuth users, the encryption key is server-generated
@@ -192,7 +177,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       }
 
       setTimeout(() => {
-        localStorage.setItem('guardian_user_email', profile.email);
+        localStorage.setItem('guardian_user_email', result.email || '');
         if (result.mfaEnabled) {
           // MFA enabled - show TOTP input instead of going to dashboard
           // Do NOT set guardian_user_id yet — prevents MFA bypass on refresh
@@ -256,11 +241,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (targetMode === 'login') {
         const result = await loginAction({ email, password });
-        newUserId = result.userId;
+        newUserId = result.userId as any;
         mfaEnabled = result.mfaEnabled;
       } else if (targetMode === 'signup') {
         const result = await createAccountAction({ name, email, password });
-        newUserId = result.userId;
+        newUserId = result.userId as any;
         // New signups need email verification, not redirected to login yet
       }
 
