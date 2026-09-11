@@ -607,8 +607,8 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                     >
                       {file.type === 'image' && ((file as any).url || file.imageStorageId || file.content) ? (
                         <ImagePreviewThumbnail url={(file as any).url} storageId={file.imageStorageId} content={file.content} fileName={file.name} />
-                      ) : file.type === 'audio' && file.audioStorageId ? (
-                        <span className="material-symbols-outlined text-3xl">volume_2</span>
+                      ) : file.type === 'audio' ? (
+                        <span className="material-symbols-outlined text-3xl">graphic_eq</span>
                       ) : file.type === 'note' ? (
                         <span className="material-symbols-outlined text-3xl">note</span>
                       ) : (
@@ -739,26 +739,112 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                   </a>
                 </div>
               ) : previewingFile.type === 'audio' ? (
-                <div className="bg-background-dark rounded-2xl p-8 text-center flex flex-col items-center justify-center">
-                  <span className="material-symbols-outlined text-5xl md:text-7xl text-primary mx-auto block mb-6">volume_2</span>
-                  {previewUrl ? (
-                    <>
-                      <p className="text-gray-400 mb-6 text-sm">Audio Preview</p>
-                      <div className="w-full max-w-sm">
-                        <AudioPlayer src={previewUrl} />
+                <div className="bg-background-dark/90 rounded-3xl p-6 sm:p-8 text-center flex flex-col items-center justify-center border border-gray-800 space-y-5">
+                  {/* Glowing Equalizer Icon Badge */}
+                  <div className="size-20 sm:size-24 rounded-full bg-gradient-to-tr from-primary/30 to-blue-500/10 border-2 border-primary/30 flex items-center justify-center shadow-xl shadow-primary/20 mx-auto">
+                    <span className="material-symbols-outlined text-4xl sm:text-5xl text-primary animate-pulse">graphic_eq</span>
+                  </div>
+
+                  {/* Audio Recording Title & Metadata Badges */}
+                  <div className="space-y-2 max-w-md w-full">
+                    <h4 className="text-lg sm:text-xl font-black text-white tracking-tight break-words">
+                      {previewingFile.name}
+                    </h4>
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 font-semibold border border-gray-700">
+                        {previewingFile.size || 'Audio Recording'}
+                      </span>
+                      {previewingFile.addedDate && (
+                        <span className="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 border border-gray-700">
+                          Added {previewingFile.addedDate}
+                        </span>
+                      )}
+                      <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-wider text-[10px]">
+                        Voice Memo
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Embedded Player */}
+                  <div className="w-full max-w-md">
+                    {previewUrl ? (
+                      <AudioPlayer src={previewUrl} />
+                    ) : previewingFile.audioData ? (
+                      <AudioPlayer src={previewingFile.audioData} />
+                    ) : previewingFile.audioStorageId ? (
+                      <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-4">
+                        <span className="size-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                        <span>Loading audio stream...</span>
                       </div>
-                    </>
-                  ) : previewingFile.audioData ? (
-                    <>
-                      <p className="text-gray-400 mb-6 text-sm">Audio Preview</p>
-                      <div className="w-full max-w-sm">
-                        <AudioPlayer src={previewingFile.audioData} />
+                    ) : (
+                      <p className="text-gray-500 text-sm py-4">No audio file attached</p>
+                    )}
+                  </div>
+
+                  {/* Assigned Recipients Section */}
+                  {(() => {
+                    const assignedRecipients = (previewingFile.recipientIds || [])
+                      .map(id => recipients.find(r => (typeof r._id === 'string' ? r._id : r._id.toString()) === (typeof id === 'string' ? id : id.toString())))
+                      .filter(Boolean);
+
+                    return (
+                      <div className="w-full max-w-md bg-surface-dark rounded-2xl p-4 border border-gray-800 text-left space-y-2.5">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          <span className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-sm text-primary">send</span>
+                            Delivered Upon Trigger To:
+                          </span>
+                          <span className="text-white font-mono">
+                            {assignedRecipients.length} {assignedRecipients.length === 1 ? 'Recipient' : 'Recipients'}
+                          </span>
+                        </div>
+
+                        {assignedRecipients.length > 0 ? (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {assignedRecipients.map((r: any) => (
+                              <span
+                                key={r._id}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background-dark border border-gray-700/80 text-xs text-gray-200"
+                              >
+                                <span className="size-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                                <span className="font-semibold text-white">{r.name}</span>
+                                {r.relationship && (
+                                  <span className="text-[10px] text-gray-400">({r.relationship})</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <span className="text-xs text-amber-400 flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-base">warning</span>
+                              No recipients assigned
+                            </span>
+                            <button
+                              type="button"
+                              onClick={openEditFromPreview}
+                              className="text-[11px] font-bold text-primary hover:underline whitespace-nowrap cursor-pointer"
+                            >
+                              Assign
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </>
-                  ) : previewingFile.audioStorageId ? (
-                    <p className="text-gray-400 text-sm">Loading audio...</p>
-                  ) : (
-                    <p className="text-gray-500 text-sm">No audio file attached</p>
+                    );
+                  })()}
+
+                  {/* Direct Download Action */}
+                  {previewUrl && (
+                    <div className="flex items-center gap-3 pt-1">
+                      <a
+                        href={previewUrl}
+                        download={previewingFile.name}
+                        className="text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">download</span>
+                        <span>Download Recording</span>
+                      </a>
+                    </div>
                   )}
                 </div>
               ) : (
