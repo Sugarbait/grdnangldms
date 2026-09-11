@@ -62,11 +62,20 @@ export interface UserProfile {
   timezone?: string;
 }
 
+// 15-minute session timeout (900,000 milliseconds)
+const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
+
 const AppContent: React.FC = () => {
   // Check if session is expired on initial load
   const isSessionExpired = () => {
+    const hasUserId = !!localStorage.getItem('guardian_user_id');
+    if (!hasUserId) return true;
     const expiresAt = localStorage.getItem('guardian_session_expires_at');
-    if (!expiresAt) return true; // No expiration timestamp = expired
+    if (!expiresAt) {
+      // User ID exists in storage: initialize session expiration so valid sessions are not prematurely flagged
+      localStorage.setItem('guardian_session_expires_at', (Date.now() + SESSION_TIMEOUT_MS).toString());
+      return false;
+    }
     return Date.now() > parseInt(expiresAt);
   };
 
@@ -111,8 +120,6 @@ const AppContent: React.FC = () => {
     );
   }, [userId, currentUser?.timezone]);
 
-  // 15-minute session timeout (900,000 milliseconds)
-  const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
   const { getTimeRemaining: getSessionTimeRemaining } = useSessionTimeout({
     timeout: SESSION_TIMEOUT_MS,
     onTimeout: () => handleLogout(),
@@ -318,10 +325,8 @@ const AppContent: React.FC = () => {
   // Loading State
   if (userId && currentUser === undefined && isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark p-10 text-center">
-        <div className="size-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6"></div>
-        <h2 className="text-xl font-black text-white uppercase italic tracking-tighter">Loading</h2>
-        <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Getting your account ready...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark text-center">
+        <div className="size-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }

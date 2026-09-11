@@ -329,13 +329,13 @@
 
 </head>
 
-<body class="bg-background-dark font-display text-white">
     <!--
       Static fallback describing the app for clients that do not execute JavaScript
-      (crawlers, OAuth verification review). React's createRoot().render() clears these
-      children on first mount, so users never see this — it is not a duplicate UI.
+      (crawlers, OAuth verification review). Using <noscript> ensures modern browsers
+      with JavaScript enabled never paint this fallback, preventing flashes on page reload.
     -->
-    <div id="root">
+    <div id="root" class="bg-background-dark min-h-screen"></div>
+    <noscript>
         <main style="max-width:720px;margin:0 auto;padding:48px 24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#e5e7eb;line-height:1.6">
             <img src="/images/New-GrdnAngl-Logo.png" alt="Guardian Angel DMS" width="220" style="max-width:100%;height:auto">
             <h1 style="font-size:2rem;margin:24px 0 8px">Guardian Angel DMS</h1>
@@ -374,7 +374,7 @@
                 <a href="/privacy.html" style="color:#6b7280">Privacy Policy</a>
             </p>
         </main>
-    </div>
+    </noscript>
     <script type="module" src="/index.tsx"></script>
 </body>
 
