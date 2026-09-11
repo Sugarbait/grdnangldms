@@ -72,7 +72,7 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
 
     dismissTimeoutRef.current = setTimeout(() => {
       dismissCelebration();
-    }, 3400);
+    }, 6400);
   };
 
   const getInitials = (name: string) => {
