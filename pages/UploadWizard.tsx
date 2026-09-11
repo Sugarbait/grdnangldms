@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -46,6 +47,63 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [encryptionKey, setEncryptionKey] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string; size: string } | null>(null);
+
+  // Close image preview on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPreviewImage(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const renderImagePreviewModal = () => {
+    if (!previewImage) return null;
+    return ReactDOM.createPortal(
+      <div
+        onClick={() => setPreviewImage(null)}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="bg-surface-dark border border-gray-800 rounded-3xl max-w-3xl w-full flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          style={{ maxHeight: '80vh' }}
+        >
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-800 bg-surface-dark">
+            <div className="min-w-0 pr-2">
+              <h3 className="text-base sm:text-lg font-black text-white truncate">{previewImage.name}</h3>
+              <p className="text-gray-500 text-xs">{previewImage.size} • PHOTO PREVIEW</p>
+            </div>
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="size-9 rounded-full flex items-center justify-center hover:bg-gray-800 text-gray-400 hover:text-white transition-colors flex-shrink-0"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+          </div>
+          <div className="p-4 sm:p-6 overflow-y-auto flex items-center justify-center bg-background-dark/60 min-h-[220px]">
+            <img
+              src={previewImage.url}
+              alt={previewImage.name}
+              className="max-h-[55vh] w-auto max-w-full object-contain rounded-xl shadow-xl"
+            />
+          </div>
+          <div className="p-4 border-t border-gray-800 bg-surface-dark flex justify-end">
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="px-5 py-2 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-colors text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
 
   // Multi-file state tracking
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
@@ -161,6 +219,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
       };
 
       setSelectedFiles(prev => [...prev, newFile]);
+      e.target.value = '';
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -772,11 +831,37 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
             {selectedFiles.map(file => (
               <div key={file.id} className="p-3 sm:p-4 bg-surface-dark rounded-2xl border border-gray-800 space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex-shrink-0 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-2xl text-primary">{getTypeIcon(file.type)}</span>
-                  </div>
+                  {file.type === 'image' && file.url ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImage({ url: file.url!, name: file.name, size: file.size })}
+                      title="Click to view full photo"
+                      className="size-12 rounded-xl border border-primary/30 overflow-hidden flex-shrink-0 relative group/thumb cursor-pointer hover:border-primary transition-all shadow-md active:scale-95"
+                    >
+                      <img src={file.url} alt={file.name} className="w-full h-full object-cover transition-transform duration-200 group-hover/thumb:scale-110" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="material-symbols-outlined text-white text-base">zoom_in</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex-shrink-0 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-2xl text-primary">{getTypeIcon(file.type)}</span>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold truncate text-sm sm:text-base leading-snug">{file.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-bold truncate text-sm sm:text-base leading-snug">{file.name}</p>
+                      {file.type === 'image' && file.url && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage({ url: file.url!, name: file.name, size: file.size })}
+                          className="text-[9px] font-bold text-primary hover:text-blue-400 uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-1 flex-shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-xs">visibility</span>
+                          <span>Preview</span>
+                        </button>
+                      )}
+                    </div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider whitespace-nowrap mt-0.5">{file.size}</p>
                   </div>
                   <button
@@ -810,6 +895,8 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
             <span className="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
+
+        {renderImagePreviewModal()}
       </div>
     );
   }
@@ -932,9 +1019,35 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
         <div className="space-y-2">
           {selectedFiles.map(file => (
             <div key={file.id} className="flex items-center gap-3 p-3 bg-surface-darker rounded-xl">
-              <span className="material-symbols-outlined text-xl text-primary">{getTypeIcon(file.type)}</span>
+              {file.type === 'image' && file.url ? (
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage({ url: file.url!, name: file.name, size: file.size })}
+                  title="Click to view full photo"
+                  className="size-10 rounded-lg border border-primary/30 overflow-hidden flex-shrink-0 relative group/thumb cursor-pointer hover:border-primary transition-all shadow-sm active:scale-95"
+                >
+                  <img src={file.url} alt={file.name} className="w-full h-full object-cover transition-transform duration-200 group-hover/thumb:scale-110" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
+                    <span className="material-symbols-outlined text-white text-xs">zoom_in</span>
+                  </div>
+                </button>
+              ) : (
+                <span className="material-symbols-outlined text-xl text-primary">{getTypeIcon(file.type)}</span>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-bold truncate">{file.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-white text-sm font-bold truncate">{file.name}</p>
+                  {file.type === 'image' && file.url && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImage({ url: file.url!, name: file.name, size: file.size })}
+                      className="text-[9px] font-bold text-primary hover:text-blue-400 uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-1 flex-shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[10px]">visibility</span>
+                      <span>Preview</span>
+                    </button>
+                  )}
+                </div>
                 <p className="text-gray-500 text-[10px] uppercase">{file.size}</p>
               </div>
             </div>
@@ -989,6 +1102,8 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
           )}
         </button>
       </div>
+
+      {renderImagePreviewModal()}
     </div>
   );
 };

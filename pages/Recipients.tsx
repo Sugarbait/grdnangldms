@@ -237,10 +237,14 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
                   key={file._id}
                   className="flex items-center gap-3 p-3 bg-surface-darker border border-gray-800 rounded-xl hover:border-primary/30 transition-colors"
                 >
-                  <div className="size-10 rounded-lg bg-surface-dark flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-sm text-blue-400">
-                      {file.type.startsWith('audio') ? 'mic' : file.type.startsWith('video') ? 'videocam' : 'description'}
-                    </span>
+                  <div className="size-10 rounded-lg bg-surface-dark flex items-center justify-center flex-shrink-0 overflow-hidden border border-gray-800">
+                    {(file as any).url && file.type.startsWith('image') ? (
+                      <img src={(file as any).url} alt={file.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-sm text-blue-400">
+                        {file.type.startsWith('audio') ? 'mic' : file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'videocam' : 'description'}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">{file.name}</p>

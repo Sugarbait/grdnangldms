@@ -14,32 +14,52 @@ interface VaultProps {
 }
 
 // Image Preview Component
-const ImagePreviewThumbnail: React.FC<{ storageId: string; fileName: string }> = ({ storageId, fileName }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+const ImagePreviewThumbnail: React.FC<{ url?: string | null; storageId?: string; fileName: string }> = ({ url, storageId, fileName }) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(url || null);
+  const [hasError, setHasError] = useState(false);
   const getFileUrl = useAction(api.fileStorage.getFileUrl);
 
   useEffect(() => {
+    if (url) {
+      setPreviewUrl(url);
+      setHasError(false);
+      return;
+    }
+
+    if (!storageId) return;
+
+    let isMounted = true;
     const loadImagePreview = async () => {
       try {
-        const url = await getFileUrl({ storageId });
-        if (url) {
-          setPreviewUrl(url);
+        const fetchedUrl = await getFileUrl({ storageId: storageId as any });
+        if (isMounted && fetchedUrl) {
+          setPreviewUrl(fetchedUrl);
+          setHasError(false);
         }
       } catch (error) {
         console.error('Failed to load image preview:', error);
+        if (isMounted) setHasError(true);
       }
     };
 
     loadImagePreview();
-  }, [storageId, getFileUrl]);
+    return () => {
+      isMounted = false;
+    };
+  }, [url, storageId]);
 
-  if (previewUrl) {
+  if (previewUrl && !hasError) {
     return (
-      <img src={previewUrl} alt={fileName} className="w-full h-full object-cover" />
+      <img
+        src={previewUrl}
+        alt={fileName}
+        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        onError={() => setHasError(true)}
+      />
     );
   }
 
-  return <span className="material-symbols-outlined text-3xl">image</span>;
+  return <span className="material-symbols-outlined text-3xl text-primary">image</span>;
 };
 
 const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
@@ -53,6 +73,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [previewingFile, setPreviewingFile] = useState<Doc<"files"> | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [encryptionKey, setEncryptionKey] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -66,6 +87,21 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
       setEncryptionKey(stored);
     }
   }, []);
+
+  // Handle keyboard events (e.g. Esc to close modals)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (previewingFile) {
+          closePreview();
+        } else if (modal) {
+          setModal(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewingFile, modal]);
 
   // Convex Data
   const files = useQuery(api.files.list, { userId }) ?? [];
@@ -187,15 +223,25 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
     }, 180);
   };
 
-  const openPreview = async (file: Doc<"files">) => {
+  const openPreview = async (file: Doc<"files"> & { url?: string | null }) => {
     setPreviewingFile(file);
-    setPreviewUrl(null); // Reset preview URL
 
     console.log(`[PREVIEW] Opening preview for ${file.type}`, {
       imageStorageId: file.imageStorageId,
       audioStorageId: file.audioStorageId,
+      url: file.url,
       hasAudioData: !!file.audioData
     });
+
+    // If file already has direct url from files.list, use it immediately!
+    if (file.url) {
+      setPreviewUrl(file.url);
+      setIsPreviewLoading(false);
+      return;
+    }
+
+    setPreviewUrl(null);
+    setIsPreviewLoading(true);
 
     // Load the file URL for preview
     const hasImageStorage = file.type === 'image' && file.imageStorageId;
@@ -207,14 +253,17 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
         const storageId = file.imageStorageId || file.documentStorageId || file.audioStorageId;
         console.log(`[PREVIEW] Loading ${file.type} with storageId:`, storageId);
         if (storageId) {
-          const url = await getFileUrl({ storageId });
+          const url = await getFileUrl({ storageId: storageId as any });
           console.log(`[PREVIEW] Got URL for ${file.type}:`, url);
           setPreviewUrl(url);
         }
       } catch (error) {
         console.error('[PREVIEW] Failed to load preview URL:', error);
+      } finally {
+        setIsPreviewLoading(false);
       }
     } else {
+      setIsPreviewLoading(false);
       console.log(`[PREVIEW] No storage ID for ${file.type}. File may use legacy audioData format.`);
     }
   };
@@ -230,6 +279,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
     closeWithAnimation('preview', () => {
       setPreviewingFile(null);
       setPreviewUrl(null);
+      setIsPreviewLoading(false);
     });
   };
 
@@ -538,11 +588,13 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
+                        openPreview(file as any);
                       }}
-                      className="flex items-center justify-center rounded-2xl h-14 w-14 border bg-primary/10 text-primary border-primary/20 shadow-inner group-hover:bg-primary/20 transition-colors overflow-hidden flex-shrink-0 cursor-pointer hover:border-primary/60"
+                      title="Click to view preview"
+                      className="flex items-center justify-center rounded-2xl h-14 w-14 border bg-primary/10 text-primary border-primary/20 shadow-inner group-hover:bg-primary/20 transition-all overflow-hidden flex-shrink-0 cursor-pointer hover:border-primary/60 hover:scale-105 active:scale-95"
                     >
-                      {file.type === 'image' && file.imageStorageId ? (
-                        <ImagePreviewThumbnail storageId={file.imageStorageId} fileName={file.name} />
+                      {file.type === 'image' && ((file as any).url || file.imageStorageId) ? (
+                        <ImagePreviewThumbnail url={(file as any).url} storageId={file.imageStorageId} fileName={file.name} />
                       ) : file.type === 'audio' && file.audioStorageId ? (
                         <span className="material-symbols-outlined text-3xl">volume_2</span>
                       ) : file.type === 'note' ? (
@@ -613,8 +665,45 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-6 min-h-0">
-              {previewingFile.type === 'image' && previewUrl ? (
-                <img src={previewUrl} alt={previewingFile.name} className="w-full h-auto rounded-2xl" />
+              {previewingFile.type === 'image' ? (
+                previewUrl ? (
+                  <div className="flex flex-col items-center justify-center min-h-[240px] bg-background-dark/80 rounded-2xl p-3 sm:p-5 border border-gray-800">
+                    <img
+                      src={previewUrl}
+                      alt={previewingFile.name}
+                      className="max-h-[58vh] w-auto max-w-full object-contain rounded-xl shadow-2xl transition-all duration-200"
+                    />
+                    <div className="mt-4 flex items-center gap-3">
+                      <a
+                        href={previewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-primary hover:text-blue-400 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all"
+                      >
+                        <span className="material-symbols-outlined text-sm">open_in_new</span>
+                        <span>Open Full Size</span>
+                      </a>
+                      <a
+                        href={previewUrl}
+                        download={previewingFile.name}
+                        className="text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 transition-all"
+                      >
+                        <span className="material-symbols-outlined text-sm">download</span>
+                        <span>Download</span>
+                      </a>
+                    </div>
+                  </div>
+                ) : isPreviewLoading ? (
+                  <div className="flex flex-col items-center justify-center p-12 bg-background-dark rounded-2xl border border-gray-800">
+                    <div className="size-10 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                    <p className="text-gray-400 text-sm font-medium">Loading image preview...</p>
+                  </div>
+                ) : (
+                  <div className="bg-background-dark rounded-2xl p-8 text-center border border-gray-800">
+                    <span className="material-symbols-outlined text-5xl text-gray-600 block mb-3">broken_image</span>
+                    <p className="text-gray-400 text-sm">Unable to load image preview</p>
+                  </div>
+                )
               ) : previewingFile.type === 'pdf' && previewUrl ? (
                 <iframe
                   src={`${previewUrl}#toolbar=1`}

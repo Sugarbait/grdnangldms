@@ -5,10 +5,39 @@ import { v } from "convex/values";
 export const list = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const files = await ctx.db
       .query("files")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
+
+    return await Promise.all(
+      files.map(async (file) => {
+        let url: string | null = null;
+        const storageId = file.imageStorageId || file.documentStorageId || file.audioStorageId;
+        if (storageId) {
+          try {
+            url = await ctx.storage.getUrl(storageId);
+          } catch (e) {
+            console.error(`Failed to get storage URL for file ${file._id}:`, e);
+          }
+        }
+        return {
+          ...file,
+          url,
+        };
+      })
+    );
+  },
+});
+
+export const getUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    try {
+      return await ctx.storage.getUrl(args.storageId as any);
+    } catch {
+      return null;
+    }
   },
 });
 
