@@ -14,14 +14,23 @@ interface VaultProps {
 }
 
 // Image Preview Component
-const ImagePreviewThumbnail: React.FC<{ url?: string | null; storageId?: string; fileName: string }> = ({ url, storageId, fileName }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(url || null);
+// Image Preview Component
+const ImagePreviewThumbnail: React.FC<{ url?: string | null; storageId?: string; content?: string; fileName: string }> = ({ url, storageId, content, fileName }) => {
+  const isDataUrl = content?.startsWith('data:image/');
+  const initialUrl = url || (isDataUrl ? content : null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [hasError, setHasError] = useState(false);
   const getFileUrl = useAction(api.fileStorage.getFileUrl);
 
   useEffect(() => {
     if (url) {
       setPreviewUrl(url);
+      setHasError(false);
+      return;
+    }
+
+    if (isDataUrl && content) {
+      setPreviewUrl(content);
       setHasError(false);
       return;
     }
@@ -37,7 +46,7 @@ const ImagePreviewThumbnail: React.FC<{ url?: string | null; storageId?: string;
           setHasError(false);
         }
       } catch (error) {
-        console.error('Failed to load image preview:', error);
+        console.error('[IMAGE_THUMBNAIL] Failed to load image preview:', error);
         if (isMounted) setHasError(true);
       }
     };
@@ -46,7 +55,7 @@ const ImagePreviewThumbnail: React.FC<{ url?: string | null; storageId?: string;
     return () => {
       isMounted = false;
     };
-  }, [url, storageId]);
+  }, [url, storageId, content, isDataUrl]);
 
   if (previewUrl && !hasError) {
     return (
@@ -54,7 +63,10 @@ const ImagePreviewThumbnail: React.FC<{ url?: string | null; storageId?: string;
         src={previewUrl}
         alt={fileName}
         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        onError={() => setHasError(true)}
+        onError={(e) => {
+          console.error('[IMAGE_THUMBNAIL_ERROR] Failed to render thumbnail:', previewUrl, e);
+          setHasError(true);
+        }}
       />
     );
   }
@@ -593,8 +605,8 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                       title="Click to view preview"
                       className="flex items-center justify-center rounded-2xl h-14 w-14 border bg-primary/10 text-primary border-primary/20 shadow-inner group-hover:bg-primary/20 transition-all overflow-hidden flex-shrink-0 cursor-pointer hover:border-primary/60 hover:scale-105 active:scale-95"
                     >
-                      {file.type === 'image' && ((file as any).url || file.imageStorageId) ? (
-                        <ImagePreviewThumbnail url={(file as any).url} storageId={file.imageStorageId} fileName={file.name} />
+                      {file.type === 'image' && ((file as any).url || file.imageStorageId || file.content) ? (
+                        <ImagePreviewThumbnail url={(file as any).url} storageId={file.imageStorageId} content={file.content} fileName={file.name} />
                       ) : file.type === 'audio' && file.audioStorageId ? (
                         <span className="material-symbols-outlined text-3xl">volume_2</span>
                       ) : file.type === 'note' ? (
