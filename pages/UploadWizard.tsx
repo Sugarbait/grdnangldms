@@ -6,6 +6,7 @@ import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id, Doc } from '../convex/_generated/dataModel';
 import AudioPlayer from '../components/AudioPlayer';
+import LiveAudioVisualizer from '../components/LiveAudioVisualizer';
 import CryptoJS from 'crypto-js';
 
 interface UploadWizardProps {
@@ -112,6 +113,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioMode, setAudioMode] = useState<'upload' | 'record'>('upload');
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -121,6 +123,7 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<number | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
 
   // Load encryption key on mount
   useEffect(() => {
@@ -142,6 +145,18 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [step]);
+
+  // Cleanup audio recording stream on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -182,6 +197,9 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
   };
 
   const toggleType = (type: string) => {
+    if (type === 'audio' && isRecording) {
+      stopRecording();
+    }
     const newTypes = new Set(selectedTypes);
     if (newTypes.has(type)) {
       newTypes.delete(type);
@@ -235,6 +253,8 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("[RECORD] Microphone stream obtained successfully");
+      audioStreamRef.current = stream;
+      setAudioStream(stream);
       
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -266,6 +286,8 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
 
         setSelectedFiles(prev => [...prev, newFile]);
         stream.getTracks().forEach(track => track.stop());
+        audioStreamRef.current = null;
+        setAudioStream(null);
       };
 
       mediaRecorder.start();
@@ -301,6 +323,11 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach(track => track.stop());
+        audioStreamRef.current = null;
+      }
+      setAudioStream(null);
       if (recordingIntervalRef.current) {
         clearInterval(recordingIntervalRef.current);
         recordingIntervalRef.current = null;
@@ -752,28 +779,29 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
                         </label>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-3">
+                      <div className="w-full flex flex-col items-center">
                         {isRecording ? (
-                          <>
-                            <div className="text-2xl font-mono text-red-500 animate-pulse">{formatTime(recordingTime)}</div>
-                            <button
-                              onClick={stopRecording}
-                              className="size-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/30 active:scale-95 transition-all"
-                            >
-                              <span className="material-symbols-outlined text-3xl">stop</span>
-                            </button>
-                          </>
+                          <LiveAudioVisualizer
+                            stream={audioStream}
+                            isRecording={isRecording}
+                            recordingTime={recordingTime}
+                            onStop={stopRecording}
+                          />
                         ) : (
-                          <button
-                            onClick={startRecording}
-                            className="size-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-all"
-                          >
-                            <span className="material-symbols-outlined text-3xl">mic</span>
-                          </button>
+                          <div className="flex flex-col items-center gap-3 py-2">
+                            <button
+                              type="button"
+                              onClick={startRecording}
+                              className="size-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                              title="Start Recording"
+                            >
+                              <span className="material-symbols-outlined text-3xl">mic</span>
+                            </button>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                              Tap to record
+                            </p>
+                          </div>
                         )}
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-                          {isRecording ? 'Tap to stop' : 'Tap to record'}
-                        </p>
                       </div>
                     )}
                   </div>
