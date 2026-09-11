@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile } from '../App';
+import { InfoTooltip } from '../components/InfoTooltip';
 
 interface DashboardProps {
   timerSeconds: number;
@@ -368,7 +369,13 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
       <section data-tour-id="dashboard-timer" className="ga-timer-panel relative group pt-2">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-all duration-1000"></div>
         <div className="relative z-10 text-center mb-5">
-          <p className="ga-eyebrow">Time until your protocol activates</p>
+          <p className="ga-eyebrow flex items-center justify-center">
+            Time until your protocol activates
+            <InfoTooltip
+              title="Dead Man's Switch"
+              content="This countdown resets every time you press 'I'M SAFE'. If it reaches zero without a check-in, Guardian Angel DMS automatically emails your assigned vault files to your designated recipients."
+            />
+          </p>
         </div>
         <div className="flex gap-2 justify-center relative z-10">
           {[

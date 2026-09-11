@@ -5,6 +5,7 @@ import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 import { Recipient, SecureFile } from '../types';
+import { InfoTooltip } from '../components/InfoTooltip';
 
 const RECIPIENT_CAP = 5;
 
@@ -202,13 +203,23 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center">
+              Delivery Email Address
+              <InfoTooltip
+                title="Delivery Destination"
+                content="This is the exact email address where assigned vault files, voice recordings, and private messages will be delivered if your check-in timer expires. Ensure this recipient maintains access to this inbox."
+              />
+            </label>
             <input 
               type="email" 
               value={formData.email || ''} 
               onChange={e => setFormData({...formData, email: e.target.value})}
               className="w-full h-14 bg-surface-dark border-gray-800 rounded-2xl px-5 text-white focus:border-primary focus:ring-0" 
             />
+            <p className="text-[11px] text-amber-400/90 font-medium flex items-center gap-1.5 ml-1">
+              <span className="material-symbols-outlined text-xs">mark_email_read</span>
+              Assigned vault files and messages will be sent to this email address if your timer expires.
+            </p>
           </div>
         </div>
 
@@ -391,8 +402,12 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
       </header>
 
       <div className="px-1 text-center">
-        <p className="text-gray-400 text-xs leading-relaxed max-w-[300px] mx-auto">
-          People who will receive your saved items if you don't check in.
+        <p className="text-gray-400 text-xs leading-relaxed max-w-[340px] mx-auto flex items-center justify-center gap-1">
+          <span>People who will receive your vault files if your timer expires.</span>
+          <InfoTooltip
+            title="Vault Recipients"
+            content="Each recipient only receives the specific items assigned to them. When your check-in timer reaches zero, Guardian Angel DMS automatically emails each recipient their designated files and messages."
+          />
         </p>
       </div>
 
@@ -428,9 +443,16 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
                 </div>
                 <div className="flex flex-1 flex-col justify-center min-w-0">
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="min-w-0 pr-2">
                       <p className="text-white text-base font-semibold tracking-tight truncate group-hover:text-primary transition-colors">{recipient.name}</p>
-                      <p className="text-gray-500 text-[10px] font-medium uppercase tracking-[0.08em] mt-0.5">{recipient.relationship}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-gray-500 text-[10px] font-medium uppercase tracking-[0.08em]">{recipient.relationship}</span>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-primary/[0.08] border border-primary/20 text-gray-300 text-xs font-medium truncate max-w-full">
+                          <span className="material-symbols-outlined text-[13px] text-primary shrink-0">mark_email_read</span>
+                          <span className="text-primary/90 text-[10px] font-bold uppercase tracking-wider shrink-0">Delivers to:</span>
+                          <span className="truncate text-gray-200">{recipient.email}</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

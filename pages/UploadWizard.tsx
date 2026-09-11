@@ -7,6 +7,7 @@ import { api } from '../convex/_generated/api';
 import { Id, Doc } from '../convex/_generated/dataModel';
 import AudioPlayer from '../components/AudioPlayer';
 import LiveAudioVisualizer from '../components/LiveAudioVisualizer';
+import { InfoTooltip } from '../components/InfoTooltip';
 import CryptoJS from 'crypto-js';
 
 interface UploadWizardProps {
@@ -905,7 +906,13 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
         </header>
 
         <div className="text-center py-4">
-          <p className="text-gray-400 text-sm">Who should receive these {selectedFiles.length} items?</p>
+          <p className="text-gray-400 text-sm flex items-center justify-center gap-1">
+            <span>Who should receive these {selectedFiles.length} items?</span>
+            <InfoTooltip
+              title="Delivery Recipients"
+              content="Selected recipients will receive these items at their designated delivery email address when your check-in timer expires."
+            />
+          </p>
           <p className="text-gray-500 text-xs mt-2">(Optional - you can assign recipients later from your vault)</p>
         </div>
 
@@ -941,7 +948,14 @@ const UploadWizard: React.FC<UploadWizardProps> = ({ recipients, userId, canAcce
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`font-bold transition-colors ${selectedRecipientIds.includes(typeof r._id === 'string' ? r._id : r._id.toString()) ? 'text-white' : 'text-gray-400'}`}>{r.name}</p>
-                  <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{r.relationship}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{r.relationship}</span>
+                    <span className="text-gray-600 text-[10px]">•</span>
+                    <span className="text-gray-400 text-xs truncate flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px] text-primary">mail</span>
+                      {r.email}
+                    </span>
+                  </div>
                 </div>
                 <input
                   type="checkbox"

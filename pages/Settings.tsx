@@ -7,6 +7,7 @@ import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
 import { UserProfile } from '../App';
 import { useTour } from '../components/OnboardingTour';
+import { InfoTooltip } from '../components/InfoTooltip';
 
 interface SettingsProps {
   onResetAll?: () => void;
@@ -335,7 +336,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-semibold text-lg truncate tracking-tight">{currentUser.name}</h3>
+            <h3 className="text-white font-semibold text-lg truncate tracking-tight flex items-center">
+              <span className="truncate">{currentUser.name}</span>
+              <InfoTooltip
+                title="Account Profile"
+                content="Your personal account profile. Pre-expiry check-in reminders and security alerts are sent to your account email address."
+              />
+            </h3>
             <p className="text-gray-500 text-[11px] truncate mt-0.5">{currentUser.email}</p>
           </div>
           <button
@@ -608,7 +615,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Check-in Window */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-semibold tracking-tight">Check-in Window</h3>
+          <h3 className="text-lg font-semibold tracking-tight flex items-center">
+            Check-in Window
+            <InfoTooltip
+              title="Check-In Window"
+              content="The maximum duration allowed between check-ins. If you don't check in before this countdown reaches zero, your emergency protocol activates and delivers assigned items to your recipients."
+            />
+          </h3>
           {timer?.durationSeconds && (timer.durationSeconds !== toSeconds(customValue, customUnit)) && (
             <span className="ga-eyebrow text-[10px] px-2 py-1 bg-primary/10 rounded-full">
               Unsaved Changes
@@ -755,7 +768,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Pre-Expiry Reminders (Multiple) */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-semibold tracking-tight">Pre-Expiry Reminders</h3>
+          <h3 className="text-lg font-semibold tracking-tight flex items-center">
+            Pre-Expiry Reminders
+            <InfoTooltip
+              title="Check-In Reminders"
+              content="Automated email reminders sent to you before your check-in timer expires so you never trigger the protocol unintentionally. You can set multiple alerts (e.g., 24 hours and 2 hours before)."
+            />
+          </h3>
           <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">Multiple times supported</p>
         </div>
         <div data-tour-id="settings-reminders" className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
@@ -906,7 +925,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Check-in Helper Alert Threshold */}
       <section className="flex flex-col gap-4 pb-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-semibold tracking-tight">Check-in Helper Alert</h3>
+          <h3 className="text-lg font-semibold tracking-tight flex items-center">
+            Check-in Helper Alert
+            <InfoTooltip
+              title="Helper Alert Threshold"
+              content="Specifies how far in advance designated helper recipients receive an email alert asking them to check on you before your final timer expires."
+            />
+          </h3>
           <p className="text-[9px] text-gray-500 font-medium uppercase tracking-widest">When to Notify</p>
         </div>
         <div className="bg-surface-dark rounded-[28px] p-6 border border-gray-800 shadow-sm">
@@ -1057,7 +1082,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-2xl font-semibold tracking-tight text-white">Check-in Helpers</h3>
+          <h3 className="text-2xl font-semibold tracking-tight text-white flex items-center justify-center">
+            Check-in Helpers
+            <InfoTooltip
+              title="Emergency Check-In Helpers"
+              content="Trusted contacts you authorize to reset your timer on your behalf if you are temporarily without phone or computer access."
+            />
+          </h3>
           <p className="text-[10px] text-primary font-black uppercase tracking-[0.4em]">Emergency Assistance</p>
         </div>
 
@@ -1083,7 +1114,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-2xl font-semibold tracking-tight text-white">Stop Timer</h3>
+          <h3 className="text-2xl font-semibold tracking-tight text-white flex items-center justify-center">
+            Stop Timer
+            <InfoTooltip
+              title="Pause Countdown"
+              content="Halts your check-in countdown indefinitely. Your protocol will not trigger while stopped. You can resume at any time by checking in from the Dashboard."
+            />
+          </h3>
           <p className="text-[10px] text-red-500 font-black uppercase tracking-[0.4em]">Pause Countdown</p>
         </div>
 
@@ -1124,7 +1161,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
 
       {/* Account Statistics */}
       <section className="bg-surface-dark border border-gray-800 p-6 rounded-[28px] shadow-lg">
-        <h3 className="text-lg font-bold mb-4">Account Overview</h3>
+        <h3 className="text-lg font-bold mb-4 flex items-center">
+          Account Overview
+          <InfoTooltip
+            title="Account Summary"
+            content="Summary of your saved vault items, designated recipients, and active subscription protection tier."
+          />
+        </h3>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-background-dark p-4 rounded-2xl text-center">
             <p className="text-3xl font-black text-primary">{fileCount}</p>
@@ -1158,7 +1201,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Product Tour */}
       <section className="bg-surface-dark border border-gray-800 p-6 rounded-[28px] shadow-lg flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold tracking-tight mb-1">Product Tour</h3>
+          <h3 className="text-lg font-semibold tracking-tight mb-1 flex items-center">
+            Product Tour
+            <InfoTooltip
+              title="Interactive Tour"
+              content="Restart the onboarding guide anytime to explore the check-in timer, notifications, and security protocols."
+            />
+          </h3>
           <p className="text-gray-500 text-[11px] leading-relaxed">See how check-ins, reminders, and recipients work together.</p>
         </div>
         <button
@@ -1173,7 +1222,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
 
       {/* Data & Privacy */}
       <section className="bg-surface-dark border border-gray-800 p-6 rounded-[28px] shadow-lg">
-        <h3 className="text-lg font-bold mb-4">Data & Privacy</h3>
+        <h3 className="text-lg font-bold mb-4 flex items-center">
+          Data & Privacy
+          <InfoTooltip
+            title="Account Data Export"
+            content="Export a complete JSON backup of your account profile, recipient mappings, and metadata. Your encrypted vault remains zero-knowledge protected."
+          />
+        </h3>
         <div className="space-y-3">
           <button
             onClick={handleExportData}
@@ -1191,7 +1246,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary text-3xl">verified_user</span>
-            <h3 className="text-2xl font-semibold tracking-tight text-white">Multi-Factor Auth</h3>
+            <h3 className="text-2xl font-semibold tracking-tight text-white flex items-center">
+              Multi-Factor Auth
+              <InfoTooltip
+                title="Two-Factor Authentication"
+                content="Protects your vault by requiring a 6-digit TOTP security code from your authenticator app (e.g. Google Authenticator, Authy, or 1Password) whenever you log in."
+              />
+            </h3>
           </div>
         </div>
 
@@ -1360,7 +1421,13 @@ const Settings: React.FC<SettingsProps> = ({ onResetAll, onTestTrigger, onLogout
       {/* Danger Zone */}
       <section className="bg-red-950/20 border border-red-500/20 p-6 rounded-[28px] shadow-lg">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-red-500 uppercase tracking-tight">Danger Zone</h3>
+          <h3 className="text-lg font-bold text-red-500 uppercase tracking-tight flex items-center">
+            Danger Zone
+            <InfoTooltip
+              title="Permanent Account Deletion"
+              content="Irreversible actions. Permanently deletes your account, removes all encrypted files and voice recordings from cloud storage, and deactivates all timers."
+            />
+          </h3>
           <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-1 rounded-full">IRREVERSIBLE</span>
         </div>
 

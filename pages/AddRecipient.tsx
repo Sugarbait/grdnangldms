@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
+import { InfoTooltip } from '../components/InfoTooltip';
 
 const RECIPIENT_CAP = 5;
 
@@ -125,32 +126,59 @@ const AddRecipient: React.FC<AddRecipientProps> = ({ userId, recipientCount = 0,
         </div>
 
         <div className="space-y-4">
-          <input
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={e => setFormData({...formData, name: e.target.value})}
-            className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
-          />
-          <input
-            placeholder="Email"
-            type="email"
-            value={formData.email}
-            onChange={e => setFormData({...formData, email: e.target.value})}
-            className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
-          />
-          <select
-            value={formData.relationship}
-            onChange={e => setFormData({...formData, relationship: e.target.value})}
-            className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
-          >
-            <option value="Spouse">Spouse / Partner</option>
-            <option value="Family">Family Member</option>
-            <option value="Friend">Trusted Friend</option>
-            <option value="Lawyer">Lawyer / Executor</option>
-            <option value="Journalist">Journalist</option>
-            <option value="Investigator">Investigator</option>
-            <option value="Other">Other</option>
-          </select>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center">
+              Full Name
+              <InfoTooltip content="The legal or trusted name of the person you are adding." />
+            </label>
+            <input
+              placeholder="e.g. Jane Doe"
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center">
+              Delivery Email Address
+              <InfoTooltip
+                title="Delivery Destination"
+                content="This is the exact email address where assigned vault files, voice recordings, and private messages will be delivered if your check-in timer expires. Make sure your recipient has secure access to this inbox."
+              />
+            </label>
+            <input
+              placeholder="recipient@example.com"
+              type="email"
+              value={formData.email}
+              onChange={e => setFormData({...formData, email: e.target.value})}
+              className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
+            />
+            <p className="text-[11px] text-amber-400/90 font-medium flex items-center gap-1.5 ml-1 pt-0.5">
+              <span className="material-symbols-outlined text-xs">mark_email_read</span>
+              Assigned vault files and messages will be sent to this email address if your timer expires.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center">
+              Relationship
+              <InfoTooltip content="Categorizes your contact for your records and dashboard vault organization." />
+            </label>
+            <select
+              value={formData.relationship}
+              onChange={e => setFormData({...formData, relationship: e.target.value})}
+              className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
+            >
+              <option value="Spouse">Spouse / Partner</option>
+              <option value="Family">Family Member</option>
+              <option value="Friend">Trusted Friend</option>
+              <option value="Lawyer">Lawyer / Executor</option>
+              <option value="Journalist">Journalist</option>
+              <option value="Investigator">Investigator</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
         </div>
 
         {isAtCap ? (

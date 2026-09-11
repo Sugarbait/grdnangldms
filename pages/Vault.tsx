@@ -7,6 +7,7 @@ import { api } from '../convex/_generated/api';
 import { Id, Doc } from '../convex/_generated/dataModel';
 import AudioPlayer from '../components/AudioPlayer';
 import { PageLoader } from '../components/PageLoader';
+import { InfoTooltip } from '../components/InfoTooltip';
 import CryptoJS from 'crypto-js';
 
 interface VaultProps {
@@ -432,7 +433,13 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
             </div>
           )}
           <div className="flex items-center justify-between px-1">
-            <h2 className="ga-eyebrow text-xs">Who should receive this?</h2>
+            <h2 className="ga-eyebrow text-xs flex items-center">
+              Who should receive this?
+              <InfoTooltip
+                title="Delivery Recipients"
+                content="Select which contacts should receive this file when your timer expires. Items are securely emailed to their designated delivery email address."
+              />
+            </h2>
             <span className="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full">
               {tempRecipientIds.length} Selected
             </span>
@@ -548,7 +555,13 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
           </button>
         </div>
         <div className="text-center">
-          <h1 className="text-lg font-semibold tracking-tight">My Items</h1>
+          <h1 className="text-lg font-semibold tracking-tight flex items-center justify-center">
+            My Items
+            <InfoTooltip
+              title="Secure Vault"
+              content="All files, notes, and voice recordings stored in your vault. Each item is only sent to the recipients you explicitly assign if your check-in timer expires."
+            />
+          </h1>
           <p className="ga-eyebrow text-[9px] mt-0.5">Guardian Angel DMS</p>
         </div>
         <div className="flex gap-2">
