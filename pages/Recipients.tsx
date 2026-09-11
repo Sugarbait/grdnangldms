@@ -210,16 +210,6 @@ const Recipients: React.FC<RecipientsProps> = ({ recipients, files = [], canAcce
               className="w-full h-14 bg-surface-dark border-gray-800 rounded-2xl px-5 text-white focus:border-primary focus:ring-0" 
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Phone Number</label>
-            <input 
-              type="tel" 
-              value={formData.phone || ''} 
-              onChange={e => setFormData({...formData, phone: e.target.value})}
-              className="w-full h-14 bg-surface-dark border-gray-800 rounded-2xl px-5 text-white focus:border-primary focus:ring-0" 
-            />
-          </div>
         </div>
 
         {/* Files Section */}

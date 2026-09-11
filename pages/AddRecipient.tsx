@@ -138,13 +138,6 @@ const AddRecipient: React.FC<AddRecipientProps> = ({ userId, recipientCount = 0,
             onChange={e => setFormData({...formData, email: e.target.value})}
             className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
           />
-          <input
-            placeholder="Phone Number (optional)"
-            type="tel"
-            value={formData.phone}
-            onChange={e => setFormData({...formData, phone: e.target.value})}
-            className="w-full h-14 bg-surface-dark border border-gray-800 rounded-2xl px-5 text-white focus:border-primary transition-all"
-          />
           <select
             value={formData.relationship}
             onChange={e => setFormData({...formData, relationship: e.target.value})}

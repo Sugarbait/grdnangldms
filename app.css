@@ -506,6 +506,188 @@ input.tracking-widest {
   }
 }
 
+/* ── Branded Favicon Page Loader ─────────────────────────────────── */
+.ga-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ga-loader-icon-wrapper {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ga-loader-glow {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(113, 129, 255, 0.32) 0%, rgba(113, 129, 255, 0) 70%);
+  filter: blur(16px);
+  pointer-events: none;
+  animation: ga-pulse-glow 2.4s ease-in-out infinite alternate;
+}
+
+.ga-loader-orbit {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid rgba(113, 129, 255, 0.15);
+  border-top-color: #7181ff;
+  border-right-color: rgba(113, 129, 255, 0.7);
+  animation: ga-spin 1.25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  pointer-events: none;
+}
+
+.ga-loader-orbit-inner {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  animation: ga-spin-reverse 7s linear infinite;
+  pointer-events: none;
+}
+
+.ga-loader-favicon-box {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: rgba(20, 25, 37, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(113, 129, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  animation: ga-favicon-breathe 2.4s ease-in-out infinite;
+}
+
+.ga-loader-favicon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(113, 129, 255, 0.5));
+}
+
+.ga-loader-bar-wrap {
+  width: 136px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 22px;
+}
+
+.ga-loader-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, #7181ff 50%, transparent 100%);
+  animation: ga-shimmer-travel 1.8s ease-in-out infinite;
+}
+
+.ga-loader-brand {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ga-loader-brand-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #7181ff;
+  animation: ga-ping-dot 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.ga-loader-brand-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #949cad;
+  text-transform: uppercase;
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+}
+
+.ga-loader-message {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #626b7d;
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+}
+
+@keyframes ga-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ga-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes ga-favicon-breathe {
+  0%, 100% {
+    transform: scale(0.95);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(113, 129, 255, 0.25);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 30px rgba(113, 129, 255, 0.6);
+  }
+}
+
+@keyframes ga-pulse-glow {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes ga-shimmer-travel {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes ga-ping-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -516,3 +698,4 @@ input.tracking-widest {
     transition-duration: 0.01ms !important;
   }
 }
+

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
+import { PageLoader } from '../components/PageLoader';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -109,16 +110,7 @@ const VerifyEmail: React.FC = () => {
 
   if (loading && !error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark p-6">
-        <div className="bg-surface-dark border border-gray-800 rounded-[32px] p-8 max-w-md w-full text-center">
-          <div className="size-20 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 mx-auto mb-6 animate-pulse">
-            <span className="material-symbols-outlined text-primary text-5xl">mail</span>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white mb-2">Verifying Email</h1>
-          <p className="text-gray-400 mb-6">Please wait while we confirm your email address...</p>
-          <div className="w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full animate-pulse"></div>
-        </div>
-      </div>
+      <PageLoader message="Verifying email address..." submessage="Please wait while we confirm your account" />
     );
   }
 

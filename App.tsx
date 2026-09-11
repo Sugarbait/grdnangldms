@@ -24,6 +24,7 @@ import Pricing from './pages/Pricing';
 import Onboarding from './pages/Onboarding';
 import Splash from './pages/Splash';
 import Toast from './components/Toast';
+import { PageLoader } from './components/PageLoader';
 
 // Initialize Convex Client
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
@@ -324,11 +325,7 @@ const AppContent: React.FC = () => {
 
   // Loading State
   if (userId && currentUser === undefined && isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark text-center">
-        <div className="size-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <PageLoader message="Loading your secure vault..." />;
   }
 
   return (

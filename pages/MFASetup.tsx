@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAction, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
+import { PageLoader } from '../components/PageLoader';
 import QRCode from 'qrcode';
 
 const MFASetup: React.FC = () => {
@@ -161,13 +162,7 @@ const MFASetup: React.FC = () => {
   };
 
   if (!userId) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark p-6">
-        <div className="bg-surface-dark border border-gray-800 rounded-[32px] p-8 max-w-md w-full text-center animate-pulse">
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading security settings..." />;
   }
 
   if (mode === 'setup') {

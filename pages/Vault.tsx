@@ -6,6 +6,7 @@ import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id, Doc } from '../convex/_generated/dataModel';
 import AudioPlayer from '../components/AudioPlayer';
+import { PageLoader } from '../components/PageLoader';
 import CryptoJS from 'crypto-js';
 
 interface VaultProps {
@@ -706,9 +707,8 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                     </div>
                   </div>
                 ) : isPreviewLoading ? (
-                  <div className="flex flex-col items-center justify-center p-12 bg-background-dark rounded-2xl border border-gray-800">
-                    <div className="size-10 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                    <p className="text-gray-400 text-sm font-medium">Loading image preview...</p>
+                  <div className="flex flex-col items-center justify-center p-8 bg-background-dark rounded-2xl border border-gray-800">
+                    <PageLoader inline message="Loading image preview..." />
                   </div>
                 ) : (
                   <div className="bg-background-dark rounded-2xl p-8 text-center border border-gray-800">

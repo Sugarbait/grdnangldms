@@ -21,8 +21,9 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
   const navigate = useNavigate();
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationClosing, setCelebrationClosing] = useState(false);
-  const canvasBackRef = useRef<HTMLCanvasElement>(null);
-  const canvasFrontRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dismissTimeoutRef = useRef<NodeJS.Timeout>();
+  const closeTimeoutRef = useRef<NodeJS.Timeout>();
 
   const [trialRemaining, setTrialRemaining] = useState('');
 
@@ -49,17 +50,28 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
 
   const formatNum = (num: number) => num.toString().padStart(2, '0');
 
+  const dismissCelebration = () => {
+    if (celebrationClosing) return;
+    setCelebrationClosing(true);
+    if (dismissTimeoutRef.current) clearTimeout(dismissTimeoutRef.current);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = setTimeout(() => {
+      setShowCelebration(false);
+      setCelebrationClosing(false);
+    }, 400);
+  };
+
   const handleCheckInClick = () => {
     onCheckIn();
     setCelebrationClosing(false);
     setShowCelebration(true);
-    setTimeout(() => {
-      setCelebrationClosing(true);
-      setTimeout(() => {
-        setShowCelebration(false);
-        setCelebrationClosing(false);
-      }, 600);
-    }, 7400);
+
+    if (dismissTimeoutRef.current) clearTimeout(dismissTimeoutRef.current);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+
+    dismissTimeoutRef.current = setTimeout(() => {
+      dismissCelebration();
+    }, 3400);
   };
 
   const getInitials = (name: string) => {
@@ -70,260 +82,178 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
   };
 
   useEffect(() => {
-    if (!showCelebration || !canvasBackRef.current || !canvasFrontRef.current) return;
+    if (!showCelebration || !canvasRef.current) return;
 
-    const canvasBack = canvasBackRef.current;
-    const canvasFront = canvasFrontRef.current;
-    const ctxBack = canvasBack.getContext('2d')!;
-    const ctxFront = canvasFront.getContext('2d')!;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
     let animationFrameId: number;
-
     const dpr = window.devicePixelRatio || 1;
+
     const setCanvasSize = () => {
-      [canvasBack, canvasFront].forEach(c => {
-        c.width = window.innerWidth * dpr;
-        c.height = window.innerHeight * dpr;
-        c.style.width = `${window.innerWidth}px`;
-        c.style.height = `${window.innerHeight}px`;
-      });
-      ctxBack.scale(dpr, dpr);
-      ctxFront.scale(dpr, dpr);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.scale(dpr, dpr);
     };
     setCanvasSize();
 
-    // 'back' = behind card, 'front' = in front of card
-    const particlesBack: any[] = [];
-    const particlesFront: any[] = [];
-    const fireworks: any[] = [];
-    const sparkles: any[] = [];
-    const colors = ['#1754cf', '#F59E0B', '#10B981', '#EC4899', '#8B5CF6', '#FFFFFF', '#3B82F6', '#60A5FA', '#FFD700', '#FF6B6B', '#4ECDC4', '#A78BFA'];
+    const colors = ['#54d6a0', '#7181ff', '#818cf8', '#60a5fa', '#ffd166', '#ffffff'];
 
-    class Particle {
-      x: number; y: number; vx: number; vy: number; alpha: number; color: string; size: number; gravity: number; friction: number; decay: number; isConfetti: boolean; rotation: number; rotationSpeed: number; shape: number;
-      constructor(x: number, y: number, color: string, isConfetti = false) {
-        this.x = x; this.y = y; this.color = color; this.isConfetti = isConfetti; this.alpha = 1;
-        this.size = isConfetti ? Math.random() * 8 + 5 : Math.random() * 4 + 2;
-        this.gravity = isConfetti ? 0.015 : 0.035;
-        this.friction = 0.985;
-        this.decay = Math.random() * 0.004 + 0.002;
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.3;
-        this.shape = Math.floor(Math.random() * 3);
-        const angle = Math.random() * Math.PI * 2;
-        const velocity = Math.random() * (isConfetti ? 8 : 10) + 3;
-        this.vx = Math.cos(angle) * velocity;
-        this.vy = Math.sin(angle) * velocity - (isConfetti ? 2 : 0);
-      }
-      update() {
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-        this.vy += this.gravity;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= this.decay;
-        this.rotation += this.rotationSpeed;
-      }
-      draw(c: CanvasRenderingContext2D) {
-        c.save();
-        c.globalAlpha = this.alpha;
-        c.fillStyle = this.color;
-        c.translate(this.x, this.y);
-        c.rotate(this.rotation);
-        if (this.isConfetti) {
-          if (this.shape === 0) {
-            c.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 0.6);
-          } else if (this.shape === 1) {
-            c.beginPath();
-            c.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-            c.fill();
-          } else {
-            c.beginPath();
-            for (let i = 0; i < 5; i++) {
-              const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-              const r = this.size;
-              c.lineTo(Math.cos(angle) * r * 0.5, Math.sin(angle) * r * 0.5);
-              const angle2 = angle + (2 * Math.PI) / 10;
-              c.lineTo(Math.cos(angle2) * r * 0.2, Math.sin(angle2) * r * 0.2);
-            }
-            c.closePath();
-            c.fill();
-          }
-        } else {
-          c.beginPath();
-          c.arc(0, 0, this.size, 0, Math.PI * 2);
-          c.fill();
-          c.shadowBlur = 10;
-          c.shadowColor = this.color;
-        }
-        c.restore();
-      }
+    // 1. Expanding shockwave ring
+    let shockwaveRadius = 15;
+    let shockwaveAlpha = 0.85;
+
+    // 2. Confetti ribbons
+    interface Ribbon {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      width: number;
+      height: number;
+      color: string;
+      rotation: number;
+      rotationSpeed: number;
+      oscillation: number;
+      oscillationSpeed: number;
+      alpha: number;
+      decay: number;
     }
 
-    class Sparkle {
-      x: number; y: number; alpha: number; size: number; decay: number; twinkle: number;
-      constructor(x: number, y: number) {
-        this.x = x; this.y = y; this.alpha = 1;
-        this.size = Math.random() * 3 + 1;
-        this.decay = Math.random() * 0.02 + 0.01;
-        this.twinkle = Math.random() * 0.2;
-      }
-      update() { this.alpha -= this.decay; }
-      draw(c: CanvasRenderingContext2D) {
-        const flicker = Math.sin(Date.now() * this.twinkle) * 0.3 + 0.7;
-        c.save();
-        c.globalAlpha = this.alpha * flicker;
-        c.fillStyle = '#FFFFFF';
-        c.shadowBlur = 15;
-        c.shadowColor = '#FFFFFF';
-        c.beginPath();
-        c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        c.fill();
-        c.strokeStyle = '#FFFFFF';
-        c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(this.x - this.size * 2, this.y);
-        c.lineTo(this.x + this.size * 2, this.y);
-        c.moveTo(this.x, this.y - this.size * 2);
-        c.lineTo(this.x, this.y + this.size * 2);
-        c.stroke();
-        c.restore();
-      }
+    const ribbons: Ribbon[] = [];
+    const ribbonCount = 50;
+    for (let i = 0; i < ribbonCount; i++) {
+      const angle = (Math.PI * 2 * i) / ribbonCount + (Math.random() - 0.5) * 0.4;
+      const speed = Math.random() * 7 + 4;
+      ribbons.push({
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2 - 20,
+        vx: Math.cos(angle) * speed * (Math.random() * 0.8 + 0.6),
+        vy: Math.sin(angle) * speed - (Math.random() * 4 + 2),
+        width: Math.random() * 5 + 4,
+        height: Math.random() * 11 + 9,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * Math.PI,
+        rotationSpeed: (Math.random() - 0.5) * 0.12,
+        oscillation: Math.random() * Math.PI * 2,
+        oscillationSpeed: Math.random() * 0.05 + 0.02,
+        alpha: 1,
+        decay: Math.random() * 0.005 + 0.003,
+      });
     }
 
-    class Firework {
-      x: number; y: number; targetY: number; vy: number; color: string; exploded: boolean; trail: { x: number, y: number, alpha: number }[];
-      constructor() {
-        this.x = Math.random() * window.innerWidth;
-        this.y = window.innerHeight;
-        this.targetY = Math.random() * (window.innerHeight * 0.5) + 50;
-        this.vy = -Math.random() * 4 - 8;
-        this.color = colors[Math.floor(Math.random() * colors.length)];
-        this.exploded = false;
-        this.trail = [];
-      }
-      update() {
-        this.trail.push({ x: this.x, y: this.y, alpha: 1 });
-        if (this.trail.length > 8) this.trail.shift();
-        this.trail.forEach(t => t.alpha *= 0.8);
-        this.y += this.vy;
-        this.vy *= 0.985;
-        if (this.y <= this.targetY || Math.abs(this.vy) < 0.5) {
-          this.exploded = true;
-          // Explosion particles — ~60% go behind card, ~40% in front
-          for (let i = 0; i < 80; i++) {
-            const p = new Particle(this.x, this.y, this.color);
-            (Math.random() < 0.6 ? particlesBack : particlesFront).push(p);
-          }
-          // Confetti from explosion — ~50/50 split
-          for (let i = 0; i < 30; i++) {
-            const p = new Particle(this.x, this.y, colors[Math.floor(Math.random() * colors.length)], true);
-            (Math.random() < 0.5 ? particlesBack : particlesFront).push(p);
-          }
-          // Sparkles always behind
-          for (let i = 0; i < 15; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * 50;
-            sparkles.push(new Sparkle(this.x + Math.cos(angle) * dist, this.y + Math.sin(angle) * dist));
-          }
-        }
-      }
-      draw(c: CanvasRenderingContext2D) {
-        this.trail.forEach((t, i) => {
-          c.save();
-          c.globalAlpha = t.alpha * 0.5;
-          c.beginPath();
-          c.arc(t.x, t.y, 2 - i * 0.2, 0, Math.PI * 2);
-          c.fillStyle = this.color;
-          c.fill();
-          c.restore();
-        });
-        c.save();
-        c.beginPath();
-        c.arc(this.x, this.y, 3, 0, Math.PI * 2);
-        c.fillStyle = this.color;
-        c.fill();
-        c.shadowBlur = 15;
-        c.shadowColor = this.color;
-        c.restore();
-      }
+    // 3. Starlight sparks & glowing embers
+    interface Spark {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      color: string;
+      alpha: number;
+      decay: number;
+      twinkleSpeed: number;
     }
 
-    const addParticle = (p: any) => {
-      (Math.random() < 0.5 ? particlesBack : particlesFront).push(p);
-    };
-
-    const triggerInitialBurst = () => {
-      for (let i = 0; i < 150; i++) {
-        addParticle(new Particle(window.innerWidth / 2, window.innerHeight / 2, colors[Math.floor(Math.random() * colors.length)], true));
-      }
-      for (let i = 0; i < 30; i++) {
-        sparkles.push(new Sparkle(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.6));
-      }
-      for (let i = 0; i < 2; i++) {
-        setTimeout(() => fireworks.push(new Firework()), i * 200);
-      }
-    };
-    triggerInitialBurst();
-
-    const launchSideConfetti = () => {
-      for (let i = 0; i < 40; i++) {
-        const fromLeft = Math.random() > 0.5;
-        const p = new Particle(
-          fromLeft ? 0 : window.innerWidth,
-          window.innerHeight * 0.7,
-          colors[Math.floor(Math.random() * colors.length)],
-          true
-        );
-        p.vx = fromLeft ? Math.random() * 8 + 4 : -(Math.random() * 8 + 4);
-        p.vy = -(Math.random() * 10 + 5);
-        addParticle(p);
-      }
-    };
-    setTimeout(launchSideConfetti, 500);
-    setTimeout(launchSideConfetti, 1500);
-    setTimeout(launchSideConfetti, 3000);
+    const sparks: Spark[] = [];
+    const sparkCount = 65;
+    for (let i = 0; i < sparkCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 10 + 3;
+      sparks.push({
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2 - 20,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - Math.random() * 2,
+        size: Math.random() * 3 + 1.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1,
+        decay: Math.random() * 0.01 + 0.007,
+        twinkleSpeed: Math.random() * 0.2 + 0.05,
+      });
+    }
 
     const animate = () => {
-      // Clear both canvases
-      ctxBack.fillStyle = 'rgba(15, 17, 21, 0.15)';
-      ctxBack.fillRect(0, 0, window.innerWidth, window.innerHeight);
-      ctxFront.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      if (Math.random() < 0.06) fireworks.push(new Firework());
+      // Draw Shockwave
+      if (shockwaveAlpha > 0) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(window.innerWidth / 2, window.innerHeight / 2 - 20, shockwaveRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(84, 214, 160, ${shockwaveAlpha * 0.6})`;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.restore();
 
-      if (Math.random() < 0.15) {
-        sparkles.push(new Sparkle(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.7));
+        shockwaveRadius += (380 - shockwaveRadius) * 0.08 + 2;
+        shockwaveAlpha -= 0.025;
       }
 
-      // Fireworks draw on back canvas (behind card)
-      for (let i = fireworks.length - 1; i >= 0; i--) {
-        fireworks[i].update();
-        if (fireworks[i].exploded) fireworks.splice(i, 1);
-        else fireworks[i].draw(ctxBack);
+      // Update & Draw Sparks
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i];
+        s.vx *= 0.96;
+        s.vy *= 0.96;
+        s.vy += 0.06;
+        s.x += s.vx;
+        s.y += s.vy;
+        s.alpha -= s.decay;
+
+        if (s.alpha <= 0) {
+          sparks.splice(i, 1);
+          continue;
+        }
+
+        const flicker = Math.sin(Date.now() * s.twinkleSpeed) * 0.25 + 0.75;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, s.alpha * flicker);
+        ctx.fillStyle = s.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
 
-      // Back layer particles
-      for (let i = particlesBack.length - 1; i >= 0; i--) {
-        particlesBack[i].update();
-        if (particlesBack[i].alpha <= 0) particlesBack.splice(i, 1);
-        else particlesBack[i].draw(ctxBack);
+      // Update & Draw Confetti Ribbons
+      for (let i = ribbons.length - 1; i >= 0; i--) {
+        const r = ribbons[i];
+        r.vx *= 0.97;
+        r.vy = (r.vy + 0.12) * 0.98;
+        r.oscillation += r.oscillationSpeed;
+        r.x += r.vx + Math.sin(r.oscillation) * 1.2;
+        r.y += r.vy;
+        r.rotation += r.rotationSpeed;
+        r.alpha -= r.decay;
+
+        if (r.alpha <= 0 || r.y > window.innerHeight + 50) {
+          ribbons.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, r.alpha);
+        ctx.translate(r.x, r.y);
+        ctx.rotate(r.rotation);
+        const scaleX = Math.cos(r.oscillation * 2);
+        ctx.scale(scaleX, 1);
+        ctx.fillStyle = r.color;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = r.color;
+        ctx.beginPath();
+        ctx.roundRect(-r.width / 2, -r.height / 2, r.width, r.height, 2);
+        ctx.fill();
+        ctx.restore();
       }
 
-      // Front layer particles (over the card)
-      for (let i = particlesFront.length - 1; i >= 0; i--) {
-        particlesFront[i].update();
-        if (particlesFront[i].alpha <= 0) particlesFront.splice(i, 1);
-        else particlesFront[i].draw(ctxFront);
+      if (sparks.length > 0 || ribbons.length > 0 || shockwaveAlpha > 0) {
+        animationFrameId = requestAnimationFrame(animate);
       }
-
-      // Sparkles on back canvas
-      for (let i = sparkles.length - 1; i >= 0; i--) {
-        sparkles[i].update();
-        if (sparkles[i].alpha <= 0) sparkles.splice(i, 1);
-        else sparkles[i].draw(ctxBack);
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
     };
 
     animate();
@@ -338,27 +268,64 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
   return (
     <div className="ga-dashboard flex flex-col gap-6 px-1 sm:px-3 py-6 md:py-10 animate-in fade-in duration-700 relative min-h-screen overflow-hidden">
       {showCelebration && createPortal(
-        <div className={`fixed inset-0 w-screen h-[100dvh] z-[100] pointer-events-none overflow-hidden transition-all duration-500 ease-out ${celebrationClosing ? 'celebration-overlay-exit' : 'celebration-overlay-enter'}`}>
-          {/* Back canvas — fireworks, sparkles, and ~half of confetti behind the card */}
-          <canvas ref={canvasBackRef} className="absolute inset-0 w-full h-full" />
-          {/* Card in the middle */}
-          <div className={`absolute inset-0 flex items-center justify-center p-6 transition-all duration-500 ease-out ${celebrationClosing ? 'celebration-card-exit' : 'celebration-card-enter'}`}>
-            <div className="bg-gradient-to-br from-primary/30 to-purple-600/20 backdrop-blur-xl border border-white/30 p-8 sm:p-12 rounded-[48px] text-center shadow-[0_0_150px_rgba(23,84,207,0.7),0_0_60px_rgba(139,92,246,0.5)] w-full max-w-[300px] sm:max-w-none animate-pulse-slow">
-              <div className="inline-flex size-20 sm:size-24 rounded-full bg-gradient-to-br from-green-400/30 to-emerald-500/20 items-center justify-center mb-5 ring-4 ring-white/30 shadow-[0_0_40px_rgba(16,185,129,0.5)]">
-                <span className="material-symbols-outlined text-white text-5xl sm:text-6xl drop-shadow-[0_0_30px_#10b981]">verified</span>
+        <div
+          onClick={dismissCelebration}
+          className={`fixed inset-0 w-screen h-[100dvh] z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden transition-all duration-400 ease-out cursor-pointer ${
+            celebrationClosing ? 'celebration-overlay-exit' : 'celebration-overlay-enter'
+          }`}
+        >
+          {/* Particles canvas */}
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+
+          {/* Elegant Confirmation Card */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`relative z-10 max-w-md w-full rounded-3xl bg-[#0f1422]/95 backdrop-blur-2xl border border-white/15 p-8 sm:p-10 text-center shadow-[0_24px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(113,129,255,0.22)] transition-all duration-400 ease-out ${
+              celebrationClosing ? 'celebration-card-exit' : 'celebration-card-enter'
+            }`}
+          >
+            {/* Glowing Shield & Heart Emblem */}
+            <div className="relative mx-auto mb-5 size-20 sm:size-24 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-3xl bg-emerald-500/20 blur-xl animate-pulse pointer-events-none"></div>
+              <div className="absolute -inset-2 rounded-full border border-emerald-400/20 animate-ping opacity-40 pointer-events-none"></div>
+
+              <div className="relative size-16 sm:size-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 via-primary/15 to-surface-dark border border-emerald-400/40 flex items-center justify-center shadow-[0_8px_24px_rgba(16,185,129,0.3)]">
+                <span className="material-symbols-outlined text-emerald-400 text-3xl sm:text-4xl drop-shadow-[0_0_16px_rgba(52,211,153,0.8)]">
+                  verified_user
+                </span>
               </div>
-              <h2 className="text-4xl sm:text-6xl font-semibold text-white tracking-tight mb-3 drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]">I AM ALIVE!</h2>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="h-0.5 w-8 bg-gradient-to-r from-transparent to-white/60 rounded-full"></div>
-                <span className="material-symbols-outlined text-green-400 text-xl">check_circle</span>
-                <div className="h-0.5 w-8 bg-gradient-to-l from-transparent to-white/60 rounded-full"></div>
-              </div>
-              <p className="text-white/70 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] sm:tracking-[0.5em]">You're all set</p>
-              <p className="text-green-400/90 text-[11px] sm:text-sm font-semibold uppercase tracking-[0.08em] mt-2 animate-pulse">Timer reset successfully</p>
             </div>
+
+            {/* Eyebrow Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-bold tracking-wider uppercase mb-3 shadow-sm">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Check-In Confirmed
+            </div>
+
+            {/* Main Headline */}
+            <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight mb-2">
+              You're Safe & Protected
+            </h2>
+
+            {/* Body */}
+            <p className="text-xs sm:text-sm text-gray-300 font-medium leading-relaxed max-w-xs mx-auto">
+              Your check-in timer has been reset. Your encrypted vault and emergency protocol remain on standby.
+            </p>
+
+            {/* Info Badge */}
+            <div className="mt-6 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-gray-400 font-medium">
+              <span className="material-symbols-outlined text-emerald-400 text-base">timer</span>
+              <span>Next check-in active · Protocol secure</span>
+            </div>
+
+            {/* Done Button */}
+            <button
+              onClick={dismissCelebration}
+              className="mt-6 w-full py-3 px-5 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 active:scale-[0.98] border border-white/15 text-xs font-semibold text-white tracking-wide transition-all shadow-lg shadow-primary/20"
+            >
+              Continue to Dashboard
+            </button>
           </div>
-          {/* Front canvas — confetti and particles that fall over the card */}
-          <canvas ref={canvasFrontRef} className="absolute inset-0 w-full h-full" />
         </div>,
         document.body
       )}
@@ -435,22 +402,31 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         <button
           data-tour-id="dashboard-checkin-button"
           onClick={canAccessFeatures ? handleCheckInClick : () => navigate('/pricing')}
-          className={`ga-checkin-button relative w-full group overflow-hidden h-28 sm:h-32 rounded-[24px] shadow-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-[0.98] border ${canAccessFeatures
-            ? 'bg-primary shadow-primary/40 hover:bg-blue-600 border-white/20'
+          className={`ga-checkin-button relative w-full group overflow-hidden h-28 sm:h-32 rounded-[24px] shadow-2xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-[0.98] border ${canAccessFeatures
+            ? 'bg-gradient-to-r from-[#1754cf] via-[#2163ee] to-[#1754cf] shadow-primary/30 hover:shadow-primary/50 border-white/20'
             : 'bg-surface-dark border-gray-700 hover:border-primary/50 cursor-pointer'
             }`}
         >
-          {canAccessFeatures && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>}
-          <div className="text-center relative z-10">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight leading-none mb-2">
-              {isExpired ? 'Subscribe to check in' : "I'M SAFE"}
-            </h2>
+          {canAccessFeatures && (
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+          )}
+          <div className="text-center relative z-10 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="material-symbols-outlined text-emerald-300 text-xl sm:text-2xl drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]">
+                {isExpired ? 'lock' : 'verified_user'}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-none">
+                {isExpired ? 'Subscribe to check in' : "I'M SAFE"}
+              </h2>
+            </div>
             <div className="flex flex-col items-center">
-              <div className="h-0.5 w-10 sm:w-12 bg-white/40 mb-2 rounded-full"></div>
-              <p className="text-[11px] sm:text-xs text-white/75 font-medium">{isExpired ? '$7.99/month for full access' : 'Confirm your safety and reset the timer'}</p>
+              <div className="h-0.5 w-12 sm:w-16 bg-white/30 mb-1.5 rounded-full"></div>
+              <p className="text-[11px] sm:text-xs text-white/80 font-medium tracking-wide">
+                {isExpired ? '$7.99/month for full access' : 'Tap to confirm safety & reset protocol timer'}
+              </p>
             </div>
           </div>
-          {canAccessFeatures && <div className="absolute inset-0 rounded-[32px] sm:rounded-[40px] pulse-ring pointer-events-none"></div>}
+          {canAccessFeatures && <div className="absolute inset-0 rounded-[24px] pulse-ring pointer-events-none"></div>}
         </button>
 
       </div>
@@ -498,15 +474,15 @@ const Dashboard: React.FC<DashboardProps> = ({ timerSeconds, onCheckIn, fileCoun
         .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
-        .celebration-overlay-enter { animation: overlayIn 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .celebration-overlay-exit { animation: overlayOut 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        @keyframes overlayIn { from { background: rgba(0,0,0,0); backdrop-filter: blur(0px); } to { background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); } }
-        @keyframes overlayOut { from { background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); opacity: 1; } to { background: rgba(0,0,0,0); backdrop-filter: blur(0px); opacity: 0; } }
+        .celebration-overlay-enter { animation: overlayIn 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .celebration-overlay-exit { animation: overlayOut 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes overlayIn { from { background: rgba(0,0,0,0); backdrop-filter: blur(0px); opacity: 0; } to { background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); opacity: 1; } }
+        @keyframes overlayOut { from { background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); opacity: 1; } to { background: rgba(0,0,0,0); backdrop-filter: blur(0px); opacity: 0; } }
 
-        .celebration-card-enter { animation: cardIn 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .celebration-card-exit { animation: cardOut 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        @keyframes cardIn { from { opacity: 0; transform: scale(0.5) translateY(40px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes cardOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.85) translateY(30px); } }
+        .celebration-card-enter { animation: cardIn 450ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .celebration-card-exit { animation: cardOut 350ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes cardIn { from { opacity: 0; transform: scale(0.88) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes cardOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.92) translateY(16px); } }
       `}</style>
     </div>
   );
