@@ -133,7 +133,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, compact = false }) => {
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-surface-dark to-surface-darker p-6 rounded-3xl border border-gray-800 shadow-lg">
+    <div className="w-full bg-gradient-to-br from-surface-dark to-surface-darker p-3.5 sm:p-4 rounded-2xl border border-gray-800 shadow-lg">
       <audio
         ref={audioRef}
         src={src}
@@ -142,12 +142,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, compact = false }) => {
         onEnded={() => setIsPlaying(false)}
       />
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3.5">
         <button
           onClick={handlePlayPause}
-          className="flex-shrink-0 size-14 rounded-full bg-primary hover:bg-blue-600 flex items-center justify-center transition-all hover:shadow-lg hover:shadow-primary/20"
+          className="flex-shrink-0 size-11 sm:size-12 rounded-full bg-primary hover:bg-blue-600 flex items-center justify-center transition-all hover:shadow-lg hover:shadow-primary/20"
         >
-          <span className="material-symbols-outlined text-2xl text-white">
+          <span className="material-symbols-outlined text-xl sm:text-2xl text-white">
             {isPlaying ? 'pause' : 'play_arrow'}
           </span>
         </button>

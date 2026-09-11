@@ -661,11 +661,11 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`bg-surface-dark border border-gray-800 rounded-3xl max-w-4xl w-full flex flex-col shadow-2xl overflow-hidden ${closingModal === 'preview' ? 'animate-out zoom-out-95 slide-out-to-bottom-4 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-8 duration-300'}`}
-            style={{ maxHeight: '75vh' }}
+            className={`bg-surface-dark border border-gray-800 rounded-3xl ${previewingFile.type === 'audio' ? 'max-w-lg' : 'max-w-4xl'} w-full flex flex-col shadow-2xl overflow-hidden ${closingModal === 'preview' ? 'animate-out zoom-out-95 slide-out-to-bottom-4 duration-[180ms]' : 'animate-in zoom-in-95 slide-in-from-bottom-8 duration-300'}`}
+            style={{ maxHeight: previewingFile.type === 'audio' ? '92vh' : '75vh' }}
           >
             {/* Fixed header — never scrolls away */}
-            <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-gray-800 bg-surface-dark rounded-t-3xl">
+            <div className={`flex-shrink-0 flex items-center justify-between ${previewingFile.type === 'audio' ? 'px-5 py-3.5' : 'p-5'} border-b border-gray-800 bg-surface-dark rounded-t-3xl`}>
               <h3 className="text-sm sm:text-lg md:text-xl font-black text-white truncate pr-2">{previewingFile.name}</h3>
               <button
                 onClick={closePreview}
@@ -675,8 +675,8 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
               </button>
             </div>
 
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto p-6 min-h-0">
+            {/* Content container */}
+            <div className={`flex-1 ${previewingFile.type === 'audio' ? 'p-3 sm:p-4 overflow-hidden flex flex-col items-center justify-center' : 'p-6 overflow-y-auto'} min-h-0`}>
               {previewingFile.type === 'image' ? (
                 previewUrl ? (
                   <div className="flex flex-col items-center justify-center min-h-[240px] bg-background-dark/80 rounded-2xl p-3 sm:p-5 border border-gray-800">
@@ -739,45 +739,45 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                   </a>
                 </div>
               ) : previewingFile.type === 'audio' ? (
-                <div className="bg-background-dark/90 rounded-3xl p-6 sm:p-8 text-center flex flex-col items-center justify-center border border-gray-800 space-y-5">
+                <div className="w-full bg-background-dark/90 rounded-2xl p-3.5 sm:p-4 text-center flex flex-col items-center justify-center border border-gray-800 space-y-3 sm:space-y-3.5 max-w-md my-auto">
                   {/* Glowing Equalizer Icon Badge */}
-                  <div className="size-20 sm:size-24 rounded-full bg-gradient-to-tr from-primary/30 to-blue-500/10 border-2 border-primary/30 flex items-center justify-center shadow-xl shadow-primary/20 mx-auto">
-                    <span className="material-symbols-outlined text-4xl sm:text-5xl text-primary animate-pulse">graphic_eq</span>
+                  <div className="size-14 sm:size-16 rounded-2xl bg-gradient-to-tr from-primary/30 to-blue-500/10 border-2 border-primary/30 flex items-center justify-center shadow-lg shadow-primary/20 mx-auto">
+                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-primary animate-pulse">graphic_eq</span>
                   </div>
 
                   {/* Audio Recording Title & Metadata Badges */}
-                  <div className="space-y-2 max-w-md w-full">
-                    <h4 className="text-lg sm:text-xl font-black text-white tracking-tight break-words">
+                  <div className="space-y-1.5 max-w-sm w-full">
+                    <h4 className="text-base sm:text-lg font-black text-white tracking-tight truncate">
                       {previewingFile.name}
                     </h4>
-                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-                      <span className="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 font-semibold border border-gray-700">
-                        {previewingFile.size || 'Audio Recording'}
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
+                      <span className="px-2 py-0.5 rounded-md bg-gray-800 text-gray-300 font-semibold border border-gray-700">
+                        {previewingFile.size || 'Audio'}
                       </span>
                       {previewingFile.addedDate && (
-                        <span className="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 border border-gray-700">
-                          Added {previewingFile.addedDate}
+                        <span className="px-2 py-0.5 rounded-md bg-gray-800 text-gray-400 border border-gray-700">
+                          {previewingFile.addedDate}
                         </span>
                       )}
-                      <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-wider text-[10px]">
+                      <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-wider text-[9px]">
                         Voice Memo
                       </span>
                     </div>
                   </div>
 
                   {/* Embedded Player */}
-                  <div className="w-full max-w-md">
+                  <div className="w-full">
                     {previewUrl ? (
                       <AudioPlayer src={previewUrl} />
                     ) : previewingFile.audioData ? (
                       <AudioPlayer src={previewingFile.audioData} />
                     ) : previewingFile.audioStorageId ? (
-                      <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-4">
-                        <span className="size-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                      <div className="flex items-center justify-center gap-2 text-gray-400 text-xs py-2">
+                        <span className="size-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
                         <span>Loading audio stream...</span>
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm py-4">No audio file attached</p>
+                      <p className="text-gray-500 text-xs py-2">No audio file attached</p>
                     )}
                   </div>
 
@@ -788,25 +788,25 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                       .filter(Boolean);
 
                     return (
-                      <div className="w-full max-w-md bg-surface-dark rounded-2xl p-4 border border-gray-800 text-left space-y-2.5">
+                      <div className="w-full bg-surface-dark rounded-xl p-2.5 sm:p-3 border border-gray-800 text-left space-y-1.5">
                         <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
                           <span className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-sm text-primary">send</span>
+                            <span className="material-symbols-outlined text-xs text-primary">send</span>
                             Delivered Upon Trigger To:
                           </span>
-                          <span className="text-white font-mono">
+                          <span className="text-white font-mono text-[10px]">
                             {assignedRecipients.length} {assignedRecipients.length === 1 ? 'Recipient' : 'Recipients'}
                           </span>
                         </div>
 
                         {assignedRecipients.length > 0 ? (
-                          <div className="flex flex-wrap gap-2 pt-1">
+                          <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {assignedRecipients.map((r: any) => (
                               <span
                                 key={r._id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background-dark border border-gray-700/80 text-xs text-gray-200"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background-dark border border-gray-700/80 text-[11px] text-gray-200"
                               >
-                                <span className="size-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                                <span className="size-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
                                 <span className="font-semibold text-white">{r.name}</span>
                                 {r.relationship && (
                                   <span className="text-[10px] text-gray-400">({r.relationship})</span>
@@ -815,15 +815,15 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
                             ))}
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-amber-400 flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-base">warning</span>
+                          <div className="flex items-center justify-between gap-2 pt-0.5">
+                            <span className="text-[11px] text-amber-400 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-sm">warning</span>
                               No recipients assigned
                             </span>
                             <button
                               type="button"
                               onClick={openEditFromPreview}
-                              className="text-[11px] font-bold text-primary hover:underline whitespace-nowrap cursor-pointer"
+                              className="text-[10px] font-bold text-primary hover:underline whitespace-nowrap cursor-pointer"
                             >
                               Assign
                             </button>
@@ -835,13 +835,13 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
 
                   {/* Direct Download Action */}
                   {previewUrl && (
-                    <div className="flex items-center gap-3 pt-1">
+                    <div className="flex items-center justify-center pt-0.5">
                       <a
                         href={previewUrl}
                         download={previewingFile.name}
-                        className="text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all cursor-pointer"
+                        className="text-[11px] font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all cursor-pointer"
                       >
-                        <span className="material-symbols-outlined text-sm">download</span>
+                        <span className="material-symbols-outlined text-xs">download</span>
                         <span>Download Recording</span>
                       </a>
                     </div>
@@ -855,7 +855,7 @@ const Vault: React.FC<VaultProps> = ({ userId, canAccessFeatures }) => {
             </div>
 
             {/* Fixed footer — never scrolls away */}
-            <div className="flex-shrink-0 flex flex-row gap-3 p-5 border-t border-gray-800 bg-surface-dark items-center justify-between">
+            <div className={`flex-shrink-0 flex flex-row gap-3 ${previewingFile.type === 'audio' ? 'px-5 py-3' : 'p-5'} border-t border-gray-800 bg-surface-dark items-center justify-between`}>
               <p className="text-gray-500 text-sm whitespace-nowrap">
                 {previewingFile.size} • {previewingFile.type.toUpperCase()}
               </p>
